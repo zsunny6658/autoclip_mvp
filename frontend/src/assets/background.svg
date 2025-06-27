@@ -1,0 +1,103 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 深色渐变背景 -->
+  <defs>
+    <radialGradient id="mainGradient" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#16213e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f0f0f;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- 动态光效渐变 -->
+    <linearGradient id="lightGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.1" />
+      <stop offset="50%" style="stop-color:#00f2fe;stop-opacity:0.05" />
+      <stop offset="100%" style="stop-color:#4facfe;stop-opacity:0.1" />
+    </linearGradient>
+    
+    <linearGradient id="lightGradient2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.08" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:0.04" />
+      <stop offset="100%" style="stop-color:#667eea;stop-opacity:0.08" />
+    </linearGradient>
+    
+    <!-- 粒子效果 -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 主背景 -->
+  <rect width="1920" height="1080" fill="url(#mainGradient)"/>
+  
+  <!-- 动态光效层 -->
+  <ellipse cx="300" cy="200" rx="400" ry="200" fill="url(#lightGradient1)" opacity="0.6">
+    <animateTransform attributeName="transform" type="translate" values="0,0; 50,30; 0,0" dur="8s" repeatCount="indefinite"/>
+  </ellipse>
+  
+  <ellipse cx="1500" cy="800" rx="350" ry="180" fill="url(#lightGradient2)" opacity="0.5">
+    <animateTransform attributeName="transform" type="translate" values="0,0; -30,20; 0,0" dur="10s" repeatCount="indefinite"/>
+  </ellipse>
+  
+  <!-- 几何装饰元素 -->
+  <g opacity="0.1">
+    <!-- 网格线 -->
+    <defs>
+      <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+        <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#4facfe" stroke-width="0.5" opacity="0.3"/>
+      </pattern>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#grid)"/>
+  </g>
+  
+  <!-- 浮动粒子 -->
+  <g filter="url(#glow)">
+    <circle cx="150" cy="150" r="2" fill="#4facfe" opacity="0.8">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="3s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" values="0,0; 20,10; 0,0" dur="6s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="800" cy="300" r="1.5" fill="#00f2fe" opacity="0.6">
+      <animate attributeName="opacity" values="0.2;0.6;0.2" dur="4s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" values="0,0; -15,25; 0,0" dur="7s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="1600" cy="200" r="2.5" fill="#667eea" opacity="0.7">
+      <animate attributeName="opacity" values="0.3;0.7;0.3" dur="5s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" values="0,0; 10,-20; 0,0" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="400" cy="700" r="1" fill="#764ba2" opacity="0.5">
+      <animate attributeName="opacity" values="0.2;0.5;0.2" dur="3.5s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" values="0,0; 30,15; 0,0" dur="9s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="1200" cy="600" r="1.8" fill="#4facfe" opacity="0.6">
+      <animate attributeName="opacity" values="0.3;0.6;0.3" dur="4.5s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" values="0,0; -25,5; 0,0" dur="6.5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- 抽象几何形状 -->
+  <g opacity="0.05">
+    <polygon points="100,400 200,350 250,450 150,500" fill="#4facfe">
+      <animateTransform attributeName="transform" type="rotate" values="0 175 425; 360 175 425" dur="20s" repeatCount="indefinite"/>
+    </polygon>
+    
+    <polygon points="1700,600 1800,550 1850,650 1750,700" fill="#00f2fe">
+      <animateTransform attributeName="transform" type="rotate" values="360 1775 625; 0 1775 625" dur="25s" repeatCount="indefinite"/>
+    </polygon>
+  </g>
+  
+  <!-- 底部渐变遮罩 -->
+  <defs>
+    <linearGradient id="bottomFade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#000000;stop-opacity:0" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:0.3" />
+    </linearGradient>
+  </defs>
+  <rect x="0" y="800" width="1920" height="280" fill="url(#bottomFade)"/>
+</svg>
