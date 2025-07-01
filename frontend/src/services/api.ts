@@ -3,7 +3,7 @@ import { Project, Clip, Collection } from '../store/useProjectStore'
 
 const api = axios.create({
   baseURL: 'http://localhost:8000/api', // FastAPI后端服务器地址
-  timeout: 30000,
+  timeout: 300000, // 增加到5分钟超时
   headers: {
     'Content-Type': 'application/json',
   },
@@ -31,6 +31,18 @@ api.interceptors.response.use(
     if (error.response?.status === 429) {
       const message = error.response?.data?.detail || '系统正在处理其他项目，请稍后再试'
       error.userMessage = message
+    }
+    // 处理超时错误
+    else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      error.userMessage = '请求超时，项目可能仍在后台处理中，请稍后查看项目状态'
+    }
+    // 处理网络错误
+    else if (error.code === 'NETWORK_ERROR' || !error.response) {
+      error.userMessage = '网络连接失败，请检查网络连接'
+    }
+    // 处理服务器错误
+    else if (error.response?.status >= 500) {
+      error.userMessage = '服务器内部错误，请稍后重试'
     }
     
     return Promise.reject(error)

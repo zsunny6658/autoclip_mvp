@@ -20,6 +20,7 @@ import FileUpload from '../components/FileUpload'
 import backgroundSvg from '../assets/background.svg'
 import { projectApi } from '../services/api'
 import { Project, useProjectStore } from '../store/useProjectStore'
+import { useProjectPolling } from '../hooks/useProjectPolling'
 
 const { Content } = Layout
 const { Title, Text } = Typography
@@ -29,6 +30,15 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate()
   const { projects, setProjects, deleteProject, loading, setLoading } = useProjectStore()
   const [statusFilter, setStatusFilter] = useState<string>('all')
+
+  // 使用项目轮询Hook
+  const { refreshNow } = useProjectPolling({
+    onProjectsUpdate: (updatedProjects) => {
+      setProjects(updatedProjects || [])
+    },
+    enabled: true,
+    interval: 10000 // 10秒轮询一次
+  })
 
   useEffect(() => {
     loadProjects()
@@ -69,11 +79,32 @@ const HomePage: React.FC = () => {
   const handleStartProcessing = async (projectId: string) => {
     try {
       await projectApi.startProcessing(projectId)
-      message.success('开始处理项目')
+      message.success('项目已开始处理，请稍等片刻查看进度')
+      // 立即刷新项目列表以显示最新状态
+      setTimeout(async () => {
+        try {
+          await refreshNow()
+        } catch (refreshError) {
+          console.error('Failed to refresh after starting processing:', refreshError)
+        }
+      }, 1000)
     } catch (error: any) {
       const errorMessage = error.userMessage || '启动处理失败'
       message.error(errorMessage)
       console.error('Start processing error:', error)
+      
+      // 如果是超时错误，提示用户项目可能仍在处理
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        message.info('请求超时，但项目可能已开始处理，请查看项目状态', 5)
+        // 延迟刷新项目列表
+        setTimeout(async () => {
+          try {
+            await refreshNow()
+          } catch (refreshError) {
+            console.error('Failed to refresh after timeout:', refreshError)
+          }
+        }, 3000)
+      }
     }
   }
 
@@ -155,11 +186,20 @@ const HomePage: React.FC = () => {
               padding: '32px',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
             }}>
-              <FileUpload onUploadSuccess={(projectId: string) => {
+              <FileUpload onUploadSuccess={async (projectId: string) => {
                 // 处理完成后刷新项目列表
-                loadProjects()
-                // 开始处理项目
-                handleStartProcessing(projectId)
+                await loadProjects()
+                
+                // 延迟一下再开始处理，确保项目状态已更新
+                setTimeout(async () => {
+                  try {
+                    await handleStartProcessing(projectId)
+                  } catch (error) {
+                    // 如果启动处理失败，至少确保项目列表是最新的
+                    console.error('Failed to start processing after upload:', error)
+                    loadProjects()
+                  }
+                }, 500)
               }} />
             </div>
           </div>

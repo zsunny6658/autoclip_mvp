@@ -286,27 +286,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
             </div>
           )}
           
-          {/* 状态标签 */}
-          <div style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px'
-          }}>
-            <Tag 
-              color={getStatusColor(project.status)}
-              style={{
-                borderRadius: '4px',
-                border: 'none',
-                fontWeight: 500,
-                fontSize: '10px',
-                padding: '1px 6px',
-                lineHeight: '16px',
-                height: '18px'
-              }}
-            >
-              {getStatusText(project.status)}
-            </Tag>
-          </div>
+          {/* 移除右上角状态指示器 - 可读性差且冗余 */}
           
           {/* 更新时间和操作按钮 - 移动到封面底部 */}
           <div style={{
@@ -460,41 +440,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
     >
       <div style={{ padding: '0', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div>
-          {/* 进度条和日志显示 */}
-          {project.status === 'processing' && (
+          {/* 仅在处理中时显示实时日志 */}
+          {project.status === 'processing' && logs.length > 0 && (
             <div style={{ marginBottom: '8px' }}>
-              {/* 进度条 */}
-              {project.current_step && project.total_steps && (
-                <div style={{ marginBottom: '6px' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    marginBottom: '3px'
-                  }}>
-                    <Text style={{ fontSize: '11px', color: '#999999' }}>
-                      处理进度
-                    </Text>
-                    <Text style={{ fontSize: '11px', color: '#ffffff', fontWeight: 500 }}>
-                      {Math.round((project.current_step / project.total_steps) * 100)}%
-                    </Text>
-                  </div>
-                  <Progress 
-                    percent={Math.round((project.current_step / project.total_steps) * 100)} 
-                    size="small" 
-                    showInfo={false}
-                    strokeColor={{
-                      '0%': '#667eea',
-                      '100%': '#764ba2',
-                    }}
-                    trailColor="rgba(255, 255, 255, 0.1)"
-                    strokeWidth={4}
-                  />
-                </div>
-              )}
-              
-              {/* 实时日志轮播 */}
-              {logs.length > 0 && (
                 <div style={{
                   background: 'rgba(0, 0, 0, 0.3)',
                   borderRadius: '4px',
@@ -549,11 +497,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
                     </div>
                   )}
                 </div>
-              )}
             </div>
           )}
-          
-
           
           {/* 项目名称 */}
           <div style={{ marginBottom: '8px' }}>
@@ -571,11 +516,52 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
             </Text>
           </div>
           
-          {/* 统计信息 */}
+          {/* 状态和统计信息 */}
           <div style={{ 
             display: 'flex', 
             gap: '6px'
           }}>
+            {/* 状态显示 */}
+            <div style={{
+              background: project.status === 'completed' ? 'rgba(82, 196, 26, 0.15)' :
+                         project.status === 'processing' ? 'rgba(24, 144, 255, 0.15)' :
+                         project.status === 'error' ? 'rgba(255, 77, 79, 0.15)' :
+                         'rgba(217, 217, 217, 0.15)',
+              border: project.status === 'completed' ? '1px solid rgba(82, 196, 26, 0.3)' :
+                      project.status === 'processing' ? '1px solid rgba(24, 144, 255, 0.3)' :
+                      project.status === 'error' ? '1px solid rgba(255, 77, 79, 0.3)' :
+                      '1px solid rgba(217, 217, 217, 0.3)',
+              borderRadius: '4px',
+              padding: '4px 6px',
+              textAlign: 'center',
+              flex: 1
+            }}>
+              <div style={{ 
+                color: project.status === 'completed' ? '#52c41a' :
+                       project.status === 'processing' ? '#1890ff' :
+                       project.status === 'error' ? '#ff4d4f' :
+                       '#d9d9d9',
+                fontSize: '12px', 
+                fontWeight: 600, 
+                lineHeight: '14px' 
+              }}>
+                {project.status === 'processing' && project.current_step && project.total_steps 
+                  ? `${Math.round((project.current_step / project.total_steps) * 100)}%`
+                  : project.status === 'completed' ? '✓'
+                  : project.status === 'error' ? '✗'
+                  : '○'
+                }
+              </div>
+              <div style={{ color: '#999999', fontSize: '9px', lineHeight: '10px' }}>
+                {project.status === 'completed' ? '已完成' :
+                 project.status === 'processing' ? '处理中' :
+                 project.status === 'error' ? '失败' :
+                 '等待中'
+                }
+              </div>
+            </div>
+            
+            {/* 切片数量 */}
             <div style={{
               background: 'rgba(102, 126, 234, 0.15)',
               border: '1px solid rgba(102, 126, 234, 0.3)',
@@ -591,6 +577,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
                 切片
               </div>
             </div>
+            
+            {/* 合集数量 */}
             <div style={{
               background: 'rgba(118, 75, 162, 0.15)',
               border: '1px solid rgba(118, 75, 162, 0.3)',
