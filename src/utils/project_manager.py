@@ -147,11 +147,16 @@ class ProjectManager:
         
         self._save_project_metadata(project_id, metadata)
     
-    def _save_project_metadata(self, project_id: str, metadata: Dict[str, Any]):
+    def _save_project_metadata(self, project_id: str, metadata: Dict[str, Any]) -> None:
         """保存项目元数据"""
-        metadata_file = self.get_project_paths(project_id)["metadata_dir"] / "project_metadata.json"
+        paths = self.get_project_paths(project_id)
+        metadata_dir = paths["metadata_dir"]
+        metadata_file = metadata_dir / "project_metadata.json"
         
         try:
+            # 确保metadata目录存在
+            metadata_dir.mkdir(parents=True, exist_ok=True)
+            
             with open(metadata_file, 'w', encoding='utf-8') as f:
                 json.dump(metadata, f, ensure_ascii=False, indent=2)
         except Exception as e:
@@ -278,6 +283,9 @@ class ProjectManager:
         paths = self.get_project_paths(project_id)
         metadata_dir = paths["metadata_dir"]
         
+        # 确保metadata目录存在
+        metadata_dir.mkdir(parents=True, exist_ok=True)
+        
         # 保存步骤结果
         step_file = metadata_dir / f"step{step}_result.json"
         
@@ -337,6 +345,9 @@ class ProjectManager:
         
         paths = self.get_project_paths(project_id)
         metadata_dir = paths["metadata_dir"]
+        
+        # 确保metadata目录存在
+        metadata_dir.mkdir(parents=True, exist_ok=True)
         
         # 读取现有切片数据
         clips_file = metadata_dir / "clips_metadata.json"
@@ -414,6 +425,9 @@ class ProjectManager:
         
         paths = self.get_project_paths(project_id)
         metadata_dir = paths["metadata_dir"]
+        
+        # 确保metadata目录存在
+        metadata_dir.mkdir(parents=True, exist_ok=True)
         
         # 读取现有合集数据
         collections_file = metadata_dir / "collections_metadata.json"

@@ -20,10 +20,13 @@ aiohttp==3.12.13
 # 加密和安全
 cryptography==42.0.5
 
+# B站上传工具
+bilitool>=1.0.0
+
 # 测试依赖
 pytest==8.0.0
 pytest-cov==4.1.0
 pytest-mock==3.12.0
 
 # 开发工具
-watchfiles==1.1.0 
+watchfiles==1.1.0

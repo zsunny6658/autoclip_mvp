@@ -34,6 +34,21 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [currentLogIndex, setCurrentLogIndex] = useState(0)
 
+  // 获取分类信息
+  const getCategoryInfo = (category?: string) => {
+    const categoryMap: Record<string, { name: string; icon: string; color: string }> = {
+      'default': { name: '默认', icon: '🎬', color: '#4facfe' },
+      'knowledge': { name: '知识科普', icon: '📚', color: '#52c41a' },
+      'business': { name: '商业财经', icon: '💼', color: '#faad14' },
+      'opinion': { name: '观点评论', icon: '💭', color: '#722ed1' },
+      'experience': { name: '经验分享', icon: '🌟', color: '#13c2c2' },
+      'speech': { name: '演讲脱口秀', icon: '🎤', color: '#eb2f96' },
+      'content_review': { name: '内容解说', icon: '🎭', color: '#f5222d' },
+      'entertainment': { name: '娱乐内容', icon: '🎪', color: '#fa8c16' }
+    }
+    return categoryMap[category || 'default'] || categoryMap['default']
+  }
+
   // 生成项目视频缩略图
   useEffect(() => {
     const generateThumbnail = async () => {
@@ -241,6 +256,33 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
               }}>
                 点击预览
               </div>
+            </div>
+          )}
+          
+          {/* 分类标签 - 左上角 */}
+          {project.video_category && project.video_category !== 'default' && (
+            <div style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px'
+            }}>
+              <Tag
+                style={{
+                  background: `${getCategoryInfo(project.video_category).color}15`,
+                  border: `1px solid ${getCategoryInfo(project.video_category).color}40`,
+                  borderRadius: '4px',
+                  color: getCategoryInfo(project.video_category).color,
+                  fontSize: '10px',
+                  fontWeight: 500,
+                  padding: '2px 6px',
+                  lineHeight: '14px',
+                  height: '18px',
+                  margin: 0
+                }}
+              >
+                <span style={{ marginRight: '2px' }}>{getCategoryInfo(project.video_category).icon}</span>
+                {getCategoryInfo(project.video_category).name}
+              </Tag>
             </div>
           )}
           
@@ -510,6 +552,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
               )}
             </div>
           )}
+          
+
           
           {/* 项目名称 */}
           <div style={{ marginBottom: '8px' }}>

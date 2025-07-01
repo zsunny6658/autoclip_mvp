@@ -41,6 +41,20 @@ export interface UploadFilesRequest {
   video_file: File
   srt_file?: File
   project_name: string
+  video_category?: string
+}
+
+export interface VideoCategory {
+  value: string
+  name: string
+  description: string
+  icon: string
+  color: string
+}
+
+export interface VideoCategoriesResponse {
+  categories: VideoCategory[]
+  default_category: string
 }
 
 export interface ProcessingStatus {
@@ -72,6 +86,11 @@ export const settingsApi = {
 
 // 项目相关API
 export const projectApi = {
+  // 获取视频分类配置
+  getVideoCategories: async (): Promise<VideoCategoriesResponse> => {
+    return api.get('/video-categories')
+  },
+
   // 获取所有项目
   getProjects: async (): Promise<Project[]> => {
     return api.get('/projects')
@@ -90,6 +109,9 @@ export const projectApi = {
       formData.append('srt_file', data.srt_file)
     }
     formData.append('project_name', data.project_name)
+    if (data.video_category) {
+      formData.append('video_category', data.video_category)
+    }
     
     return api.post('/upload', formData, {
       headers: {

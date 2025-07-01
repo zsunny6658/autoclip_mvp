@@ -16,12 +16,13 @@ logger = logging.getLogger(__name__)
 class ClipScorer:
     """内容评分器"""
     
-    def __init__(self):
+    def __init__(self, prompt_files: Dict = None):
         self.llm_client = LLMClient()
         self.text_processor = TextProcessor()
         
         # 加载提示词
-        with open(PROMPT_FILES['recommendation'], 'r', encoding='utf-8') as f:
+        prompt_files_to_use = prompt_files if prompt_files is not None else PROMPT_FILES
+        with open(prompt_files_to_use['recommendation'], 'r', encoding='utf-8') as f:
             self.recommendation_prompt = f.read()
     
     def score_clips(self, timeline_data: List[Dict]) -> List[Dict]:
@@ -125,13 +126,14 @@ class ClipScorer:
             json.dump(scored_clips, f, ensure_ascii=False, indent=2)
         logger.info(f"评分结果已保存到: {output_path}")
 
-def run_step3_scoring(timeline_path: Path, metadata_dir: Path = None, output_path: Optional[Path] = None) -> List[Dict]:
+def run_step3_scoring(timeline_path: Path, metadata_dir: Path = None, output_path: Optional[Path] = None, prompt_files: Dict = None) -> List[Dict]:
     """
     运行Step 3: 内容评分与筛选
     
     Args:
         timeline_path: 时间线文件路径
         output_path: 输出文件路径
+        prompt_files: 自定义提示词文件
         
     Returns:
         高分切片列表
@@ -141,7 +143,7 @@ def run_step3_scoring(timeline_path: Path, metadata_dir: Path = None, output_pat
         timeline_data = json.load(f)
     
     # 创建评分器
-    scorer = ClipScorer()
+    scorer = ClipScorer(prompt_files)
     
     # 评分
     scored_clips = scorer.score_clips(timeline_data)

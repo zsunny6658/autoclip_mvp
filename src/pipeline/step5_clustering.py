@@ -14,11 +14,12 @@ logger = logging.getLogger(__name__)
 class ClusteringEngine:
     """主题聚类引擎"""
     
-    def __init__(self, metadata_dir: Optional[Path] = None):
+    def __init__(self, metadata_dir: Optional[Path] = None, prompt_files: Dict = None):
         self.llm_client = LLMClient()
         
         # 加载提示词
-        with open(PROMPT_FILES['clustering'], 'r', encoding='utf-8') as f:
+        prompt_files_to_use = prompt_files if prompt_files is not None else PROMPT_FILES
+        with open(prompt_files_to_use['clustering'], 'r', encoding='utf-8') as f:
             self.clustering_prompt = f.read()
         
         # 使用传入的metadata_dir或默认值
@@ -322,13 +323,14 @@ class ClusteringEngine:
         with open(input_path, 'r', encoding='utf-8') as f:
             return json.load(f)
 
-def run_step5_clustering(clips_with_titles_path: Path, output_path: Optional[Path] = None, metadata_dir: Optional[str] = None) -> List[Dict]:
+def run_step5_clustering(clips_with_titles_path: Path, output_path: Optional[Path] = None, metadata_dir: Optional[str] = None, prompt_files: Dict = None) -> List[Dict]:
     """
     运行Step 5: 主题聚类
     
     Args:
         clips_with_titles_path: 带标题的片段文件路径
         output_path: 输出文件路径
+        prompt_files: 自定义提示词文件
         
     Returns:
         合集数据
@@ -340,7 +342,7 @@ def run_step5_clustering(clips_with_titles_path: Path, output_path: Optional[Pat
     # 创建聚类器
     if metadata_dir is None:
         metadata_dir = METADATA_DIR
-    clusterer = ClusteringEngine(metadata_dir=Path(metadata_dir))
+    clusterer = ClusteringEngine(metadata_dir=Path(metadata_dir), prompt_files=prompt_files)
     
     # 进行聚类
     collections_data = clusterer.cluster_clips(clips_with_titles)

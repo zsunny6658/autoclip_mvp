@@ -27,7 +27,8 @@ import sys
 sys.path.append(str(Path(__file__).parent))
 
 from src.main import AutoClipsProcessor
-from src.config import OUTPUT_DIR, CLIPS_DIR, COLLECTIONS_DIR, METADATA_DIR, DASHSCOPE_API_KEY
+from src.config import OUTPUT_DIR, CLIPS_DIR, COLLECTIONS_DIR, METADATA_DIR, DASHSCOPE_API_KEY, VideoCategory, VIDEO_CATEGORIES_CONFIG
+from src.upload.upload_manager import UploadManager, Platform, UploadStatus
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -68,6 +69,7 @@ class Project(BaseModel):
     status: str
     created_at: str
     updated_at: str
+    video_category: str = "default"  # 新增视频分类字段
     clips: List[Clip] = []
     collections: List[Collection] = []
     current_step: Optional[int] = None
@@ -91,6 +93,29 @@ class ApiSettings(BaseModel):
     min_score_threshold: float = 0.7
     max_clips_per_collection: int = 5
 
+class UploadRequest(BaseModel):
+    platform: str  # "bilibili"
+    video_path: str
+    title: str
+    desc: str = ""
+    tags: List[str] = []
+    cover_path: Optional[str] = None
+    tid: Optional[int] = 21  # B站分区ID
+
+class BilibiliCredential(BaseModel):
+    sessdata: str
+    bili_jct: str
+    buvid3: str = ""
+
+class UploadTaskResponse(BaseModel):
+    task_id: str
+    platform: str
+    status: str
+    progress: float
+    title: str
+    result: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
 # 全局状态管理
 class ProjectManager:
     def __init__(self):
@@ -101,6 +126,7 @@ class ProjectManager:
         self.processing_lock = asyncio.Lock()  # 防止并发处理
         self.max_concurrent_processing = 1  # 最大并发处理数
         self.current_processing_count = 0
+        self.upload_manager = UploadManager()  # 上传管理器
         self.load_projects()
     
     def load_projects(self):
@@ -138,7 +164,7 @@ class ProjectManager:
         except Exception as e:
             logger.error(f"保存项目数据失败: {e}")
     
-    def create_project(self, name: str, video_path: str, project_id: str = None) -> Project:
+    def create_project(self, name: str, video_path: str, project_id: str = None, video_category: str = "default") -> Project:
         """创建新项目"""
         if project_id is None:
             project_id = str(uuid.uuid4())
@@ -150,7 +176,8 @@ class ProjectManager:
             video_path=video_path,
             status="uploading",
             created_at=now,
-            updated_at=now
+            updated_at=now,
+            video_category=video_category
         )
         
         self.projects[project_id] = project
@@ -271,6 +298,24 @@ async def root():
     """根路径"""
     return {"message": "自动切片工具 API 服务", "version": "1.0.0"}
 
+@app.get("/api/video-categories")
+async def get_video_categories():
+    """获取视频分类配置"""
+    categories = []
+    for key, config in VIDEO_CATEGORIES_CONFIG.items():
+        categories.append({
+            "value": key,
+            "name": config["name"],
+            "description": config["description"],
+            "icon": config["icon"],
+            "color": config["color"]
+        })
+    
+    return {
+        "categories": categories,
+        "default_category": VideoCategory.DEFAULT
+    }
+
 @app.get("/api/projects", response_model=List[Project])
 async def get_projects():
     """获取所有项目"""
@@ -298,12 +343,39 @@ async def get_project(project_id: str):
         logger.error(f"get_project failed for {project_id}: {e}")
         raise HTTPException(status_code=500, detail="服务器内部错误")
 
+@app.put("/api/projects/{project_id}/category")
+async def update_project_category(project_id: str, video_category: str = Form(...)):
+    """更新项目的视频分类"""
+    try:
+        # 验证分类是否有效
+        if video_category not in [category.value for category in VideoCategory]:
+            raise HTTPException(status_code=400, detail="无效的视频分类")
+        
+        project = project_manager.get_project(project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="项目不存在")
+        
+        # 更新项目分类
+        project.video_category = video_category
+        project.updated_at = datetime.now().isoformat()
+        
+        # 保存项目
+        project_manager.save_projects()
+        
+        return {"message": "项目分类更新成功", "video_category": video_category}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"update_project_category failed for {project_id}: {e}")
+        raise HTTPException(status_code=500, detail="服务器内部错误")
+
 @app.post("/api/upload")
 async def upload_files(
     background_tasks: BackgroundTasks,
     video_file: UploadFile = File(...),
     srt_file: Optional[UploadFile] = File(None),
-    project_name: str = Form(...)
+    project_name: str = Form(...),
+    video_category: str = Form("default")
 ):
     """上传文件并创建项目"""
     # 验证文件类型
@@ -332,7 +404,7 @@ async def upload_files(
     
     # 创建项目记录（video_path相对于项目根目录）
     relative_video_path = f"uploads/{project_id}/input/input.{video_extension}"
-    project = project_manager.create_project(project_name, relative_video_path, project_id)
+    project = project_manager.create_project(project_name, relative_video_path, project_id, video_category)
     
     return project
 
@@ -1003,6 +1075,179 @@ async def test_api_key(request: dict):
     except Exception as e:
         logger.error(f"测试API密钥失败: {e}")
         return {"success": False, "error": "测试过程中发生错误"}
+
+# ==================== 上传相关API ====================
+
+@app.post("/api/upload/bilibili/credential")
+async def set_bilibili_credential(credential: BilibiliCredential):
+    """设置B站登录凭证"""
+    try:
+        project_manager.upload_manager.set_bilibili_credential(
+            sessdata=credential.sessdata,
+            bili_jct=credential.bili_jct,
+            buvid3=credential.buvid3
+        )
+        
+        # 验证凭证
+        is_valid = await project_manager.upload_manager.verify_platform_credential(Platform.BILIBILI)
+        
+        if is_valid:
+            return {"success": True, "message": "B站凭证设置成功"}
+        else:
+            return {"success": False, "error": "B站凭证验证失败"}
+            
+    except Exception as e:
+        logger.error(f"设置B站凭证失败: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/upload/bilibili/verify")
+async def verify_bilibili_credential():
+    """验证B站登录凭证"""
+    try:
+        is_valid = await project_manager.upload_manager.verify_platform_credential(Platform.BILIBILI)
+        return {"success": True, "valid": is_valid}
+    except Exception as e:
+        logger.error(f"验证B站凭证失败: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/upload/bilibili/categories")
+async def get_bilibili_categories():
+    """获取B站分区列表"""
+    try:
+        categories = project_manager.upload_manager.get_platform_categories(Platform.BILIBILI)
+        return {"success": True, "categories": categories}
+    except Exception as e:
+        logger.error(f"获取B站分区失败: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/upload/create")
+async def create_upload_task(upload_request: UploadRequest):
+    """创建上传任务"""
+    try:
+        # 生成任务ID
+        task_id = str(uuid.uuid4())
+        
+        # 验证平台
+        if upload_request.platform.lower() == "bilibili":
+            platform = Platform.BILIBILI
+        else:
+            raise ValueError(f"不支持的平台: {upload_request.platform}")
+        
+        # 验证视频文件是否存在
+        if not os.path.exists(upload_request.video_path):
+            raise FileNotFoundError(f"视频文件不存在: {upload_request.video_path}")
+        
+        # 创建上传任务
+        task = await project_manager.upload_manager.create_upload_task(
+            task_id=task_id,
+            platform=platform,
+            video_path=upload_request.video_path,
+            title=upload_request.title,
+            desc=upload_request.desc,
+            tags=upload_request.tags,
+            cover_path=upload_request.cover_path,
+            tid=upload_request.tid,
+            auto_start=True
+        )
+        
+        return {
+            "success": True,
+            "task_id": task_id,
+            "message": "上传任务创建成功"
+        }
+        
+    except Exception as e:
+        logger.error(f"创建上传任务失败: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/upload/tasks/{task_id}", response_model=UploadTaskResponse)
+async def get_upload_task_status(task_id: str):
+    """获取上传任务状态"""
+    try:
+        task_status = project_manager.upload_manager.get_task_status(task_id)
+        
+        if not task_status:
+            raise HTTPException(status_code=404, detail="任务不存在")
+        
+        return UploadTaskResponse(**task_status)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"获取上传任务状态失败: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/upload/tasks")
+async def get_all_upload_tasks():
+    """获取所有上传任务"""
+    try:
+        tasks = project_manager.upload_manager.get_all_tasks()
+        return {"success": True, "tasks": tasks}
+    except Exception as e:
+        logger.error(f"获取上传任务列表失败: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/upload/tasks/{task_id}/cancel")
+async def cancel_upload_task(task_id: str):
+    """取消上传任务"""
+    try:
+        success = await project_manager.upload_manager.cancel_upload(task_id)
+        
+        if success:
+            return {"success": True, "message": "任务已取消"}
+        else:
+            return {"success": False, "error": "取消任务失败"}
+            
+    except Exception as e:
+        logger.error(f"取消上传任务失败: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/upload/clips/{clip_id}")
+async def upload_clip_to_platform(
+    clip_id: str,
+    platform: str = Form(...),
+    title: str = Form(...),
+    desc: str = Form(""),
+    tags: str = Form(""),  # 逗号分隔的标签
+    tid: int = Form(21)
+):
+    """上传指定切片到平台"""
+    try:
+        # 查找切片文件
+        clip_file = None
+        for project in project_manager.projects.values():
+            for clip in project.clips:
+                if clip.id == clip_id:
+                    # 构建切片文件路径
+                    clip_filename = f"{clip_id}.mp4"
+                    clip_file = CLIPS_DIR / clip_filename
+                    break
+            if clip_file:
+                break
+        
+        if not clip_file or not clip_file.exists():
+            raise FileNotFoundError(f"切片文件不存在: {clip_id}")
+        
+        # 解析标签
+        tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()] if tags else []
+        
+        # 创建上传请求
+        upload_request = UploadRequest(
+            platform=platform,
+            video_path=str(clip_file),
+            title=title,
+            desc=desc,
+            tags=tag_list,
+            tid=tid
+        )
+        
+        # 创建上传任务
+        result = await create_upload_task(upload_request)
+        return result
+        
+    except Exception as e:
+        logger.error(f"上传切片失败: {e}")
+        return {"success": False, "error": str(e)}
 
 # 健康检查
 @app.get("/health")

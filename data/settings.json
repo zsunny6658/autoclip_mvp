@@ -1,5 +1,5 @@
 {
-  "dashscope_api_key": "sk-b5cff39a1c0c4faebfb530b9bf6e6192",
+  "dashscope_api_key": "sk-bd4871e0208444bb92c453e8264b2f3e",
   "model_name": "qwen-plus",
   "chunk_size": 5000,
   "min_score_threshold": 0.7,

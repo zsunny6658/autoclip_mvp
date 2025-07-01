@@ -16,6 +16,7 @@ from .pipeline.step3_scoring import run_step3_scoring
 from .pipeline.step4_title import run_step4_title
 from .pipeline.step5_clustering import run_step5_clustering
 from .pipeline.step6_video import run_step6_video
+from .config import get_prompt_files
 
 # 配置日志
 try:
@@ -57,13 +58,22 @@ class AutoClipsProcessor:
         if not project_manager.validate_project_exists(project_id):
             raise ValueError(f"项目不存在: {project_id}")
         
+        # 获取项目元数据
+        project_metadata = project_manager.get_project_metadata(project_id)
+        if not project_metadata:
+            raise ValueError(f"无法获取项目信息: {project_id}")
+        
+        # 根据项目的视频分类获取对应的prompt文件
+        video_category = project_metadata.get('video_category', 'default')
+        self.prompt_files = get_prompt_files(video_category)
+        
         # 获取项目路径
         self.paths = project_manager.get_project_paths(project_id)
         
         # 确保项目目录存在
         project_manager.config.ensure_project_directories(project_id)
         
-        logger.info(f"初始化处理器，项目ID: {project_id}")
+        logger.info(f"初始化处理器，项目ID: {project_id}，视频分类: {video_category}")
     
     def run_full_pipeline(self, progress_callback=None) -> Dict[str, Any]:
         """
@@ -98,7 +108,8 @@ class AutoClipsProcessor:
             
             outlines = run_step1_outline(
                 input_srt, 
-                self.paths["metadata_dir"]
+                self.paths["metadata_dir"],
+                prompt_files=self.prompt_files
             )
             self.results['step1_outlines'] = outlines
             
@@ -116,7 +127,8 @@ class AutoClipsProcessor:
             
             timeline_data = run_step2_timeline(
                 self.paths["metadata_dir"] / "step1_outline.json",
-                self.paths["metadata_dir"]
+                self.paths["metadata_dir"],
+                prompt_files=self.prompt_files
             )
             self.results['step2_timeline'] = timeline_data
             
@@ -134,7 +146,8 @@ class AutoClipsProcessor:
             
             high_score_clips = run_step3_scoring(
                 self.paths["metadata_dir"] / "step2_timeline.json",
-                self.paths["metadata_dir"]
+                self.paths["metadata_dir"],
+                prompt_files=self.prompt_files
             )
             self.results['step3_scoring'] = high_score_clips
             
@@ -153,7 +166,8 @@ class AutoClipsProcessor:
             clips_with_titles = run_step4_title(
                 self.paths["metadata_dir"] / "step3_high_score_clips.json",
                 output_path=None,
-                metadata_dir=str(self.paths["metadata_dir"])
+                metadata_dir=str(self.paths["metadata_dir"]),
+                prompt_files=self.prompt_files
             )
             self.results['step4_titles'] = clips_with_titles
             
@@ -172,7 +186,8 @@ class AutoClipsProcessor:
             collections_data = run_step5_clustering(
                 self.paths["metadata_dir"] / "step4_titles.json",
                 output_path=None,
-                metadata_dir=str(self.paths["metadata_dir"])
+                metadata_dir=str(self.paths["metadata_dir"]),
+                prompt_files=self.prompt_files
             )
             self.results['step5_collections'] = collections_data
             
@@ -256,25 +271,29 @@ class AutoClipsProcessor:
                 result = run_step1_outline(input_srt, self.paths["metadata_dir"])
             elif step == 2:
                 result = run_step2_timeline(
-                    self.paths["metadata_dir"] / "step1_outline.json",
-                    self.paths["metadata_dir"]
-                )
+                self.paths["metadata_dir"] / "step1_outline.json",
+                self.paths["metadata_dir"],
+                prompt_files=self.prompt_files
+            )
             elif step == 3:
                 result = run_step3_scoring(
-                    self.paths["metadata_dir"] / "step2_timeline.json",
-                    self.paths["metadata_dir"]
-                )
+                self.paths["metadata_dir"] / "step2_timeline.json",
+                self.paths["metadata_dir"],
+                prompt_files=self.prompt_files
+            )
             elif step == 4:
                 result = run_step4_title(
                     self.paths["metadata_dir"] / "step3_high_score_clips.json",
                     output_path=None,
-                    metadata_dir=str(self.paths["metadata_dir"])
+                    metadata_dir=str(self.paths["metadata_dir"]),
+                    prompt_files=self.prompt_files
                 )
             elif step == 5:
                 result = run_step5_clustering(
                     self.paths["metadata_dir"] / "step4_titles.json",
                     output_path=None,
-                    metadata_dir=str(self.paths["metadata_dir"])
+                    metadata_dir=str(self.paths["metadata_dir"]),
+                    prompt_files=self.prompt_files
                 )
             elif step == 6:
                 if not input_video:
@@ -403,9 +422,10 @@ class AutoClipsProcessor:
                         progress_callback(2, 6, "提取时间区间", step_progress)
                     
                     timeline_data = run_step2_timeline(
-                        self.paths["metadata_dir"] / "step1_outline.json",
-                        self.paths["metadata_dir"]
-                    )
+                    self.paths["metadata_dir"] / "step1_outline.json",
+                    self.paths["metadata_dir"],
+                    prompt_files=self.prompt_files
+                )
                     self.results['step2_timeline'] = timeline_data
                     project_manager.save_processing_result(self.project_id, 2, {"timeline": timeline_data})
                     
@@ -419,9 +439,10 @@ class AutoClipsProcessor:
                         progress_callback(3, 6, "内容评分与筛选", step_progress)
                     
                     high_score_clips = run_step3_scoring(
-                        self.paths["metadata_dir"] / "step2_timeline.json",
-                        self.paths["metadata_dir"]
-                    )
+                    self.paths["metadata_dir"] / "step2_timeline.json",
+                    self.paths["metadata_dir"],
+                    prompt_files=self.prompt_files
+                )
                     self.results['step3_scoring'] = high_score_clips
                     project_manager.save_processing_result(self.project_id, 3, {"high_score_clips": high_score_clips})
                     
@@ -437,7 +458,8 @@ class AutoClipsProcessor:
                     clips_with_titles = run_step4_title(
                         self.paths["metadata_dir"] / "step3_high_score_clips.json",
                         output_path=None,
-                        metadata_dir=str(self.paths["metadata_dir"])
+                        metadata_dir=str(self.paths["metadata_dir"]),
+                        prompt_files=self.prompt_files
                     )
                     self.results['step4_titles'] = clips_with_titles
                     project_manager.save_processing_result(self.project_id, 4, {"clips_with_titles": clips_with_titles})
@@ -454,7 +476,8 @@ class AutoClipsProcessor:
                     collections_data = run_step5_clustering(
                         self.paths["metadata_dir"] / "step4_titles.json",
                         output_path=None,
-                        metadata_dir=str(self.paths["metadata_dir"])
+                        metadata_dir=str(self.paths["metadata_dir"]),
+                        prompt_files=self.prompt_files
                     )
                     self.results['step5_collections'] = collections_data
                     project_manager.save_processing_result(self.project_id, 5, {"collections": collections_data})

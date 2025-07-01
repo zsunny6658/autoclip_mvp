@@ -10,6 +10,9 @@
 - **统一配置**: 支持环境变量和配置文件管理
 - **错误处理**: 完善的错误处理和重试机制
 - **安全存储**: API密钥加密存储和管理
+- **一键投稿**: 集成 bilitool，支持切片视频一键投稿到B站
+- **批量上传**: 支持多个切片视频的批量上传和进度监控
+- **分P投稿**: 支持将相关切片追加到主视频作为分P
 
 ## 🏗️ 项目架构
 
@@ -39,6 +42,15 @@ venv\Scripts\activate     # Windows
 
 # 安装依赖
 pip install -r requirements.txt
+
+# 安装 bilitool（用于B站视频上传）
+# 推荐方式1: 使用安装脚本
+python install_bilitool.py
+
+# 推荐方式2: 手动安装到虚拟环境
+pip install bilitool
+
+# 其他安装方式请参考 BILITOOL_INTEGRATION.md
 ```
 
 ### 2. 配置API密钥
@@ -143,6 +155,12 @@ MAX_CLIPS_PER_COLLECTION=5
 MAX_RETRIES=3
 TIMEOUT_SECONDS=30
 
+# B站上传配置
+BILIBILI_AUTO_UPLOAD=false
+BILIBILI_DEFAULT_TID=21
+BILIBILI_MAX_CONCURRENT_UPLOADS=3
+BILIBILI_UPLOAD_TIMEOUT_MINUTES=30
+
 # 路径配置
 PROJECT_ROOT=/path/to/project
 UPLOADS_DIR=/path/to/uploads
@@ -168,6 +186,14 @@ LOG_FILE=auto_clips.log
     "chunk_size": 5000,
     "min_score_threshold": 0.7,
     "max_clips_per_collection": 5
+  },
+  "bilibili": {
+    "auto_upload": false,
+    "default_tid": 21,
+    "max_concurrent_uploads": 3,
+    "upload_timeout_minutes": 30,
+    "auto_generate_tags": true,
+    "tag_limit": 12
   }
 }
 ```
@@ -186,8 +212,36 @@ python -m pytest tests/test_error_handler.py
 ## 📚 文档
 
 - [后端架构设计](BACKEND_ARCHITECTURE.md)
-- [流水线优化说明](PIPELINE_OPTIMIZATION.md)
+- [Bilitool 集成使用指南](BILITOOL_INTEGRATION.md)
 - [项目总结](项目总结.md)
+
+## 🎬 B站视频上传
+
+本项目集成了 [bilitool](https://github.com/timerring/bilitool)，支持切片视频一键投稿到B站。
+
+### 快速开始
+
+```bash
+# 1. 安装 bilitool
+python install_bilitool.py
+
+# 2. 运行演示
+python demo_bilitool_integration.py
+
+# 3. 运行测试
+python test_bilibili_upload.py
+```
+
+### 主要功能
+
+- **一键上传**: 支持单个视频快速上传
+- **批量投稿**: 支持多个切片视频批量上传
+- **分P投稿**: 支持将相关切片追加到主视频
+- **进度监控**: 实时显示上传进度和状态
+- **自动重试**: 上传失败时自动重试
+- **登录管理**: 支持扫码登录和登录状态持久化
+
+详细使用方法请参考 [Bilitool 集成使用指南](BILITOOL_INTEGRATION.md)。
 
 ## 🔧 开发
 
@@ -217,4 +271,4 @@ MIT License
 
 ## 📞 支持
 
-如有问题，请提交Issue或联系开发团队。 
+如有问题，请提交Issue或联系开发团队。

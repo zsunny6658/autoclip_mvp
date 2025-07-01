@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class TimelineExtractor:
     """从大纲和SRT字幕中提取精确时间线"""
     
-    def __init__(self, metadata_dir: Path = None):
+    def __init__(self, metadata_dir: Path = None, prompt_files: Dict = None):
         self.llm_client = LLMClient()
         self.text_processor = TextProcessor()
         
@@ -26,7 +26,8 @@ class TimelineExtractor:
         self.metadata_dir = metadata_dir
         
         # 加载提示词
-        with open(PROMPT_FILES['timeline'], 'r', encoding='utf-8') as f:
+        prompt_files_to_use = prompt_files if prompt_files is not None else PROMPT_FILES
+        with open(prompt_files_to_use['timeline'], 'r', encoding='utf-8') as f:
             self.timeline_prompt = f.read()
             
         # SRT块的目录
@@ -336,14 +337,14 @@ class TimelineExtractor:
         with open(input_path, 'r', encoding='utf-8') as f:
             return json.load(f)
 
-def run_step2_timeline(outline_path: Path, metadata_dir: Path = None, output_path: Optional[Path] = None) -> List[Dict]:
+def run_step2_timeline(outline_path: Path, metadata_dir: Path = None, output_path: Optional[Path] = None, prompt_files: Dict = None) -> List[Dict]:
     """
     运行Step 2: 时间点提取
     """
     if metadata_dir is None:
         metadata_dir = METADATA_DIR
         
-    extractor = TimelineExtractor(metadata_dir)
+    extractor = TimelineExtractor(metadata_dir, prompt_files)
     
     # 加载大纲
     with open(outline_path, 'r', encoding='utf-8') as f:

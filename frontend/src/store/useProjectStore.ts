@@ -30,6 +30,7 @@ export interface Project {
   status: 'uploading' | 'processing' | 'completed' | 'error'
   created_at: string
   updated_at: string
+  video_category?: string
   clips: Clip[]
   collections: Collection[]
   current_step?: number

@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
-import { Button, message, Progress, Space, Typography, Card, Input } from 'antd'
+import React, { useState, useEffect } from 'react'
+import { Button, message, Progress, Space, Typography, Card, Input, Spin } from 'antd'
 import { InboxOutlined, VideoCameraOutlined, FileTextOutlined, SubnodeOutlined } from '@ant-design/icons'
 import { useDropzone } from 'react-dropzone'
-import { projectApi } from '../services/api'
+import { projectApi, VideoCategory, VideoCategoriesResponse } from '../services/api'
 import { useProjectStore } from '../store/useProjectStore'
 
 const { Text, Title } = Typography
@@ -15,12 +15,39 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [projectName, setProjectName] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [categories, setCategories] = useState<VideoCategory[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(false)
   const [files, setFiles] = useState<{
     video?: File
     srt?: File
   }>({})
   
   const { addProject } = useProjectStore()
+
+  // 加载视频分类配置
+  useEffect(() => {
+    const loadCategories = async () => {
+      setLoadingCategories(true)
+      try {
+        const response = await projectApi.getVideoCategories()
+        setCategories(response.categories)
+        // 设置默认选中【默认】选项
+        if (response.default_category) {
+          setSelectedCategory(response.default_category)
+        } else if (response.categories.length > 0) {
+          setSelectedCategory(response.categories[0].value)
+        }
+      } catch (error) {
+        console.error('Failed to load video categories:', error)
+        message.error('加载视频分类失败')
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+
+    loadCategories()
+  }, [])
 
   const onDrop = (acceptedFiles: File[]) => {
     const newFiles = { ...files }
@@ -80,7 +107,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       const newProject = await projectApi.uploadFiles({
         video_file: files.video,
         srt_file: files.srt,
-        project_name: projectName.trim()
+        project_name: projectName.trim(),
+        video_category: selectedCategory
       })
       
       clearInterval(progressInterval)
@@ -93,6 +121,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       setFiles({})
       setProjectName('')
       setUploadProgress(0)
+      // 重置为第一个分类
+      if (categories.length > 0) {
+        setSelectedCategory(categories[0].value)
+      }
       
       if (onUploadSuccess) {
         onUploadSuccess(newProject.id)
@@ -206,6 +238,67 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
               color: '#ffffff'
             }}
           />
+        </div>
+      )}
+
+      {/* 视频分类选择 - 只有在选择文件后才显示 */}
+      {files.video && (
+        <div style={{ marginBottom: '16px' }}>
+          <Text strong style={{ color: '#ffffff', fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+            视频分类
+          </Text>
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px'
+          }}>
+            {categories.map(category => {
+              const isSelected = selectedCategory === category.value
+              return (
+                <div
+                  key={category.value}
+                  onClick={() => setSelectedCategory(category.value)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: isSelected 
+                      ? `2px solid ${category.color}` 
+                      : '2px solid rgba(255, 255, 255, 0.1)',
+                    background: isSelected 
+                      ? `${category.color}25` 
+                      : 'rgba(255, 255, 255, 0.05)',
+                    color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
+                    boxShadow: isSelected 
+                      ? `0 0 12px ${category.color}40` 
+                      : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontSize: '13px',
+                    fontWeight: isSelected ? 600 : 400,
+                    userSelect: 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                    }
+                  }}
+                >
+                  <span style={{ fontSize: '14px' }}>{category.icon}</span>
+                  <span>{category.name}</span>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

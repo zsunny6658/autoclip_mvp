@@ -16,12 +16,13 @@ logger = logging.getLogger(__name__)
 class TitleGenerator:
     """标题生成器"""
     
-    def __init__(self, metadata_dir: Optional[Path] = None):
+    def __init__(self, metadata_dir: Optional[Path] = None, prompt_files: Dict = None):
         self.llm_client = LLMClient()
         self.text_processor = TextProcessor()
         
         # 加载提示词
-        with open(PROMPT_FILES['title'], 'r', encoding='utf-8') as f:
+        prompt_files_to_use = prompt_files if prompt_files is not None else PROMPT_FILES
+        with open(prompt_files_to_use['title'], 'r', encoding='utf-8') as f:
             self.title_prompt = f.read()
         
         # 使用传入的metadata_dir或默认值
@@ -105,7 +106,7 @@ class TitleGenerator:
             json.dump(clips_with_titles, f, ensure_ascii=False, indent=2)
         logger.info(f"带标题的片段数据已保存到: {output_path}")
 
-def run_step4_title(high_score_clips_path: Path, output_path: Optional[Path] = None, metadata_dir: Optional[str] = None) -> List[Dict]:
+def run_step4_title(high_score_clips_path: Path, output_path: Optional[Path] = None, metadata_dir: Optional[str] = None, prompt_files: Dict = None) -> List[Dict]:
     """
     运行Step 4: 标题生成
     
@@ -113,6 +114,7 @@ def run_step4_title(high_score_clips_path: Path, output_path: Optional[Path] = N
         high_score_clips_path: 高分切片文件路径
         output_path: 输出文件路径，默认为step4_titles.json
         metadata_dir: 元数据目录路径
+        prompt_files: 自定义提示词文件
         
     Returns:
         带标题的切片列表
@@ -128,7 +130,7 @@ def run_step4_title(high_score_clips_path: Path, output_path: Optional[Path] = N
     # 创建标题生成器
     if metadata_dir is None:
         metadata_dir = METADATA_DIR
-    title_generator = TitleGenerator(metadata_dir=Path(metadata_dir))
+    title_generator = TitleGenerator(metadata_dir=Path(metadata_dir), prompt_files=prompt_files)
     
     # 生成标题
     clips_with_titles = title_generator.generate_titles(high_score_clips)

@@ -8,6 +8,70 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 from pydantic import BaseModel, validator
+from enum import Enum
+
+# 视频分类枚举
+class VideoCategory(str, Enum):
+    DEFAULT = "default"
+    KNOWLEDGE = "knowledge"
+    BUSINESS = "business"
+    OPINION = "opinion"
+    EXPERIENCE = "experience"
+    SPEECH = "speech"
+    CONTENT_REVIEW = "content_review"
+    ENTERTAINMENT = "entertainment"
+
+# 视频分类配置
+VIDEO_CATEGORIES_CONFIG = {
+    VideoCategory.DEFAULT: {
+        "name": "默认",
+        "description": "通用视频内容，适用于大部分场景",
+        "icon": "🎬",
+        "color": "#4facfe"
+    },
+    VideoCategory.KNOWLEDGE: {
+        "name": "知识科普",
+        "description": "教育、科普、技术分享等知识性内容",
+        "icon": "📚",
+        "color": "#52c41a"
+    },
+    VideoCategory.BUSINESS: {
+        "name": "商业财经",
+        "description": "商业分析、财经资讯、投资理财等",
+        "icon": "💼",
+        "color": "#faad14"
+    },
+    VideoCategory.OPINION: {
+        "name": "观点评论",
+        "description": "观点表达、评论分析、思辨讨论等",
+        "icon": "💭",
+        "color": "#722ed1"
+    },
+    VideoCategory.EXPERIENCE: {
+        "name": "经验分享",
+        "description": "生活经验、技能分享、实用技巧等",
+        "icon": "🌟",
+        "color": "#13c2c2"
+    },
+    VideoCategory.SPEECH: {
+        "name": "演讲脱口秀",
+        "description": "演讲、脱口秀、访谈等口语表达内容",
+        "icon": "🎤",
+        "color": "#eb2f96"
+    },
+    VideoCategory.CONTENT_REVIEW: {
+        "name": "内容解说",
+        "description": "影视解说、游戏解说、作品分析等",
+        "icon": "🎭",
+        "color": "#f5222d"
+    },
+    VideoCategory.ENTERTAINMENT: {
+        "name": "娱乐内容",
+        "description": "娱乐节目、综艺、表演等轻松内容",
+        "icon": "🎪",
+        "color": "#fa8c16"
+    }
+}
 
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -43,6 +107,13 @@ CHUNK_SIZE = 5000  # 文本分块大小
 MIN_SCORE_THRESHOLD = 0.7  # 最低评分阈值
 MAX_CLIPS_PER_COLLECTION = 5  # 每个合集最大切片数
 
+# 新增：话题提取控制参数
+MIN_TOPIC_DURATION_MINUTES = 2  # 话题最小时长（分钟）
+MAX_TOPIC_DURATION_MINUTES = 12  # 话题最大时长（分钟）
+TARGET_TOPIC_DURATION_MINUTES = 5  # 话题目标时长（分钟）
+MIN_TOPICS_PER_CHUNK = 3  # 每个文本块最少话题数
+MAX_TOPICS_PER_CHUNK = 8  # 每个文本块最多话题数
+
 # 确保输出目录存在
 for dir_path in [CLIPS_DIR, COLLECTIONS_DIR, METADATA_DIR]:
     dir_path.mkdir(parents=True, exist_ok=True)
@@ -50,13 +121,26 @@ for dir_path in [CLIPS_DIR, COLLECTIONS_DIR, METADATA_DIR]:
 # 新的配置管理系统
 class Settings(BaseModel):
     """系统设置"""
-    dashscope_api_key: str = ""
+    dashscope_api_key: Optional[str] = ""
     model_name: str = "qwen-plus"
     chunk_size: int = 5000
     min_score_threshold: float = 0.7
     max_clips_per_collection: int = 5
     max_retries: int = 3
     timeout_seconds: int = 30
+    # 新增话题提取控制参数
+    min_topic_duration_minutes: int = 2
+    max_topic_duration_minutes: int = 12
+    target_topic_duration_minutes: int = 5
+    min_topics_per_chunk: int = 3
+    max_topics_per_chunk: int = 8
+    # B站上传配置
+    bilibili_auto_upload: bool = False
+    bilibili_default_tid: int = 21  # 默认分区：日常
+    bilibili_max_concurrent_uploads: int = 3
+    bilibili_upload_timeout_minutes: int = 30
+    bilibili_auto_generate_tags: bool = True
+    bilibili_tag_limit: int = 12
     
     @validator('min_score_threshold')
     def validate_score_threshold(cls, v):
@@ -86,6 +170,16 @@ class ProcessingConfig:
     max_clips_per_collection: int = 5
     max_retries: int = 3
     timeout_seconds: int = 30
+
+@dataclass
+class BilibiliConfig:
+    """B站上传配置"""
+    auto_upload: bool = False
+    default_tid: int = 21  # 默认分区：日常
+    max_concurrent_uploads: int = 3
+    upload_timeout_minutes: int = 30
+    auto_generate_tags: bool = True
+    tag_limit: int = 12
 
 @dataclass
 class PathConfig:
@@ -169,6 +263,17 @@ class ConfigManager:
         """获取路径配置"""
         return PathConfig()
     
+    def get_bilibili_config(self) -> BilibiliConfig:
+        """获取B站上传配置"""
+        return BilibiliConfig(
+            auto_upload=self.settings.bilibili_auto_upload,
+            default_tid=self.settings.bilibili_default_tid,
+            max_concurrent_uploads=self.settings.bilibili_max_concurrent_uploads,
+            upload_timeout_minutes=self.settings.bilibili_upload_timeout_minutes,
+            auto_generate_tags=self.settings.bilibili_auto_generate_tags,
+            tag_limit=self.settings.bilibili_tag_limit
+        )
+    
     def ensure_project_directories(self, project_id: str):
         """确保项目目录结构存在"""
         paths = self.get_project_paths(project_id)
@@ -234,6 +339,14 @@ class ConfigManager:
                 "max_retries": self.settings.max_retries,
                 "timeout_seconds": self.settings.timeout_seconds
             },
+            "bilibili_config": {
+                "auto_upload": self.settings.bilibili_auto_upload,
+                "default_tid": self.settings.bilibili_default_tid,
+                "max_concurrent_uploads": self.settings.bilibili_max_concurrent_uploads,
+                "upload_timeout_minutes": self.settings.bilibili_upload_timeout_minutes,
+                "auto_generate_tags": self.settings.bilibili_auto_generate_tags,
+                "tag_limit": self.settings.bilibili_tag_limit
+            },
             "paths": {
                 "project_root": str(self.get_path_config().project_root),
                 "data_dir": str(self.get_path_config().data_dir),
@@ -242,6 +355,30 @@ class ConfigManager:
                 "prompt_dir": str(self.get_path_config().prompt_dir)
             }
         }
+
+# 根据视频分类获取prompt文件路径
+def get_prompt_files(video_category: str = VideoCategory.DEFAULT) -> Dict[str, Path]:
+    """
+    根据视频分类获取对应的prompt文件路径
+    如果分类专用的prompt文件不存在，则回退到默认prompt文件
+    """
+    category_prompt_dir = PROMPT_DIR / video_category
+    default_prompt_files = PROMPT_FILES.copy()
+    
+    # 如果分类目录存在，尝试使用分类专用的prompt文件
+    if category_prompt_dir.exists():
+        category_prompt_files = {}
+        for key, default_path in default_prompt_files.items():
+            category_file = category_prompt_dir / default_path.name
+            if category_file.exists():
+                category_prompt_files[key] = category_file
+            else:
+                # 回退到默认文件
+                category_prompt_files[key] = default_path
+        return category_prompt_files
+    
+    # 如果分类目录不存在，返回默认prompt文件
+    return default_prompt_files
 
 # 创建全局配置管理器实例
 config_manager = ConfigManager()
@@ -264,5 +401,10 @@ def get_legacy_config() -> Dict[str, Any]:
         'MODEL_NAME': MODEL_NAME,
         'CHUNK_SIZE': CHUNK_SIZE,
         'MIN_SCORE_THRESHOLD': MIN_SCORE_THRESHOLD,
-        'MAX_CLIPS_PER_COLLECTION': MAX_CLIPS_PER_COLLECTION
-    } 
+        'MAX_CLIPS_PER_COLLECTION': MAX_CLIPS_PER_COLLECTION,
+        'MIN_TOPIC_DURATION_MINUTES': MIN_TOPIC_DURATION_MINUTES,
+        'MAX_TOPIC_DURATION_MINUTES': MAX_TOPIC_DURATION_MINUTES,
+        'TARGET_TOPIC_DURATION_MINUTES': TARGET_TOPIC_DURATION_MINUTES,
+        'MIN_TOPICS_PER_CHUNK': MIN_TOPICS_PER_CHUNK,
+        'MAX_TOPICS_PER_CHUNK': MAX_TOPICS_PER_CHUNK
+    }
