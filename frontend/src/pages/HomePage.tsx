@@ -17,6 +17,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import ProjectCard from '../components/ProjectCard'
 import FileUpload from '../components/FileUpload'
+import BilibiliDownload from '../components/BilibiliDownload'
 import backgroundSvg from '../assets/background.svg'
 import { projectApi } from '../services/api'
 import { Project, useProjectStore } from '../store/useProjectStore'
@@ -30,6 +31,7 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate()
   const { projects, setProjects, deleteProject, loading, setLoading } = useProjectStore()
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [activeTab, setActiveTab] = useState<'upload' | 'bilibili'>('bilibili')
 
   // 使用项目轮询Hook
   const { refreshNow } = useProjectPolling({
@@ -135,44 +137,10 @@ const HomePage: React.FC = () => {
     }}>
       <Content style={{ padding: '40px 24px', position: 'relative' }}>
         <div style={{ maxWidth: '1600px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          {/* 页面标题区域 */}
-          <div style={{ 
-            marginBottom: '48px',
-            textAlign: 'center',
-            padding: '20px 0'
-          }}>
-            <Title 
-              level={1} 
-              style={{ 
-                color: '#ffffff',
-                fontSize: '48px',
-                fontWeight: 700,
-                marginBottom: '12px',
-                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                textShadow: '0 4px 20px rgba(79, 172, 254, 0.3)',
-                letterSpacing: '1px'
-              }}
-            >
-              AI视频切片工具
-            </Title>
-            <Text style={{ 
-              color: '#cccccc',
-              fontSize: '18px',
-              display: 'block',
-              marginBottom: '32px',
-              fontWeight: 300,
-              letterSpacing: '0.5px'
-            }}>
-              智能分析视频内容，自动生成精彩片段
-            </Text>
-          </div>
-
           {/* 文件上传区域 */}
           <div style={{ 
             marginBottom: '48px',
+            marginTop: '20px',
             display: 'flex',
             justifyContent: 'center'
           }}>
@@ -186,21 +154,87 @@ const HomePage: React.FC = () => {
               padding: '32px',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
             }}>
-              <FileUpload onUploadSuccess={async (projectId: string) => {
-                // 处理完成后刷新项目列表
-                await loadProjects()
-                
-                // 延迟一下再开始处理，确保项目状态已更新
-                setTimeout(async () => {
-                  try {
-                    await handleStartProcessing(projectId)
-                  } catch (error) {
-                    // 如果启动处理失败，至少确保项目列表是最新的
-                    console.error('Failed to start processing after upload:', error)
-                    loadProjects()
-                  }
-                }, 500)
-              }} />
+              {/* 标签页切换 */}
+              <div style={{
+                display: 'flex',
+                marginBottom: '24px',
+                borderRadius: '12px',
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '4px'
+              }}>
+                 <button 
+                   style={{
+                     flex: 1,
+                     padding: '12px 24px',
+                     borderRadius: '8px',
+                     background: activeTab === 'bilibili' ? 'rgba(79, 172, 254, 0.2)' : 'transparent',
+                     color: activeTab === 'bilibili' ? '#4facfe' : '#cccccc',
+                     cursor: 'pointer',
+                     fontSize: '16px',
+                     fontWeight: 600,
+                     transition: 'all 0.3s ease',
+                     border: activeTab === 'bilibili' ? '1px solid rgba(79, 172, 254, 0.4)' : '1px solid transparent'
+                   }}
+                   onClick={() => setActiveTab('bilibili')}
+                 >
+                   📺 B站链接
+                 </button>
+                <button 
+                   style={{
+                     flex: 1,
+                     padding: '12px 24px',
+                     borderRadius: '8px',
+                     background: activeTab === 'upload' ? 'rgba(79, 172, 254, 0.2)' : 'transparent',
+                     color: activeTab === 'upload' ? '#4facfe' : '#cccccc',
+                     cursor: 'pointer',
+                     fontSize: '16px',
+                     fontWeight: 600,
+                     transition: 'all 0.3s ease',
+                     border: activeTab === 'upload' ? '1px solid rgba(79, 172, 254, 0.4)' : '1px solid transparent'
+                   }}
+                   onClick={() => setActiveTab('upload')}
+                 >
+                   📁 文件上传
+                 </button>
+              </div>
+              
+              {/* 内容区域 */}
+              <div>
+                {activeTab === 'bilibili' && (
+                  <BilibiliDownload onDownloadSuccess={async (projectId: string) => {
+                    // 处理完成后刷新项目列表
+                    await loadProjects()
+                    
+                    // 延迟一下再开始处理，确保项目状态已更新
+                    setTimeout(async () => {
+                      try {
+                        await handleStartProcessing(projectId)
+                      } catch (error) {
+                        // 如果启动处理失败，至少确保项目列表是最新的
+                        console.error('Failed to start processing after download:', error)
+                        loadProjects()
+                      }
+                    }, 500)
+                  }} />
+                )}
+                {activeTab === 'upload' && (
+                  <FileUpload onUploadSuccess={async (projectId: string) => {
+                    // 处理完成后刷新项目列表
+                    await loadProjects()
+                    
+                    // 延迟一下再开始处理，确保项目状态已更新
+                    setTimeout(async () => {
+                      try {
+                        await handleStartProcessing(projectId)
+                      } catch (error) {
+                        // 如果启动处理失败，至少确保项目列表是最新的
+                        console.error('Failed to start processing after upload:', error)
+                        loadProjects()
+                      }
+                    }, 500)
+                  }} />
+                )}
+              </div>
             </div>
           </div>
 

@@ -501,17 +501,46 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
           )}
           
           {/* 项目名称 */}
-          <div style={{ marginBottom: '8px' }}>
-            <Text strong style={{ 
-              fontSize: '15px', 
-              color: '#ffffff',
-              fontWeight: 600,
-              lineHeight: '18px',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden'
-            }}>
+          <div style={{ marginBottom: '12px', position: 'relative' }}>
+            <Text 
+              strong 
+              title={project.name}
+              style={{ 
+                fontSize: '13px', 
+                color: '#ffffff',
+                fontWeight: 600,
+                lineHeight: '16px',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                cursor: 'help',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                 const target = e.currentTarget as HTMLElement
+                 if (target.scrollHeight > target.clientHeight) {
+                   target.style.webkitLineClamp = 'unset'
+                   target.style.maxHeight = 'none'
+                   target.style.background = 'rgba(0, 0, 0, 0.8)'
+                   target.style.padding = '4px'
+                   target.style.borderRadius = '4px'
+                   target.style.zIndex = '10'
+                   target.style.position = 'relative'
+                 }
+               }}
+               onMouseLeave={(e) => {
+                 const target = e.currentTarget as HTMLElement
+                 target.style.webkitLineClamp = '2'
+                 target.style.maxHeight = '32px'
+                 target.style.background = 'transparent'
+                 target.style.padding = '0'
+                 target.style.borderRadius = '0'
+                 target.style.zIndex = 'auto'
+                 target.style.position = 'static'
+               }}
+            >
               {project.name}
             </Text>
           </div>

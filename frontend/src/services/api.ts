@@ -78,6 +78,41 @@ export interface ProcessingStatus {
   error_message?: string
 }
 
+// B站相关接口类型
+export interface BilibiliVideoInfo {
+  title: string
+  description: string
+  duration: number
+  uploader: string
+  upload_date: string
+  view_count: number
+  like_count: number
+  thumbnail: string
+  url: string
+}
+
+export interface BilibiliDownloadRequest {
+  url: string
+  project_name: string
+  video_category?: string
+  browser?: string
+}
+
+export interface BilibiliDownloadTask {
+  task_id: string
+  url: string
+  project_name: string
+  video_category?: string
+  browser?: string
+  status: 'pending' | 'downloading' | 'completed' | 'failed'
+  progress: number
+  error_message?: string
+  video_info?: BilibiliVideoInfo
+  project_id?: string
+  created_at: string
+  updated_at: string
+}
+
 // 设置相关API
 export const settingsApi = {
   // 获取系统配置
@@ -272,6 +307,38 @@ export const projectApi = {
   // 获取合集视频URL
   getCollectionVideoUrl: (projectId: string, collectionId: string): string => {
     return `http://localhost:8000/api/projects/${projectId}/files/output/collections/${collectionId}.mp4`
+  }
+}
+
+// B站相关API
+export const bilibiliApi = {
+  // 解析B站视频信息
+  parseVideoInfo: async (url: string, browser?: string): Promise<{success: boolean, video_info: BilibiliVideoInfo}> => {
+    const formData = new FormData()
+    formData.append('url', url)
+    if (browser) {
+      formData.append('browser', browser)
+    }
+    return api.post('/bilibili/parse', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
+  // 创建B站下载任务
+  createDownloadTask: async (data: BilibiliDownloadRequest): Promise<BilibiliDownloadTask> => {
+    return api.post('/bilibili/download', data)
+  },
+
+  // 获取下载任务状态
+  getTaskStatus: async (taskId: string): Promise<BilibiliDownloadTask> => {
+    return api.get(`/bilibili/tasks/${taskId}`)
+  },
+
+  // 获取所有下载任务
+  getAllTasks: async (): Promise<BilibiliDownloadTask[]> => {
+    return api.get('/bilibili/tasks')
   }
 }
 
