@@ -31,7 +31,7 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate()
   const { projects, setProjects, deleteProject, loading, setLoading } = useProjectStore()
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [activeTab, setActiveTab] = useState<'upload' | 'bilibili'>('bilibili')
+  const [activeTab, setActiveTab] = useState<'upload' | 'bilibili'>('upload')
 
   // 使用项目轮询Hook
   const { refreshNow } = useProjectPolling({

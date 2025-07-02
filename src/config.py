@@ -134,13 +134,13 @@ class Settings(BaseModel):
     target_topic_duration_minutes: int = 5
     min_topics_per_chunk: int = 3
     max_topics_per_chunk: int = 8
-    # B站上传配置
-    bilibili_auto_upload: bool = False
-    bilibili_default_tid: int = 21  # 默认分区：日常
-    bilibili_max_concurrent_uploads: int = 3
-    bilibili_upload_timeout_minutes: int = 30
-    bilibili_auto_generate_tags: bool = True
-    bilibili_tag_limit: int = 12
+    # B站上传配置 (已移除 bilitool 相关功能)
+    # bilibili_auto_upload: bool = False
+    # bilibili_default_tid: int = 21  # 默认分区：日常
+    # bilibili_max_concurrent_uploads: int = 3
+    # bilibili_upload_timeout_minutes: int = 30
+    # bilibili_auto_generate_tags: bool = True
+    # bilibili_tag_limit: int = 12
     
     @validator('min_score_threshold')
     def validate_score_threshold(cls, v):
@@ -171,15 +171,15 @@ class ProcessingConfig:
     max_retries: int = 3
     timeout_seconds: int = 30
 
-@dataclass
-class BilibiliConfig:
-    """B站上传配置"""
-    auto_upload: bool = False
-    default_tid: int = 21  # 默认分区：日常
-    max_concurrent_uploads: int = 3
-    upload_timeout_minutes: int = 30
-    auto_generate_tags: bool = True
-    tag_limit: int = 12
+# @dataclass
+# class BilibiliConfig:
+#     """B站上传配置 (已移除 bilitool 相关功能)"""
+#     auto_upload: bool = False
+#     default_tid: int = 21  # 默认分区：日常
+#     max_concurrent_uploads: int = 3
+#     upload_timeout_minutes: int = 30
+#     auto_generate_tags: bool = True
+#     tag_limit: int = 12
 
 @dataclass
 class PathConfig:
@@ -263,16 +263,16 @@ class ConfigManager:
         """获取路径配置"""
         return PathConfig()
     
-    def get_bilibili_config(self) -> BilibiliConfig:
-        """获取B站上传配置"""
-        return BilibiliConfig(
-            auto_upload=self.settings.bilibili_auto_upload,
-            default_tid=self.settings.bilibili_default_tid,
-            max_concurrent_uploads=self.settings.bilibili_max_concurrent_uploads,
-            upload_timeout_minutes=self.settings.bilibili_upload_timeout_minutes,
-            auto_generate_tags=self.settings.bilibili_auto_generate_tags,
-            tag_limit=self.settings.bilibili_tag_limit
-        )
+    # def get_bilibili_config(self) -> BilibiliConfig:
+    #     """获取B站上传配置 (已移除 bilitool 相关功能)"""
+    #     return BilibiliConfig(
+    #         auto_upload=self.settings.bilibili_auto_upload,
+    #         default_tid=self.settings.bilibili_default_tid,
+    #         max_concurrent_uploads=self.settings.bilibili_max_concurrent_uploads,
+    #         upload_timeout_minutes=self.settings.bilibili_upload_timeout_minutes,
+    #         auto_generate_tags=self.settings.bilibili_auto_generate_tags,
+    #         tag_limit=self.settings.bilibili_tag_limit
+    #     )
     
     def ensure_project_directories(self, project_id: str):
         """确保项目目录结构存在"""
@@ -339,14 +339,14 @@ class ConfigManager:
                 "max_retries": self.settings.max_retries,
                 "timeout_seconds": self.settings.timeout_seconds
             },
-            "bilibili_config": {
-                "auto_upload": self.settings.bilibili_auto_upload,
-                "default_tid": self.settings.bilibili_default_tid,
-                "max_concurrent_uploads": self.settings.bilibili_max_concurrent_uploads,
-                "upload_timeout_minutes": self.settings.bilibili_upload_timeout_minutes,
-                "auto_generate_tags": self.settings.bilibili_auto_generate_tags,
-                "tag_limit": self.settings.bilibili_tag_limit
-            },
+            # "bilibili_config": {
+            #     "auto_upload": self.settings.bilibili_auto_upload,
+            #     "default_tid": self.settings.bilibili_default_tid,
+            #     "max_concurrent_uploads": self.settings.bilibili_max_concurrent_uploads,
+            #     "upload_timeout_minutes": self.settings.bilibili_upload_timeout_minutes,
+            #     "auto_generate_tags": self.settings.bilibili_auto_generate_tags,
+            #     "tag_limit": self.settings.bilibili_tag_limit
+            # },  # 已移除 bilitool 相关功能
             "paths": {
                 "project_root": str(self.get_path_config().project_root),
                 "data_dir": str(self.get_path_config().data_dir),

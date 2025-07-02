@@ -10,7 +10,7 @@ from pathlib import Path
 import logging
 from enum import Enum
 
-from .bilibili_uploader import BilibiliUploader
+# from .bilibili_uploader import BilibiliUploader  # 已移除bilitool相关功能
 from ..utils.error_handler import safe_execute, error_handler
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class UploadManager:
     
     def __init__(self):
         self.uploaders = {
-            Platform.BILIBILI: BilibiliUploader()
+            # Platform.BILIBILI: BilibiliUploader()  # 已移除bilitool相关功能
         }
         self.tasks: Dict[str, UploadTask] = {}
         self.active_tasks: Dict[str, asyncio.Task] = {}
@@ -196,18 +196,18 @@ class UploadManager:
         try:
             uploader = self.uploaders[task.platform]
             
-            # 执行上传
-            if task.platform == Platform.BILIBILI:
-                result = await uploader.upload_video(
-                    video_path=task.video_path,
-                    title=task.title,
-                    desc=task.desc,
-                    tags=task.tags,
-                    cover_path=task.cover_path,
-                    **task.kwargs
-                )
-            else:
-                raise NotImplementedError(f"平台 {task.platform.value} 暂未实现")
+            # 执行上传 (已移除 bilitool 相关功能)
+            # if task.platform == Platform.BILIBILI:
+            #     result = await uploader.upload_video(
+            #         video_path=task.video_path,
+            #         title=task.title,
+            #         desc=task.desc,
+            #         tags=task.tags,
+            #         cover_path=task.cover_path,
+            #         **task.kwargs
+            #     )
+            # else:
+            raise NotImplementedError(f"平台 {task.platform.value} 暂未实现 (已移除 bilitool 相关功能)")
             
             # 更新任务状态
             if result.get("success"):
@@ -333,19 +333,19 @@ class UploadManager:
             return uploader.verify_credential()
         return False
     
-    def set_bilibili_credential(self, **kwargs) -> bool:
-        """设置B站登录凭证（交互式登录）
-        
-        Returns:
-            bool: 设置是否成功
-        """
-        if Platform.BILIBILI not in self.uploaders:
-            return False
-            
-        uploader = self.uploaders[Platform.BILIBILI]
-        if hasattr(uploader, 'login_interactive'):
-            return uploader.login_interactive(**kwargs)
-        return False
+    # def set_bilibili_credential(self, **kwargs) -> bool:
+    #     """设置B站登录凭证（交互式登录） (已移除 bilitool 相关功能)
+    #     
+    #     Returns:
+    #         bool: 设置是否成功
+    #     """
+    #     if Platform.BILIBILI not in self.uploaders:
+    #         return False
+    #         
+    #     uploader = self.uploaders[Platform.BILIBILI]
+    #     if hasattr(uploader, 'login_interactive'):
+    #         return uploader.login_interactive(**kwargs)
+    #     return False
     
     def get_platform_status(self, platform: Platform) -> Dict[str, Any]:
         """获取平台状态

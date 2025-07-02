@@ -4,8 +4,7 @@ uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 aiofiles==23.2.1
 
-# B站投稿相关依赖
-bilitool>=0.1.3
+# B站相关依赖
 requests>=2.32.3
 aiohttp==3.9.1
 
