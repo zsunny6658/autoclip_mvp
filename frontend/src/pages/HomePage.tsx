@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom'
 import ProjectCard from '../components/ProjectCard'
 import FileUpload from '../components/FileUpload'
 import BilibiliDownload from '../components/BilibiliDownload'
-import backgroundSvg from '../assets/background.svg'
+
 import { projectApi } from '../services/api'
 import { Project, useProjectStore } from '../store/useProjectStore'
 import { useProjectPolling } from '../hooks/useProjectPolling'
@@ -128,12 +128,7 @@ const HomePage: React.FC = () => {
   return (
     <Layout style={{ 
       minHeight: '100vh', 
-      background: '#0f0f0f',
-      backgroundImage: `url(${backgroundSvg})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      backgroundAttachment: 'fixed'
+      background: '#0f0f0f'
     }}>
       <Content style={{ padding: '40px 24px', position: 'relative' }}>
         <div style={{ maxWidth: '1600px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
@@ -146,21 +141,21 @@ const HomePage: React.FC = () => {
           }}>
             <div style={{
               width: '100%',
-              maxWidth: '900px',
+              maxWidth: '800px',
               background: 'rgba(26, 26, 46, 0.8)',
               backdropFilter: 'blur(20px)',
-              borderRadius: '24px',
+              borderRadius: '16px',
               border: '1px solid rgba(79, 172, 254, 0.2)',
-              padding: '32px',
+              padding: '20px',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
             }}>
               {/* 标签页切换 */}
               <div style={{
                 display: 'flex',
-                marginBottom: '24px',
-                borderRadius: '12px',
+                marginBottom: '16px',
+                borderRadius: '8px',
                 background: 'rgba(0, 0, 0, 0.3)',
-                padding: '4px'
+                padding: '3px'
               }}>
                  <button 
                    style={{

@@ -81,10 +81,16 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       : state.currentProject
   })),
   
-  deleteProject: (id) => set((state) => ({
-    projects: state.projects.filter(p => p.id !== id),
-    currentProject: state.currentProject?.id === id ? null : state.currentProject
-  })),
+  deleteProject: (id) => {
+    // 清理缩略图缓存
+    const thumbnailCacheKey = `thumbnail_${id}`
+    localStorage.removeItem(thumbnailCacheKey)
+    
+    set((state) => ({
+      projects: state.projects.filter(p => p.id !== id),
+      currentProject: state.currentProject?.id === id ? null : state.currentProject
+    }))
+  },
   
   setLoading: (loading) => set({ loading }),
   

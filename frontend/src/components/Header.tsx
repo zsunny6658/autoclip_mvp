@@ -17,7 +17,7 @@ const Header: React.FC = () => {
         padding: '0 32px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
         height: '72px',
         position: 'sticky',
         top: 0,
@@ -27,6 +27,41 @@ const Header: React.FC = () => {
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
       }}
     >
+      {/* Logo */}
+      <div 
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
+        }}
+        onClick={() => navigate('/')}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.05)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+        }}
+      >
+        <span
+          style={{
+            fontSize: '24px',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            letterSpacing: '-0.5px',
+            textShadow: '0 0 20px rgba(79, 172, 254, 0.3)',
+            filter: 'drop-shadow(0 2px 4px rgba(79, 172, 254, 0.2))'
+          }}
+        >
+          AutoClip
+        </span>
+      </div>
+      
+      {/* Navigation Buttons */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {!isHomePage && (
           <Button 

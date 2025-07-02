@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Tag, Button, Space, Typography, Progress, Popconfirm, message } from 'antd'
+import { Card, Tag, Button, Space, Typography, Progress, Popconfirm, message, Tooltip } from 'antd'
 import { PlayCircleOutlined, DeleteOutlined, EyeOutlined, DownloadOutlined, ReloadOutlined, LoadingOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { Project } from '../store/useProjectStore'
@@ -30,6 +30,7 @@ interface LogEntry {
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, onClick }) => {
   const navigate = useNavigate()
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null)
+  const [thumbnailLoading, setThumbnailLoading] = useState(false)
   const [isRetrying, setIsRetrying] = useState(false)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [currentLogIndex, setCurrentLogIndex] = useState(0)
@@ -49,10 +50,22 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
     return categoryMap[category || 'default'] || categoryMap['default']
   }
 
-  // 生成项目视频缩略图
+  // 缩略图缓存管理
+  const thumbnailCacheKey = `thumbnail_${project.id}`
+  
+  // 生成项目视频缩略图（带缓存）
   useEffect(() => {
     const generateThumbnail = async () => {
       if (!project.video_path) return
+      
+      // 检查缓存
+      const cachedThumbnail = localStorage.getItem(thumbnailCacheKey)
+      if (cachedThumbnail) {
+        setVideoThumbnail(cachedThumbnail)
+        return
+      }
+      
+      setThumbnailLoading(true)
       
       try {
         const video = document.createElement('video')
@@ -62,41 +75,68 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
         const videoUrl = projectApi.getProjectFileUrl(project.id, 'input/input.mp4')
         
         video.onloadedmetadata = () => {
-          console.log('开始加载视频:', video.src)
           video.currentTime = Math.min(5, video.duration / 4) // 取视频1/4处或5秒处的帧
         }
         
         video.onseeked = () => {
           try {
-            console.log('尝试加载视频:', videoUrl)
             const canvas = document.createElement('canvas')
             const ctx = canvas.getContext('2d')
             if (!ctx) return
             
-            canvas.width = video.videoWidth
-            canvas.height = video.videoHeight
-            ctx.drawImage(video, 0, 0)
+            // 设置合适的缩略图尺寸
+            const maxWidth = 320
+            const maxHeight = 180
+            const aspectRatio = video.videoWidth / video.videoHeight
             
-            const thumbnail = canvas.toDataURL('image/jpeg', 0.8)
+            let width = maxWidth
+            let height = maxHeight
+            
+            if (aspectRatio > maxWidth / maxHeight) {
+              height = maxWidth / aspectRatio
+            } else {
+              width = maxHeight * aspectRatio
+            }
+            
+            canvas.width = width
+            canvas.height = height
+            ctx.drawImage(video, 0, 0, width, height)
+            
+            const thumbnail = canvas.toDataURL('image/jpeg', 0.7)
             setVideoThumbnail(thumbnail)
-            console.log('项目缩略图生成成功')
+            
+            // 缓存缩略图
+            try {
+              localStorage.setItem(thumbnailCacheKey, thumbnail)
+            } catch (e) {
+              // 如果localStorage空间不足，清理旧缓存
+              const keys = Object.keys(localStorage).filter(key => key.startsWith('thumbnail_'))
+              if (keys.length > 50) { // 保留最多50个缩略图缓存
+                keys.slice(0, 10).forEach(key => localStorage.removeItem(key))
+                localStorage.setItem(thumbnailCacheKey, thumbnail)
+              }
+            }
           } catch (error) {
             console.error('生成缩略图失败:', error)
+          } finally {
+            setThumbnailLoading(false)
           }
         }
         
         video.onerror = (error) => {
           console.error('视频加载失败:', error)
+          setThumbnailLoading(false)
         }
         
         video.src = videoUrl
       } catch (error) {
         console.error('生成缩略图时发生错误:', error)
+        setThumbnailLoading(false)
       }
     }
     
     generateThumbnail()
-  }, [project.id, project.video_path])
+  }, [project.id, project.video_path, thumbnailCacheKey])
 
   // 获取项目日志（仅在处理中时）
   useEffect(() => {
@@ -194,7 +234,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
       style={{ 
         width: 200, 
         height: 240,
-        borderRadius: '12px',
+        borderRadius: '6px',
         overflow: 'hidden',
         background: 'linear-gradient(145deg, #1e1e1e 0%, #2a2a2a 100%)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -239,7 +279,29 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
             }
           }}
         >
-          {!videoThumbnail && (
+          {/* 缩略图加载状态 */}
+          {thumbnailLoading && (
+            <div style={{ 
+              textAlign: 'center',
+              color: 'rgba(255, 255, 255, 0.8)'
+            }}>
+              <LoadingOutlined 
+                style={{ 
+                  fontSize: '24px', 
+                  marginBottom: '4px'
+                }} 
+              />
+              <div style={{ 
+                fontSize: '12px',
+                fontWeight: 500
+              }}>
+                生成封面中...
+              </div>
+            </div>
+          )}
+          
+          {/* 无缩略图时的默认显示 */}
+          {!videoThumbnail && !thumbnailLoading && (
             <div style={{ textAlign: 'center' }}>
               <PlayCircleOutlined 
                 style={{ 
@@ -270,7 +332,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
                 style={{
                   background: `${getCategoryInfo(project.video_category).color}15`,
                   border: `1px solid ${getCategoryInfo(project.video_category).color}40`,
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   color: getCategoryInfo(project.video_category).color,
                   fontSize: '10px',
                   fontWeight: 500,
@@ -291,17 +353,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
           {/* 更新时间和操作按钮 - 移动到封面底部 */}
           <div style={{
             position: 'absolute',
-            bottom: '6px',
-            left: '8px',
-            right: '8px',
+            bottom: '0',
+            left: '0',
+            right: '0',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             background: 'rgba(0, 0, 0, 0.7)',
             backdropFilter: 'blur(10px)',
-            borderRadius: '4px',
-            padding: '4px 6px',
-            height: '24px'
+            borderRadius: '0',
+            padding: '6px 8px',
+            height: '28px'
           }}>
             <Text style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.8)' }}>
               {dayjs(project.updated_at).fromNow()}
@@ -445,7 +507,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
             <div style={{ marginBottom: '8px' }}>
                 <div style={{
                   background: 'rgba(0, 0, 0, 0.3)',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   padding: '6px 8px',
                   minHeight: '32px',
                   display: 'flex',
@@ -502,47 +564,26 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
           
           {/* 项目名称 */}
           <div style={{ marginBottom: '12px', position: 'relative' }}>
-            <Text 
-              strong 
-              title={project.name}
-              style={{ 
-                fontSize: '13px', 
-                color: '#ffffff',
-                fontWeight: 600,
-                lineHeight: '16px',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                cursor: 'help',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                 const target = e.currentTarget as HTMLElement
-                 if (target.scrollHeight > target.clientHeight) {
-                   target.style.webkitLineClamp = 'unset'
-                   target.style.maxHeight = 'none'
-                   target.style.background = 'rgba(0, 0, 0, 0.8)'
-                   target.style.padding = '4px'
-                   target.style.borderRadius = '4px'
-                   target.style.zIndex = '10'
-                   target.style.position = 'relative'
-                 }
-               }}
-               onMouseLeave={(e) => {
-                 const target = e.currentTarget as HTMLElement
-                 target.style.webkitLineClamp = '2'
-                 target.style.maxHeight = '32px'
-                 target.style.background = 'transparent'
-                 target.style.padding = '0'
-                 target.style.borderRadius = '0'
-                 target.style.zIndex = 'auto'
-                 target.style.position = 'static'
-               }}
-            >
-              {project.name}
-            </Text>
+            <Tooltip title={project.name} placement="top">
+              <Text 
+                strong 
+                style={{ 
+                  fontSize: '13px', 
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  lineHeight: '16px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  cursor: 'help',
+                  height: '32px'
+                }}
+              >
+                {project.name}
+              </Text>
+            </Tooltip>
           </div>
           
           {/* 状态和统计信息 */}
@@ -560,7 +601,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
                       project.status === 'processing' ? '1px solid rgba(24, 144, 255, 0.3)' :
                       project.status === 'error' ? '1px solid rgba(255, 77, 79, 0.3)' :
                       '1px solid rgba(217, 217, 217, 0.3)',
-              borderRadius: '4px',
+              borderRadius: '3px',
               padding: '4px 6px',
               textAlign: 'center',
               flex: 1
@@ -594,7 +635,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
             <div style={{
               background: 'rgba(102, 126, 234, 0.15)',
               border: '1px solid rgba(102, 126, 234, 0.3)',
-              borderRadius: '4px',
+              borderRadius: '3px',
               padding: '4px 6px',
               textAlign: 'center',
               flex: 1
@@ -611,7 +652,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
             <div style={{
               background: 'rgba(118, 75, 162, 0.15)',
               border: '1px solid rgba(118, 75, 162, 0.3)',
-              borderRadius: '4px',
+              borderRadius: '3px',
               padding: '4px 6px',
               textAlign: 'center',
               flex: 1

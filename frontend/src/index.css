@@ -597,7 +597,6 @@ body {
 .upload-area:hover {
   border-color: #4facfe !important;
   background: rgba(79, 172, 254, 0.08) !important;
-  transform: translateY(-2px) !important;
   box-shadow: 0 8px 32px rgba(79, 172, 254, 0.2) !important;
 }
 
@@ -608,7 +607,6 @@ body {
 .upload-area.dragover {
   border-color: #4facfe !important;
   background: rgba(79, 172, 254, 0.15) !important;
-  transform: translateY(-4px) scale(1.02) !important;
   box-shadow: 0 12px 40px rgba(79, 172, 254, 0.3) !important;
 }
 

@@ -223,12 +223,11 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
     }}>
 
       {/* 输入表单 */}
-      <div style={{ marginBottom: '24px' }}>
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
+      <div style={{ marginBottom: '16px' }}>
+        <Space direction="vertical" style={{ width: '100%' }} size={16}>
           <div>
-            <Text style={{ color: '#ffffff', marginBottom: '12px', display: 'block', fontSize: '16px', fontWeight: 500 }}>B站视频链接</Text>
             <Input.TextArea
-              placeholder="请粘贴B站视频链接，支持：\n• https://www.bilibili.com/video/BV1xx411c7mu\n• https://b23.tv/xxxxxxx"
+              placeholder="请粘贴B站视频链接，支持：• https://www.bilibili.com/video/BV1xx411c7mu • https://b23.tv/xxxxxxx"
               value={url}
               onChange={(e) => {
                 setUrl(e.target.value)
@@ -250,7 +249,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
               style={{
                 background: 'rgba(38, 38, 38, 0.8)',
                 border: '1px solid rgba(79, 172, 254, 0.3)',
-                borderRadius: '12px',
+                borderRadius: '8px',
                 color: '#ffffff',
                 fontSize: '14px',
                 resize: 'none'
@@ -289,9 +288,9 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
             <div style={{
               background: 'rgba(102, 126, 234, 0.1)',
               border: '1px solid rgba(102, 126, 234, 0.3)',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '12px'
             }}>
               <Text style={{ color: '#667eea', fontWeight: 600, fontSize: '16px', display: 'block', marginBottom: '8px' }}>
                 视频信息解析成功
@@ -420,7 +419,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
 
       {/* 操作按钮 - 只有解析成功后才显示 */}
       {videoInfo && (
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', gap: '12px' }}>
+        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center', gap: '12px' }}>
           <Button
             type="primary"
             icon={<DownloadOutlined />}
@@ -469,11 +468,11 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
           style={{
             background: 'rgba(38, 38, 38, 0.8)',
             border: '1px solid rgba(79, 172, 254, 0.3)',
-            borderRadius: '16px',
-            marginTop: '24px',
+            borderRadius: '12px',
+            marginTop: '16px',
             backdropFilter: 'blur(10px)'
           }}
-          bodyStyle={{ padding: '24px' }}
+          bodyStyle={{ padding: '16px' }}
         >
           <div style={{ marginBottom: '16px' }}>
             <Text style={{ color: '#ffffff', fontWeight: 600, fontSize: '18px' }}>导入进度</Text>
