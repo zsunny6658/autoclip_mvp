@@ -84,6 +84,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       return
     }
 
+    if (!files.srt) {
+      message.error('请同时导入字幕文件(.srt)')
+      return
+    }
+
     if (!projectName.trim()) {
       message.error('请输入项目名称')
       return
@@ -214,7 +219,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
             {isDragActive ? '松开鼠标导入文件' : '点击或拖拽文件到此区域'}
           </Text>
           <Text style={{ color: '#cccccc', fontSize: '14px', lineHeight: '1.5' }}>
-            支持单个或批量导入，支持 MP4、AVI、MOV、MKV、WebM 格式，可同时导入字幕文件(.srt)
+            支持 MP4、AVI、MOV、MKV、WebM 格式，<Text style={{ color: '#ff9500', fontWeight: 600 }}>必须同时导入字幕文件(.srt)</Text>
           </Text>
         </div>
       </div>
@@ -406,6 +411,25 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
               </div>
             )}
           </Space>
+          
+          {/* 缺少字幕文件提示 */}
+          {files.video && !files.srt && (
+            <div style={{
+              marginTop: '12px',
+              padding: '12px 16px',
+              background: 'rgba(255, 149, 0, 0.1)',
+              border: '1px solid rgba(255, 149, 0, 0.3)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <SubnodeOutlined style={{ color: '#ff9500', fontSize: '16px' }} />
+              <Text style={{ color: '#ff9500', fontSize: '14px', fontWeight: 500 }}>
+                请添加字幕文件(.srt)以完成导入
+              </Text>
+            </div>
+          )}
         </div>
       )}
 
@@ -450,7 +474,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
             type="primary" 
             size="large"
             loading={uploading}
-            disabled={!files.video || !projectName.trim()}
+            disabled={!files.video || !files.srt || !projectName.trim()}
             onClick={handleUpload}
             style={{
               height: '48px',

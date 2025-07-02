@@ -172,7 +172,7 @@ const HomePage: React.FC = () => {
                    }}
                    onClick={() => setActiveTab('bilibili')}
                  >
-                   📺 B站链接
+                   📺 链接导入
                  </button>
                 <button 
                    style={{
@@ -189,7 +189,7 @@ const HomePage: React.FC = () => {
                    }}
                    onClick={() => setActiveTab('upload')}
                  >
-                   📁 文件上传
+                   📁 文件导入
                  </button>
               </div>
               
