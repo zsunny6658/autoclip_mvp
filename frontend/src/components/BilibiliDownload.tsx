@@ -299,7 +299,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
                 {videoInfo.title}
               </Text>
               <Text style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>
-                UP主: {videoInfo.uploader || '未知'} • 时长: {videoInfo.duration ? `${Math.floor(videoInfo.duration / 60)}:${String(videoInfo.duration % 60).padStart(2, '0')}` : '未知'}
+                UP主: {videoInfo.uploader || '未知'} • 时长: {videoInfo.duration ? `${Math.floor(videoInfo.duration / 60)}:${String(Math.floor(videoInfo.duration % 60)).padStart(2, '0')}` : '未知'}
               </Text>
             </div>
           )}
