@@ -2196,12 +2196,12 @@
     "clips": [
       {
         "id": "1",
-        "title": "频道十年发展回顾与数据积累",
+        "title": null,
         "start_time": "00:00:34,360",
         "end_time": "00:01:39,449",
         "final_score": 0.85,
         "recommend_reason": "真实复盘草根成长路径，引发自媒体人强烈共鸣与反思。",
-        "generated_title": null,
+        "generated_title": "从零起步到三年停滞，一个频道的草根成长复盘",
         "outline": "频道十年发展回顾与数据积累",
         "content": [
           "主播介绍频道从2016年起步时的内容形式与平台",
@@ -2213,12 +2213,12 @@
       },
       {
         "id": "2",
-        "title": "爆款视频带来的爆发式增长",
+        "title": null,
         "start_time": "00:01:39,449",
         "end_time": "00:02:32,300",
         "final_score": 0.93,
         "recommend_reason": "揭秘爆款底层逻辑，直击流量跃迁关键转折点，极具启发性。",
-        "generated_title": null,
+        "generated_title": "一个视频粉丝翻倍，爆款如何改变内容生态？",
         "outline": "爆款视频带来的爆发式增长",
         "content": [
           "2019年第一个爆款视频《20万粉丝赚多少钱》的出现",
@@ -2230,12 +2230,12 @@
       },
       {
         "id": "3",
-        "title": "播放量与涨粉率不匹配的现象分析",
+        "title": null,
         "start_time": "00:02:55,200",
         "end_time": "00:03:52,920",
         "final_score": 0.88,
         "recommend_reason": "深度剖析流量泡沫现象，揭示平台机制下隐藏的真实运营逻辑。",
-        "generated_title": null,
+        "generated_title": "播放量高却不涨粉？平台推荐机制正在制造流量泡沫",
         "outline": "播放量与涨粉率不匹配的现象分析",
         "content": [
           "播放量高但涨粉少的原因探讨",
@@ -2247,12 +2247,12 @@
       },
       {
         "id": "4",
-        "title": "平台爆款逻辑的理解与应对策略",
+        "title": null,
         "start_time": "00:03:52,920",
         "end_time": "00:06:32,060",
         "final_score": 0.95,
         "recommend_reason": "从底层逻辑到实战技巧，教你打造真正具备爆点基因的封面与内容组合。",
-        "generated_title": null,
+        "generated_title": "点击率和观看时长才是王道，封面设计如何真正提升点击？",
         "outline": "平台爆款逻辑的理解与应对策略",
         "content": [
           "点击率（CCTR）与观看时长（AVD）作为核心指标",
@@ -2264,12 +2264,12 @@
       },
       {
         "id": "5",
-        "title": "封面优化流程与AI辅助生成实践",
+        "title": null,
         "start_time": "00:06:32,060",
         "end_time": "00:08:15,380",
         "final_score": 0.91,
         "recommend_reason": "实用干货密集，展示如何用AI+协作工具高效提升内容点击率。",
-        "generated_title": null,
+        "generated_title": "AI+协作工具，中小自媒体也能高效优化封面设计",
         "outline": "封面优化流程与AI辅助生成实践",
         "content": [
           "提前制作封面并进行内部投票判断可行性",
@@ -2281,12 +2281,12 @@
       },
       {
         "id": "6",
-        "title": "内容留存与观众粘性提升策略",
+        "title": null,
         "start_time": "00:08:15,380",
         "end_time": "00:12:07,350",
         "final_score": 0.94,
         "recommend_reason": "从数据洞察到实操拆解，全面解析提升完播率与用户粘性的硬核技巧。",
-        "generated_title": null,
+        "generated_title": "观众为何留不住？从平均播放时长看内容结构优化策略",
         "outline": "内容留存与观众粘性提升策略",
         "content": [
           "观众点进来后如何留住：平均播放时长与百分比的重要性",
@@ -2298,12 +2298,12 @@
       },
       {
         "id": "7",
-        "title": "创作者人感失准问题与反馈机制创新",
+        "title": null,
         "start_time": "00:12:07,350",
         "end_time": "00:14:00,620",
         "final_score": 0.9,
         "recommend_reason": "前沿探索创作者自我认知盲区，提供AI+数据双驱动解决方案。",
-        "generated_title": null,
+        "generated_title": "创作者容易自我感动？AI反馈系统帮你打破认知盲区",
         "outline": "创作者人感失准问题与反馈机制创新",
         "content": [
           "自嗨式创作的风险与识别方式（如现场观看流汗反应）",
@@ -2315,12 +2315,12 @@
       },
       {
         "id": "8",
-        "title": "内容价值量化与数据驱动的意义反思",
+        "title": null,
         "start_time": "00:14:00,620",
         "end_time": "00:15:04,930",
         "final_score": 0.89,
         "recommend_reason": "理性思辨数据主义边界，为内容创业者提供清醒的价值指南。",
-        "generated_title": null,
+        "generated_title": "数据真的能衡量内容价值吗？一个理性思辨指南",
         "outline": "内容价值量化与数据驱动的意义反思",
         "content": [
           "反思数据是否真的能衡量内容价值",
@@ -2332,12 +2332,12 @@
       },
       {
         "id": "9",
-        "title": "工具产品推广与合作信息",
+        "title": null,
         "start_time": "00:15:04,930",
         "end_time": "00:15:30,840",
         "final_score": 0.75,
         "recommend_reason": "自然植入产品亮点，结合实际应用场景增强可信度与吸引力。",
-        "generated_title": null,
+        "generated_title": "飞书多维表格独立上线，如何用AI工具提升内容效率？",
         "outline": "工具产品推广与合作信息",
         "content": [
           "飞书多维表格产品独立上线及功能优势介绍",
@@ -3062,111 +3062,125 @@
     "video_category": "default",
     "clips": [
       {
+        "id": "1",
+        "title": null,
+        "start_time": "00:00:17,520",
+        "end_time": "00:02:37,510",
+        "final_score": 0.91,
+        "recommend_reason": "直击散户心理痛点，提供实用的情绪管理策略，极具现实指导意义。",
+        "generated_title": "面对嘈杂投资环境，如何守住账户主人意识保持独立判断？",
         "outline": "投资者心态与社交环境干扰应对",
         "content": [
           "面对公务员型股民社交圈的心理调适方法",
           "如何在嘈杂投资环境中保持独立判断和稳定心态",
           "强调账户主人意识，避免受他人情绪带动操作"
         ],
-        "start_time": "00:00:17,520",
-        "end_time": "00:02:37,510",
-        "chunk_index": 0,
-        "id": "1",
-        "final_score": 0.91,
-        "recommend_reason": "直击散户心理痛点，提供实用的情绪管理策略，极具现实指导意义。",
-        "title": "投资者心态与社交环境干扰应对"
+        "chunk_index": 0
       },
       {
+        "id": "2",
+        "title": null,
+        "start_time": "00:02:39,010",
+        "end_time": "00:08:48,590",
+        "final_score": 0.94,
+        "recommend_reason": "用真实案例拆解交易误区，逻辑清晰，极具说服力与警示价值。",
+        "generated_title": "追高固态电池错在哪？从‘射击之星’形态看真实交易失误案例",
         "outline": "交易纪律与实战案例分析",
         "content": [
           "对追高固态电池板块的批评与技术面分析",
           "回顾周三直播中对固态板块走势的预判依据",
           "分析某用户“射击之星”形态后冲高买入的失误"
         ],
-        "start_time": "00:02:39,010",
-        "end_time": "00:08:48,590",
-        "chunk_index": 0,
-        "id": "2",
-        "final_score": 0.94,
-        "recommend_reason": "用真实案例拆解交易误区，逻辑清晰，极具说服力与警示价值。",
-        "title": "交易纪律与实战案例分析"
+        "chunk_index": 0
       },
       {
+        "id": "3",
+        "title": null,
+        "start_time": "00:08:56,400",
+        "end_time": "00:11:43,990",
+        "final_score": 0.86,
+        "recommend_reason": "真实成长故事增强信任感，强化交易系统可复制的理念，激励性强。",
+        "generated_title": "从学生到少妇战法月赚22%，这套交易系统真的可以复制！",
         "outline": "粉丝成长反馈与交易模式复制",
         "content": [
           "粉丝分享通过少妇战法实现月盈利22%的经验",
           "老粉从学生时代跟随至今的成长历程与感慨",
           "强调坚持交易系统、复制成功经验的重要性"
         ],
-        "start_time": "00:08:56,400",
-        "end_time": "00:11:43,990",
-        "chunk_index": 0,
-        "id": "3",
-        "final_score": 0.86,
-        "recommend_reason": "真实成长故事增强信任感，强化交易系统可复制的理念，激励性强。",
-        "title": "粉丝成长反馈与交易模式复制"
+        "chunk_index": 0
       },
       {
+        "id": "4",
+        "title": null,
+        "start_time": "00:11:43,990",
+        "end_time": "00:14:35,310",
+        "final_score": 0.9,
+        "recommend_reason": "重塑交易底层逻辑，帮助投资者走出情绪陷阱，建立理性风控体系。",
+        "generated_title": "亏损2.5%就扛不住了？止损是成本，盈亏比必须至少2:1！",
         "outline": "净值回撤认知与盈亏比理念教育",
         "content": [
           "对亏损1.7%、2.5%用户的开导与认知调整",
           "提出盈亏比至少2:1的交易底线原则",
           "强调止损是交易成本的一部分，必须接受"
         ],
-        "start_time": "00:11:43,990",
-        "end_time": "00:14:35,310",
-        "chunk_index": 0,
-        "id": "4",
-        "final_score": 0.9,
-        "recommend_reason": "重塑交易底层逻辑，帮助投资者走出情绪陷阱，建立理性风控体系。",
-        "title": "净值回撤认知与盈亏比理念教育"
+        "chunk_index": 0
       },
       {
+        "id": "5",
+        "title": null,
+        "start_time": "00:17:30,070",
+        "end_time": "00:22:48,590",
+        "final_score": 0.89,
+        "recommend_reason": "破除技术迷信，厘清三大分析维度关系，提升观众整体认知格局。",
+        "generated_title": "MACD不是万能钥匙，技术面到底该听谁的？",
         "outline": "交易认知误区纠正与指标理解",
         "content": [
           "解释MACD大幅值只是概率优势，非确定性信号",
           "指出技术面最脆弱，需服从消息面和基本面",
           "强调市场不存在百分百确定性规律"
         ],
-        "start_time": "00:17:30,070",
-        "end_time": "00:22:48,590",
-        "chunk_index": 0,
-        "id": "5",
-        "final_score": 0.89,
-        "recommend_reason": "破除技术迷信，厘清三大分析维度关系，提升观众整体认知格局。",
-        "title": "交易认知误区纠正与指标理解"
+        "chunk_index": 0
       },
       {
+        "id": "6",
+        "title": null,
+        "start_time": "00:22:57,670",
+        "end_time": "00:24:25,990",
+        "final_score": 0.78,
+        "recommend_reason": "结合城市发展脉络给出个性化职业建议，具有现实参考价值。",
+        "generated_title": "东莞逻辑变了，化学老师要转行？这届城市趋势你得懂！",
         "outline": "城市趋势与职业发展建议",
         "content": [
           "回应城市与行业十大城市的逻辑未变",
           "建议高中化学老师考虑空间转换寻求发展",
           "提醒东莞未来发展逻辑已改变，需考虑转型"
         ],
-        "start_time": "00:22:57,670",
-        "end_time": "00:24:25,990",
-        "chunk_index": 0,
-        "id": "6",
-        "final_score": 0.78,
-        "recommend_reason": "结合城市发展脉络给出个性化职业建议，具有现实参考价值。",
-        "title": "城市趋势与职业发展建议"
+        "chunk_index": 0
       },
       {
+        "id": "7",
+        "title": null,
+        "start_time": "00:24:31,900",
+        "end_time": "00:27:45,840",
+        "final_score": 0.72,
+        "recommend_reason": "轻松话题穿插调节气氛，展现主播人格魅力，增强粉丝粘性。",
+        "generated_title": "双鱼座爱幻想也能成事？主播用恋爱礼物梗带你轻松一刻",
         "outline": "互动问答与生活话题延伸",
         "content": [
           "对恋爱关系中礼物选择的幽默回应",
           "双鱼座幻想特质的正面解读与人生价值肯定",
           "对粉丝提问风格的调侃与互动氛围维护"
         ],
-        "start_time": "00:24:31,900",
-        "end_time": "00:27:45,840",
-        "chunk_index": 0,
-        "id": "7",
-        "final_score": 0.72,
-        "recommend_reason": "轻松话题穿插调节气氛，展现主播人格魅力，增强粉丝粘性。",
-        "title": "互动问答与生活话题延伸"
+        "chunk_index": 0
       },
       {
+        "id": "8",
+        "title": null,
+        "start_time": "00:27:48,100",
+        "end_time": "00:30:59,960",
+        "final_score": 0.95,
+        "recommend_reason": "实战性强，逻辑清晰，为股民提供可落地的操作体系和风控策略。",
+        "generated_title": "三选一组、板块构建、控仓纪律，这套股票操作体系让投资更有序",
         "outline": "股票战法实践与操作策略",
         "content": [
           "如何通过三选一组的方式优化选股操作",
@@ -3174,15 +3188,16 @@
           "板块指数构建思路：将自选股票组合成板块进行观察与操作",
           "仓位控制与纪律执行的重要性：如何避免乱加仓导致节奏混乱"
         ],
-        "start_time": "00:27:48,100",
-        "end_time": "00:30:59,960",
-        "chunk_index": 1,
-        "id": "8",
-        "final_score": 0.95,
-        "recommend_reason": "实战性强，逻辑清晰，为股民提供可落地的操作体系和风控策略。",
-        "title": "股票战法实践与操作策略"
+        "chunk_index": 1
       },
       {
+        "id": "9",
+        "title": null,
+        "start_time": "00:30:59,960",
+        "end_time": "00:37:36,870",
+        "final_score": 0.82,
+        "recommend_reason": "社群运营有温度也有原则，展现圈层文化构建的独特思考。",
+        "generated_title": "从粉色门槛到互动氛围，这个车主社群的运营有多有温度又有原则",
         "outline": "预期白粉会线下交流群的建立与管理原则",
         "content": [
           "白粉会建群初心：打造志同道合车主的线下交流平台",
@@ -3190,30 +3205,32 @@
           "强调纯粹性，不涉及监管规避等敏感问题",
           "群体互动氛围营造：增进感情、探讨市场趋势"
         ],
-        "start_time": "00:30:59,960",
-        "end_time": "00:37:36,870",
-        "chunk_index": 1,
-        "id": "9",
-        "final_score": 0.82,
-        "recommend_reason": "社群运营有温度也有原则，展现圈层文化构建的独特思考。",
-        "title": "预期白粉会线下交流群的建立与管理原则"
+        "chunk_index": 1
       },
       {
+        "id": "10",
+        "title": null,
+        "start_time": "00:37:36,870",
+        "end_time": "00:43:49,320",
+        "final_score": 0.88,
+        "recommend_reason": "聚焦真实房产处置难题，给出务实可行的区域化投资判断。",
+        "generated_title": "福州刚需该不该入场？杭州运河边房产如何处理？一文看懂真实房产处置策略",
         "outline": "房产投资与处理建议",
         "content": [
           "福州刚需购房环境分析：当前是否合适入场",
           "杭城拱墅区大运河附近房产闲置处理建议：优先考虑出售",
           "出售前提条件：若无稳定租金收益且需还贷则果断出手"
         ],
-        "start_time": "00:37:36,870",
-        "end_time": "00:43:49,320",
-        "chunk_index": 1,
-        "id": "10",
-        "final_score": 0.88,
-        "recommend_reason": "聚焦真实房产处置难题，给出务实可行的区域化投资判断。",
-        "title": "房产投资与处理建议"
+        "chunk_index": 1
       },
       {
+        "id": "11",
+        "title": null,
+        "start_time": "00:43:49,320",
+        "end_time": "00:51:43,950",
+        "final_score": 0.9,
+        "recommend_reason": "深度剖析教育投资回报，为职业转型与城市选择提供关键决策参考。",
+        "generated_title": "读MBA值不值？体制内要不要辞职？教育投资与职场发展深度建议来了",
         "outline": "教育投资价值分析与职场发展建议",
         "content": [
           "高金/NBA课程的价值评估：核心在于校友资源而非知识本身",
@@ -3221,15 +3238,16 @@
           "体制内辞职建议：结合年龄与发展空间综合判断",
           "重庆与成都工作选择建议：体制内外转换的风险与机会"
         ],
-        "start_time": "00:43:49,320",
-        "end_time": "00:51:43,950",
-        "chunk_index": 1,
-        "id": "11",
-        "final_score": 0.9,
-        "recommend_reason": "深度剖析教育投资回报，为职业转型与城市选择提供关键决策参考。",
-        "title": "教育投资价值分析与职场发展建议"
+        "chunk_index": 1
       },
       {
+        "id": "12",
+        "title": null,
+        "start_time": "00:51:43,950",
+        "end_time": "00:52:34,294",
+        "final_score": 0.75,
+        "recommend_reason": "贴近粉丝互动，兼具答疑解惑与风险提示，但内容略显碎片化。",
+        "generated_title": "生日祝福感谢、技术指标答疑、舆论干扰提醒，这场直播互动信息量很大",
         "outline": "直播间互动与用户提问回应汇总",
         "content": [
           "回应生日祝福与私信回复延迟致歉",
@@ -3237,33 +3255,48 @@
           "对筹码分布与主力控盘关系的简要说明",
           "指出部分弹幕存在金融舆论战干扰现象并建议拉黑处理"
         ],
-        "start_time": "00:51:43,950",
+        "chunk_index": 1
+      },
+      {
+        "id": "17",
+        "title": null,
+        "start_time": "00:58:14,300",
         "end_time": "00:52:34,294",
-        "chunk_index": 1,
-        "id": "12",
-        "final_score": 0.75,
-        "recommend_reason": "贴近粉丝互动，兼具答疑解惑与风险提示，但内容略显碎片化。",
-        "title": "直播间互动与用户提问回应汇总"
+        "final_score": 0.89,
+        "recommend_reason": "前瞻性强，逻辑严密，为投资者提供明确的行情预判与节奏把握依据。",
+        "generated_title": "七月稳上3400，八月稳住节奏，这轮行情主线即将迎来反弹？",
+        "outline": "市场观点与行情展望",
+        "content": [
+          "对七月行情的判断：稳台阶式上涨至3400点",
+          "八月目标：八月中旬前维持3400点稳定",
+          "市场主题轮动逻辑：主线下跌后可能迎来反弹周期"
+        ],
+        "chunk_index": 1
       },
       {
         "id": "13",
+        "title": null,
         "start_time": "00:53:12,320",
         "end_time": "00:54:05,141",
+        "final_score": 0.85,
+        "recommend_reason": "实用性强，有效提升互动效率，帮助创作者建立高质量粉丝沟通机制。",
+        "generated_title": "观众提问太啰嗦？教你高效互动的三个实用技巧",
         "outline": "互动交流与观众提问引导",
         "content": [
           "引导观众精简提问内容，避免冗长小作文",
           "对私信提问格式提出建议（控制在200字以内）",
           "回应部分观众的称呼与互动方式"
         ],
-        "chunk_index": 2,
-        "final_score": 0.85,
-        "recommend_reason": "实用性强，有效提升互动效率，帮助创作者建立高质量粉丝沟通机制。",
-        "title": "互动交流与观众提问引导"
+        "chunk_index": 2
       },
       {
         "id": "14",
+        "title": null,
         "start_time": "00:54:05,160",
         "end_time": "00:55:01,000",
+        "final_score": 0.72,
+        "recommend_reason": "聚焦潮流文化热点，融合明星代言与产品设计动态，吸引球鞋圈层关注。",
+        "generated_title": "AJ39配色争议未平，AJ40能否接棒引爆球鞋市场？",
         "outline": "球鞋相关讨论与市场观察",
         "content": [
           "关于AJ39、AJ40配色问题的探讨",
@@ -3271,30 +3304,32 @@
           "对AJ40尚未发布情况的分析和推测",
           "提到杨瀚森的职业前景与性格特点对比"
         ],
-        "chunk_index": 2,
-        "final_score": 0.72,
-        "recommend_reason": "聚焦潮流文化热点，融合明星代言与产品设计动态，吸引球鞋圈层关注。",
-        "title": "球鞋相关讨论与市场观察"
+        "chunk_index": 2
       },
       {
         "id": "15",
+        "title": null,
         "start_time": "00:55:30,900",
         "end_time": "00:56:17,276",
+        "final_score": 0.88,
+        "recommend_reason": "深度解析舆论生成机制，观点犀利，具备较强的现实映射与社会洞察力。",
+        "generated_title": "热搜热度能持续多久？从苏超看网络舆论的爆发逻辑",
         "outline": "社交媒体与舆论现象点评",
         "content": [
           "苏超舆论热度是否会再现第二波",
           "认为热度依赖临川持续输球表现",
           "对网络热搜与情绪传播机制的看法"
         ],
-        "chunk_index": 2,
-        "final_score": 0.88,
-        "recommend_reason": "深度解析舆论生成机制，观点犀利，具备较强的现实映射与社会洞察力。",
-        "title": "社交媒体与舆论现象点评"
+        "chunk_index": 2
       },
       {
         "id": "16",
+        "title": null,
         "start_time": "00:56:17,290",
         "end_time": "00:58:00,170",
+        "final_score": 0.93,
+        "recommend_reason": "逻辑清晰，跨界类比生动，提供实用消费决策参考，极具大众传播潜力。",
+        "generated_title": "制造业老司机分享：买车别抢首批现车，第二批更香",
         "outline": "制造业经验分享与购车建议",
         "content": [
           "分享制造业生产流程中的试产与改进机制",
@@ -3302,53 +3337,37 @@
           "推荐等待反馈优化后的第二批车辆",
           "结合自身购车经历（苏七）说明质量改善过程"
         ],
-        "chunk_index": 2,
-        "final_score": 0.93,
-        "recommend_reason": "逻辑清晰，跨界类比生动，提供实用消费决策参考，极具大众传播潜力。",
-        "title": "制造业经验分享与购车建议"
-      },
-      {
-        "outline": "市场观点与行情展望",
-        "content": [
-          "对七月行情的判断：稳台阶式上涨至3400点",
-          "八月目标：八月中旬前维持3400点稳定",
-          "市场主题轮动逻辑：主线下跌后可能迎来反弹周期"
-        ],
-        "start_time": "00:58:14,300",
-        "end_time": "00:52:34,294",
-        "chunk_index": 1,
-        "id": "17",
-        "final_score": 0.89,
-        "recommend_reason": "前瞻性强，逻辑严密，为投资者提供明确的行情预判与节奏把握依据。",
-        "title": "市场观点与行情展望"
+        "chunk_index": 2
       },
       {
         "id": "18",
+        "title": null,
         "start_time": "00:59:24,720",
         "end_time": "00:59:48,120",
+        "final_score": 0.81,
+        "recommend_reason": "专业术语通俗化表达，直击投资者心理，有助于激发理性投资思考。",
+        "generated_title": "爆品板块为何股价下行？融资增加到底意味着什么？",
         "outline": "投资与交易板块问题回应",
         "content": [
           "回应关于爆品板块、股价下行与融资增加的关系",
           "解释“有人抄底”的逻辑与市场行为判断"
         ],
-        "chunk_index": 2,
-        "final_score": 0.81,
-        "recommend_reason": "专业术语通俗化表达，直击投资者心理，有助于激发理性投资思考。",
-        "title": "投资与交易板块问题回应"
+        "chunk_index": 2
       },
       {
         "id": "19",
+        "title": null,
         "start_time": "00:59:57,460",
         "end_time": "01:00:02,360",
+        "final_score": 0.76,
+        "recommend_reason": "紧贴青年成长痛点，观点明确，适合作为职场启蒙话题引发广泛共鸣。",
+        "generated_title": "经济学专业不学技术行不行？大学期间这些技能必须掌握",
         "outline": "教育与职业发展建议补充",
         "content": [
           "回应经济学专业学生对“掌握技术”的疑问",
           "强调大学阶段掌握实际技能的重要性"
         ],
-        "chunk_index": 2,
-        "final_score": 0.76,
-        "recommend_reason": "紧贴青年成长痛点，观点明确，适合作为职场启蒙话题引发广泛共鸣。",
-        "title": "教育与职业发展建议补充"
+        "chunk_index": 2
       }
     ],
     "collections": [
@@ -3357,10 +3376,13 @@
         "collection_title": "投资逻辑实战",
         "collection_summary": "涵盖交易系统构建、止损策略与实战案例，提升投资者理性决策能力。",
         "clip_ids": [
-          "8",
+          "2",
+          "1",
           "4",
-          "2"
-        ]
+          "3"
+        ],
+        "collection_type": "ai_recommended",
+        "created_at": null
       },
       {
         "id": "2",
@@ -3368,28 +3390,36 @@
         "collection_summary": "聚焦市场走势预判与情绪控制技巧，帮助散户建立独立判断体系。",
         "clip_ids": [
           "1",
-          "17",
-          "5"
-        ]
+          "5",
+          "4",
+          "2",
+          "3"
+        ],
+        "collection_type": "ai_recommended",
+        "created_at": null
       },
       {
         "id": "3",
         "collection_title": "房产与消费决策",
         "collection_summary": "结合城市趋势与消费心理，提供务实可行的投资与购买建议。",
         "clip_ids": [
-          "10",
           "16",
-          "18"
-        ]
+          "18",
+          "10"
+        ],
+        "collection_type": "ai_recommended",
+        "created_at": null
       },
       {
         "id": "4",
         "collection_title": "职场发展与教育投资",
         "collection_summary": "探讨职业转型路径与教育回报率，助力青年成长与技能提升。",
         "clip_ids": [
-          "11",
-          "19"
-        ]
+          "19",
+          "11"
+        ],
+        "collection_type": "ai_recommended",
+        "created_at": null
       },
       {
         "id": "5",
@@ -3398,7 +3428,9 @@
         "clip_ids": [
           "12",
           "13"
-        ]
+        ],
+        "collection_type": "ai_recommended",
+        "created_at": null
       }
     ],
     "current_step": null,
@@ -3764,8 +3796,11 @@
         "collection_summary": "从认知提升到情绪管理，助你建立理性投资思维体系。",
         "clip_ids": [
           "13",
+          "12",
           "11",
-          "12"
+          "2",
+          "1",
+          "3"
         ],
         "collection_type": "ai_recommended",
         "created_at": null

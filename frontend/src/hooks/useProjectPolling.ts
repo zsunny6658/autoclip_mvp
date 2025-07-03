@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { projectApi } from '../services/api'
-import { Project } from '../store/useProjectStore'
+import { Project, useProjectStore } from '../store/useProjectStore'
 
 interface UseProjectPollingOptions {
   interval?: number // 轮询间隔，默认10秒
@@ -14,8 +14,9 @@ export const useProjectPolling = ({
   enabled = true
 }: UseProjectPollingOptions = {}) => {
   const [isPolling, setIsPolling] = useState(false)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const intervalRef = useRef<number | null>(null)
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now())
+  const isDragging = useProjectStore(state => state.isDragging)
 
   const startPolling = () => {
     if (!enabled || intervalRef.current) return
@@ -24,6 +25,12 @@ export const useProjectPolling = ({
     
     const poll = async () => {
       try {
+        // 如果正在拖拽，跳过这次轮询
+        if (isDragging) {
+          console.log('Skipping poll: dragging in progress')
+          return
+        }
+        
         const projects = await projectApi.getProjects()
         const hasProcessingProjects = projects.some(p => p.status === 'processing')
         

@@ -37,6 +37,7 @@ import CollectionCard from '../components/CollectionCard'
 import CollectionCardMini from '../components/CollectionCardMini'
 import CollectionPreviewModal from '../components/CollectionPreviewModal'
 import CreateCollectionModal from '../components/CreateCollectionModal'
+import { useCollectionVideoDownload } from '../hooks/useCollectionVideoDownload'
 
 const { Content } = Layout
 const { Title, Text } = Typography
@@ -57,7 +58,8 @@ const ProjectDetailPage: React.FC = () => {
     addCollection,
     deleteCollection,
     removeClipFromCollection,
-    reorderCollectionClips
+    reorderCollectionClips,
+    addClipToCollection
   } = useProjectStore()
   
   const [processingStatus, setProcessingStatus] = useState<any>(null)
@@ -68,13 +70,17 @@ const ProjectDetailPage: React.FC = () => {
   const [progressCollapsed, setProgressCollapsed] = useState(false)
   const [showCollectionDetail, setShowCollectionDetail] = useState(false)
   const [selectedCollection, setSelectedCollection] = useState<any>(null)
+  const { generateAndDownloadCollectionVideo } = useCollectionVideoDownload()
 
   useEffect(() => {
     if (id) {
-      loadProject()
+      // 只有当store中没有currentProject或者currentProject的id与当前id不匹配时才重新加载
+      if (!currentProject || currentProject.id !== id) {
+        loadProject()
+      }
       loadProcessingStatus()
     }
-  }, [id])
+  }, [id, currentProject])
 
   // 当任务完成时自动折叠进度显示
   useEffect(() => {
@@ -219,17 +225,17 @@ const ProjectDetailPage: React.FC = () => {
     }
     
     try {
-      await projectApi.createCollection(currentProject.id, {
+      const newCollection = await projectApi.createCollection(currentProject.id, {
         collection_title: title,
         collection_summary: summary,
         clip_ids: clipIds
       })
       
+      // 使用store方法更新状态，而不是重新加载
+      addCollection(currentProject.id, newCollection)
+      
       message.success('合集创建成功')
       setShowCreateCollection(false)
-      
-      // 重新加载项目数据
-      loadProject()
     } catch (error) {
       console.error('创建合集失败:', error)
       message.error('创建合集失败')
@@ -241,9 +247,16 @@ const ProjectDetailPage: React.FC = () => {
     setShowCollectionDetail(true)
   }
 
-  const handleRemoveClipFromCollection = (collectionId: string, clipId: string) => {
+  const handleRemoveClipFromCollection = async (collectionId: string, clipId: string): Promise<void> => {
     if (!id) return
-    removeClipFromCollection(id, collectionId, clipId)
+    try {
+      await removeClipFromCollection(id, collectionId, clipId)
+      message.success('切片移除成功')
+    } catch (error) {
+      console.error('Failed to remove clip from collection:', error)
+      message.error('移除切片失败')
+      throw error // 重新抛出错误，让调用方知道操作失败
+    }
   }
 
   const handleDeleteCollection = async (collectionId: string) => {
@@ -263,9 +276,28 @@ const ProjectDetailPage: React.FC = () => {
     }
   }
 
-  const handleReorderCollectionClips = (collectionId: string, newClipIds: string[]) => {
+  const handleReorderCollectionClips = async (collectionId: string, newClipIds: string[]): Promise<void> => {
     if (!id) return
-    reorderCollectionClips(id, collectionId, newClipIds)
+    try {
+      await reorderCollectionClips(id, collectionId, newClipIds)
+      message.success('切片顺序调整成功')
+    } catch (error) {
+      console.error('Failed to reorder collection clips:', error)
+      message.error('调整切片顺序失败')
+      throw error // 重新抛出错误，让调用方知道操作失败
+    }
+  }
+
+  const handleAddClipToCollection = async (collectionId: string, clipIds: string[]): Promise<void> => {
+    if (!id) return
+    try {
+      await addClipToCollection(id, collectionId, clipIds)
+      message.success(`成功添加 ${clipIds.length} 个切片到合集`)
+    } catch (error) {
+      console.error('Failed to add clips to collection:', error)
+      message.error('添加切片到合集失败')
+      throw error // 重新抛出错误，让调用方知道操作失败
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -428,9 +460,15 @@ const ProjectDetailPage: React.FC = () => {
                     collection={collection}
                     clips={currentProject.clips || []}
                     onView={handleViewCollection}
-                    onGenerateVideo={(collectionId) => {
-                      message.info('开始生成合集视频...')
-                      // TODO: 实现合集视频生成
+                    onGenerateVideo={async (collectionId) => {
+                      const collection = currentProject.collections.find(c => c.id === collectionId)
+                      if (collection) {
+                        await generateAndDownloadCollectionVideo(
+                          currentProject.id, 
+                          collectionId, 
+                          collection.collection_title
+                        )
+                      }
                     }}
                     onDelete={handleDeleteCollection}
                   />
@@ -587,6 +625,7 @@ const ProjectDetailPage: React.FC = () => {
         onRemoveClip={handleRemoveClipFromCollection}
         onReorderClips={handleReorderCollectionClips}
         onDelete={handleDeleteCollection}
+        onAddClip={handleAddClipToCollection}
       />
     </Content>
   )

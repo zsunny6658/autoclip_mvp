@@ -93,112 +93,101 @@
 /* 视频区域 */
 .video-section {
   height: 100%;
+  background: #000;
+  position: relative;
+}
+
+.video-player-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-container {
+  flex: 1;
+  width: 100%;
   position: relative;
   background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-bottom: 60px;
 }
 
-.video-container {
-  position: relative;
-  width: 100%;
-  height: calc(100% - 60px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-/* 视频信息叠加层 */
-.video-info-overlay {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  right: 16px;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 16px;
-  border-radius: 8px;
-  color: #ffffff;
-  backdrop-filter: blur(10px);
-  z-index: 10;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+/* 视频信息栏 - 固定在视频下方 */
+.video-info-bar {
+  background: #1a1a1a;
+  border-top: 1px solid #2d2d2d;
+  padding: 16px 20px;
+  min-height: 80px;
 }
 
-.video-info-overlay.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.video-info-overlay.hidden {
-  opacity: 0;
-  transform: translateY(-10px);
-  pointer-events: none;
-}
-
-.video-header {
+.video-info-content {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
+  align-items: center;
+  height: 100%;
+}
+
+.video-title-section {
+  flex: 1;
+  min-width: 0;
 }
 
 .video-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   color: #ffffff;
-  flex: 1;
-  margin-right: 16px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .video-meta {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .video-meta .ant-tag {
-  background: rgba(79, 172, 254, 0.2) !important;
-  border-color: #4facfe !important;
-  color: #ffffff !important;
-}
-
-.video-meta .ant-typography {
-  color: #ffffff !important;
+  margin: 0;
 }
 
 .video-controls {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+  margin-left: 16px;
 }
 
 .video-controls .control-btn {
-  border-radius: 4px;
-  width: 32px;
-  height: 32px;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: #262626;
+  border: 1px solid #404040;
   color: #ffffff;
-  backdrop-filter: blur(8px);
   transition: all 0.2s ease;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .video-controls .control-btn:hover:not(:disabled) {
-  background: rgba(79, 172, 254, 0.8);
+  background: #4facfe;
   border-color: #4facfe;
   color: #ffffff;
-  transform: scale(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
 }
 
 .video-controls .control-btn:disabled {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.3);
+  background: #1a1a1a;
+  border-color: #2d2d2d;
+  color: #666666;
   cursor: not-allowed;
 }
 
@@ -228,6 +217,9 @@
   padding: 16px;
   border-bottom: 1px solid #2d2d2d;
   background: #1a1a1a;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .playlist-header .ant-typography {
@@ -254,9 +246,13 @@
   background: #1a1a1a;
   border: 1px solid #2d2d2d;
   border-radius: 8px;
-  cursor: pointer;
+  cursor: grab;
   transition: all 0.2s ease;
   position: relative;
+}
+
+.clip-item:active {
+  cursor: grabbing;
 }
 
 .clip-item:hover {
@@ -282,11 +278,7 @@
   border-radius: 0 2px 2px 0;
 }
 
-.clip-item.dragging {
-  transform: rotate(2deg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-}
+
 
 .clip-drag-handle {
   color: #999;
@@ -294,6 +286,12 @@
   padding: 4px;
   border-radius: 4px;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  user-select: none;
 }
 
 .clip-drag-handle:hover {
@@ -303,6 +301,18 @@
 
 .clip-drag-handle:active {
   cursor: grabbing;
+}
+
+/* 确保拖拽时不被其他元素阻挡 */
+.clip-item.dragging {
+  transform: rotate(2deg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.clip-item.dragging * {
+  pointer-events: none;
 }
 
 .clip-content {
@@ -339,8 +349,8 @@
 
 .clip-actions {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
   opacity: 0;
   transition: opacity 0.2s ease;
 }

@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from contextlib import asynccontextmanager
+from urllib.parse import quote
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -990,6 +991,102 @@ async def delete_collection(project_id: str, collection_id: str):
         logger.error(f"删除合集失败: {e}")
         raise HTTPException(status_code=500, detail=f"删除合集失败: {str(e)}")
 
+@app.patch("/api/projects/{project_id}/collections/{collection_id}")
+async def update_collection(project_id: str, collection_id: str, updates: dict):
+    """更新合集信息"""
+    try:
+        project = project_manager.get_project(project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="项目不存在")
+        
+        # 查找指定的合集
+        collection = None
+        collection_index = None
+        for i, coll in enumerate(project.collections):
+            if coll.id == collection_id:
+                collection = coll
+                collection_index = i
+                break
+        
+        if not collection:
+            raise HTTPException(status_code=404, detail="合集不存在")
+        
+        # 验证更新数据
+        if "clip_ids" in updates:
+            if not isinstance(updates["clip_ids"], list):
+                raise HTTPException(status_code=400, detail="clip_ids必须是数组")
+            
+            # 验证片段ID是否存在
+            valid_clip_ids = [clip.id for clip in project.clips]
+            for clip_id in updates["clip_ids"]:
+                if clip_id not in valid_clip_ids:
+                    raise HTTPException(status_code=400, detail=f"片段ID {clip_id} 不存在")
+        
+        # 更新合集信息
+        if "collection_title" in updates:
+            collection.collection_title = updates["collection_title"]
+        if "collection_summary" in updates:
+            collection.collection_summary = updates["collection_summary"]
+        if "clip_ids" in updates:
+            collection.clip_ids = updates["clip_ids"]
+        
+        # 保存项目
+        project_manager.save_projects()
+        
+        # 更新合集元数据文件
+        try:
+            metadata_dir = Path("./uploads") / project_id / "output" / "metadata"
+            metadata_dir.mkdir(parents=True, exist_ok=True)
+            
+            collections_metadata_file = metadata_dir / "collections_metadata.json"
+            collections_metadata = []
+            
+            # 如果文件已存在，读取现有数据
+            if collections_metadata_file.exists():
+                with open(collections_metadata_file, 'r', encoding='utf-8') as f:
+                    collections_metadata = json.load(f)
+            
+            # 更新对应的合集元数据
+            updated = False
+            for i, metadata in enumerate(collections_metadata):
+                if metadata.get("id") == collection_id:
+                    collections_metadata[i] = {
+                        "id": collection.id,
+                        "collection_title": collection.collection_title,
+                        "collection_summary": collection.collection_summary,
+                        "clip_ids": collection.clip_ids,
+                        "collection_type": collection.collection_type,
+                        "created_at": collection.created_at
+                    }
+                    updated = True
+                    break
+            
+            # 如果没有找到对应的元数据，添加新的
+            if not updated:
+                collections_metadata.append({
+                    "id": collection.id,
+                    "collection_title": collection.collection_title,
+                    "collection_summary": collection.collection_summary,
+                    "clip_ids": collection.clip_ids,
+                    "collection_type": collection.collection_type,
+                    "created_at": collection.created_at
+                })
+            
+            # 保存更新后的元数据
+            with open(collections_metadata_file, 'w', encoding='utf-8') as f:
+                json.dump(collections_metadata, f, ensure_ascii=False, indent=2)
+                
+        except Exception as e:
+            logger.warning(f"更新合集元数据失败: {e}")
+        
+        return collection
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"更新合集失败: {e}")
+        raise HTTPException(status_code=500, detail=f"更新合集失败: {str(e)}")
+
 @app.post("/api/projects/{project_id}/collections/{collection_id}/generate")
 async def generate_collection_video(project_id: str, collection_id: str, background_tasks: BackgroundTasks):
     """生成合集视频"""
@@ -1017,6 +1114,7 @@ async def generate_collection_video_background(project_id: str, collection_id: s
     try:
         from src.utils.video_processor import VideoProcessor
         import subprocess
+        import shutil
         
         project = project_manager.get_project(project_id)
         if not project:
@@ -1032,7 +1130,7 @@ async def generate_collection_video_background(project_id: str, collection_id: s
         if not collection:
             return
         
-        # 获取合集中的所有切片视频路径
+        # 获取合集中的所有切片视频路径，按照collection.clip_ids的顺序
         clips_dir = Path(f"./uploads/{project_id}/output/clips")
         collection_clips_dir = Path(f"./uploads/{project_id}/output/collections")
         collection_clips_dir.mkdir(exist_ok=True)
@@ -1042,20 +1140,28 @@ async def generate_collection_video_background(project_id: str, collection_id: s
             # 查找对应的切片视频文件
             clip_files = list(clips_dir.glob(f"{clip_id}_*.mp4"))
             if clip_files:
-                clip_paths.append(str(clip_files[0]))
+                # 使用绝对路径
+                clip_paths.append(str(clip_files[0].absolute()))
+                logger.info(f"找到切片 {clip_id}: {clip_files[0].name}")
+            else:
+                logger.warning(f"未找到切片 {clip_id} 的视频文件")
         
         if not clip_paths:
             logger.error(f"合集 {collection_id} 中没有找到有效的切片视频")
             return
         
-        # 生成合集视频文件路径
-        output_path = collection_clips_dir / f"{collection_id}.mp4"
+        # 生成合集视频文件路径，使用合集标题作为文件名
+        safe_title = VideoProcessor.sanitize_filename(collection.collection_title)
+        output_path = collection_clips_dir / f"{safe_title}.mp4"
         
         # 创建临时文件列表
         temp_list_file = collection_clips_dir / f"{collection_id}_list.txt"
         with open(temp_list_file, 'w', encoding='utf-8') as f:
             for clip_path in clip_paths:
                 f.write(f"file '{clip_path}'\n")
+        
+        logger.info(f"开始生成合集视频，包含 {len(clip_paths)} 个切片")
+        logger.info(f"切片顺序: {[Path(p).stem for p in clip_paths]}")
         
         # 使用ffmpeg合并视频
         cmd = [
@@ -1186,9 +1292,34 @@ async def download_project_video(project_id: str, clip_id: str = None, collectio
         file_path = clip_files[0]
         filename = f"clip_{clip_id}.mp4"
     elif collection_id:
-        # 下载合集视频
-        file_path = COLLECTIONS_DIR / f"{collection_id}.mp4"
-        filename = f"collection_{collection_id}.mp4"
+        # 下载合集视频 - 查找以合集标题命名的文件
+        project = project_manager.get_project(project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="项目不存在")
+        
+        # 查找指定的合集
+        collection = None
+        for coll in project.collections:
+            if coll.id == collection_id:
+                collection = coll
+                break
+        
+        if not collection:
+            raise HTTPException(status_code=404, detail="合集不存在")
+        
+        # 使用项目特定的合集目录路径
+        collection_clips_dir = Path(f"./uploads/{project_id}/output/collections")
+        
+        # 使用合集标题查找文件
+        from src.utils.video_processor import VideoProcessor
+        safe_title = VideoProcessor.sanitize_filename(collection.collection_title)
+        file_path = collection_clips_dir / f"{safe_title}.mp4"
+        filename = f"{safe_title}.mp4"
+        
+        # 如果找不到，尝试使用collection_id
+        if not file_path.exists():
+            file_path = collection_clips_dir / f"{collection_id}.mp4"
+            filename = f"collection_{collection_id}.mp4"
     else:
         # 下载原始视频
         file_path = Path(project.video_path)
@@ -1197,12 +1328,15 @@ async def download_project_video(project_id: str, clip_id: str = None, collectio
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="文件不存在")
     
+    # 关键：支持中文文件名下载
+    filename_header = f"attachment; filename*=UTF-8''{quote(filename)}"
+    
     return FileResponse(
         path=file_path,
         filename=filename,
         media_type='application/octet-stream',
         headers={
-            'Content-Disposition': f'attachment; filename="{filename}"'
+            'Content-Disposition': filename_header
         }
     )
 

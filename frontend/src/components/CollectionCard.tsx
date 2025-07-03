@@ -56,7 +56,8 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
     onReorderClips(collection.id, newClipIds)
   }
 
-  const collectionClips = clips.filter(clip => collection.clip_ids.includes(clip.id))
+  // 按照collection.clip_ids的顺序排列clips
+  const collectionClips = collection.clip_ids.map(clipId => clips.find(clip => clip.id === clipId)).filter(Boolean) as Clip[]
   const totalDuration = collectionClips.reduce((total, clip) => {
     // 简单计算总时长
     const start = clip.start_time.split(':')
