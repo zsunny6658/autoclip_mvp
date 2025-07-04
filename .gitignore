@@ -27,6 +27,7 @@ env/
 ENV/
 env.bak/
 venv.bak/
+.venv_deps_installed
 
 # IDE
 .vscode/

@@ -234,7 +234,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
       style={{ 
         width: 200, 
         height: 240,
-        borderRadius: '6px',
+        borderRadius: '4px',
         overflow: 'hidden',
         background: 'linear-gradient(145deg, #1e1e1e 0%, #2a2a2a 100%)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -370,10 +370,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
             </Text>
             
             {/* 操作按钮 */}
-            <div style={{
-              display: 'flex',
-              gap: '4px'
-            }}>
+            <div 
+              className="card-action-buttons"
+              style={{
+                display: 'flex',
+                gap: '4px',
+                opacity: 0,
+                transition: 'opacity 0.3s ease'
+              }}
+            >
               {/* 失败状态：只显示重试和删除按钮 */}
               {project.status === 'error' ? (
                 <>

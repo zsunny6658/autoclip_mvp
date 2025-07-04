@@ -15,18 +15,16 @@ import {
   Empty,
   message,
   Input,
-  Select,
+  Radio,
   Tag,
   Divider,
   List
 } from 'antd'
 import { 
   ArrowLeftOutlined, 
-  DownloadOutlined, 
   ReloadOutlined,
   PlayCircleOutlined,
   PlusOutlined,
-  ExportOutlined,
   UpOutlined,
   DownOutlined
 } from '@ant-design/icons'
@@ -43,7 +41,6 @@ const { Content } = Layout
 const { Title, Text } = Typography
 const { TabPane } = Tabs
 const { TextArea } = Input
-const { Option } = Select
 
 const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -127,27 +124,7 @@ const ProjectDetailPage: React.FC = () => {
     }
   }
 
-  const handleDownloadProject = async () => {
-    if (!id) return
-    try {
-      await projectApi.downloadVideo(id)
-      message.success('下载开始')
-    } catch (error) {
-      console.error('Failed to download:', error)
-      message.error('下载失败')
-    }
-  }
-
-  const handleExportMetadata = async () => {
-    if (!id) return
-    try {
-      await projectApi.exportMetadata(id)
-      message.success('导出成功')
-    } catch (error) {
-      console.error('Failed to export:', error)
-      message.error('导出失败')
-    }
-  }
+  // 移除了handleDownloadProject和handleExportMetadata函数
 
   const handleRestartStep = async (step: number) => {
     if (!id) return
@@ -396,23 +373,7 @@ const ProjectDetailPage: React.FC = () => {
             </Button>
           )}
           
-          {currentProject.status === 'completed' && (
-            <>
-              <Button 
-                icon={<ExportOutlined />}
-                onClick={handleExportMetadata}
-              >
-                导出数据
-              </Button>
-              <Button 
-                type="primary" 
-                icon={<DownloadOutlined />}
-                onClick={handleDownloadProject}
-              >
-                下载视频
-              </Button>
-            </>
-          )}
+          {/* 移除导出数据和下载视频按钮 */}
         </Space>
       </div>
 
@@ -494,41 +455,59 @@ const ProjectDetailPage: React.FC = () => {
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                {/* 排序控件 */}
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  padding: '8px 12px',
-                  background: 'rgba(255,255,255,0.05)',
-                  borderRadius: '12px',
-                  border: '1px solid #404040'
-                }}>
-                  <Text style={{ fontSize: '12px', color: '#888', fontWeight: 500 }}>排序</Text>
-                  <Select
+                {/* 排序控件 - 暗黑主题优化 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Text style={{ fontSize: '13px', color: '#b0b0b0', fontWeight: 500 }}>排序</Text>
+                  <Radio.Group
                     value={sortBy}
-                    onChange={(value) => setSortBy(value)}
+                    onChange={(e) => setSortBy(e.target.value)}
                     size="small"
-                    style={{ width: 100 }}
-                    dropdownStyle={{
-                      background: '#1f1f1f',
-                      border: '1px solid #404040'
+                    buttonStyle="solid"
+                    style={{
+                      ['--ant-radio-button-bg' as any]: 'transparent',
+                      ['--ant-radio-button-checked-bg' as any]: '#1890ff',
+                      ['--ant-radio-button-color' as any]: '#b0b0b0',
+                      ['--ant-radio-button-checked-color' as any]: '#ffffff'
                     }}
-                    options={[
-                      { 
-                        value: 'time', 
-                        label: (
-                          <span style={{ color: '#fff', fontSize: '12px' }}>时间</span>
-                        )
-                      },
-                      { 
-                        value: 'score', 
-                        label: (
-                          <span style={{ color: '#fff', fontSize: '12px' }}>评分</span>
-                        )
-                      }
-                    ]}
-                  />
+                  >
+                    <Radio.Button 
+                       value="time" 
+                       style={{ 
+                         fontSize: '13px',
+                         height: '32px',
+                         lineHeight: '30px',
+                         padding: '0 16px',
+                         background: sortBy === 'time' ? 'linear-gradient(45deg, #1890ff, #36cfc9)' : 'rgba(255,255,255,0.08)',
+                         border: sortBy === 'time' ? '1px solid #1890ff' : '1px solid #404040',
+                         color: sortBy === 'time' ? '#ffffff' : '#b0b0b0',
+                         borderRadius: '6px 0 0 6px',
+                         fontWeight: sortBy === 'time' ? 600 : 400,
+                         boxShadow: sortBy === 'time' ? '0 2px 8px rgba(24, 144, 255, 0.3)' : 'none',
+                         transition: 'all 0.2s ease'
+                       }}
+                     >
+                       时间
+                     </Radio.Button>
+                     <Radio.Button 
+                       value="score" 
+                       style={{ 
+                         fontSize: '13px',
+                         height: '32px',
+                         lineHeight: '30px',
+                         padding: '0 16px',
+                         background: sortBy === 'score' ? 'linear-gradient(45deg, #1890ff, #36cfc9)' : 'rgba(255,255,255,0.08)',
+                         border: sortBy === 'score' ? '1px solid #1890ff' : '1px solid #404040',
+                         borderLeft: 'none',
+                         color: sortBy === 'score' ? '#ffffff' : '#b0b0b0',
+                         borderRadius: '0 6px 6px 0',
+                         fontWeight: sortBy === 'score' ? 600 : 400,
+                         boxShadow: sortBy === 'score' ? '0 2px 8px rgba(24, 144, 255, 0.3)' : 'none',
+                         transition: 'all 0.2s ease'
+                       }}
+                     >
+                       评分
+                     </Radio.Button>
+                  </Radio.Group>
                 </div>
                 
                 {(!currentProject.collections || currentProject.collections.length === 0) && (
@@ -541,7 +520,9 @@ const ProjectDetailPage: React.FC = () => {
                       background: 'linear-gradient(45deg, #1890ff, #36cfc9)',
                       border: 'none',
                       fontWeight: 500,
-                      height: '36px'
+                      height: '40px',
+                      padding: '0 20px',
+                      fontSize: '14px'
                     }}
                   >
                     创建合集

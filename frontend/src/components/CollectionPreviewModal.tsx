@@ -279,18 +279,10 @@ const CollectionPreviewModal: React.FC<CollectionPreviewModalProps> = ({
             <Space>
               <Button 
                 type="primary" 
-                icon={<DownloadOutlined />}
-                loading={downloadingCollection}
-                onClick={handleDownloadCollection}
-              >
-                下载合集
-              </Button>
-              <Button 
-                type="primary" 
                 loading={isGenerating}
                 onClick={handleGenerateVideo}
               >
-                导出合集视频
+                导出完整视频
               </Button>
               {onDelete && (
                 <Popconfirm
@@ -398,15 +390,18 @@ const CollectionPreviewModal: React.FC<CollectionPreviewModalProps> = ({
                   {onAddClip && (
                     <Button 
                       type="primary" 
-                      size="small"
+                      size="middle"
                       icon={<PlusOutlined />}
                       onClick={() => setShowAddClipModal(true)}
                       disabled={isUpdating}
                       style={{
-                        borderRadius: '6px',
+                        borderRadius: '8px',
                         background: 'linear-gradient(45deg, #1890ff, #36cfc9)',
                         border: 'none',
-                        fontWeight: 500
+                        fontWeight: 500,
+                        height: '36px',
+                        padding: '0 16px',
+                        fontSize: '14px'
                       }}
                     >
                       添加切片

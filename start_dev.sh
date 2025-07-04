@@ -17,14 +17,24 @@ if ! command -v node &> /dev/null; then
 fi
 
 # 安装后端依赖
-echo "📦 安装后端依赖..."
+echo "📦 检查后端依赖..."
 if [ ! -d "venv" ]; then
     echo "创建Python虚拟环境..."
     python3 -m venv venv
 fi
 
 source venv/bin/activate
-pip install -r requirements.txt
+
+# 检查是否需要安装依赖
+# 如果requirements.txt比.venv_deps_installed新，或者.venv_deps_installed不存在，则重新安装
+if [ ! -f ".venv_deps_installed" ] || [ "requirements.txt" -nt ".venv_deps_installed" ]; then
+    echo "安装后端依赖..."
+    pip install -r requirements.txt
+    # 创建标记文件
+    touch .venv_deps_installed
+else
+    echo "后端依赖已是最新，跳过安装"
+fi
 
 # 检查前端依赖
 echo "📦 检查前端依赖..."

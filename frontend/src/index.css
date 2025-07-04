@@ -530,6 +530,10 @@ body {
   opacity: 1 !important;
 }
 
+.project-card:hover .card-action-buttons {
+  opacity: 1 !important;
+}
+
 .project-card .ant-card-body {
   background: #1a1a1a !important;
   color: #ffffff !important;

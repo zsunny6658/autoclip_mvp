@@ -195,22 +195,15 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
               </Button>
             </Tooltip>,
             onGenerateVideo && (
-              <Tooltip key="generate" title="生成视频">
+              <Tooltip key="generate" title="导出完整视频">
                 <Button 
                   type="text"
                   onClick={() => onGenerateVideo(collection.id)}
                 >
-                  生成
+                  导出完整视频
                 </Button>
               </Tooltip>
-            ),
-            <Tooltip key="download" title="下载">
-              <Button 
-                type="text" 
-                icon={<DownloadOutlined />}
-                onClick={() => onDownload(collection.id)}
-              />
-            </Tooltip>
+            )
           ].filter(Boolean)}
       >
         <div style={{ padding: '0 8px' }}>
@@ -297,7 +290,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
                 setShowClipList(false)
               }}
             >
-              生成合集视频
+              导出完整视频
             </Button>
           )
         ].filter(Boolean)}

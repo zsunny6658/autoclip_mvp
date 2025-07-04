@@ -267,9 +267,16 @@ export const projectApi = {
                      `project_${projectId}.mp4`
       
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
-        if (filenameMatch) {
-          filename = filenameMatch[1]
+        // 优先尝试解析 RFC 6266 格式的 filename* 参数
+        const filenameStarMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/)
+        if (filenameStarMatch) {
+          filename = decodeURIComponent(filenameStarMatch[1])
+        } else {
+          // 回退到传统的 filename 参数
+          const filenameMatch = contentDisposition.match(/filename="([^"]+)"/)
+          if (filenameMatch) {
+            filename = filenameMatch[1]
+          }
         }
       }
       
