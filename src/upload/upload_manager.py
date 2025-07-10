@@ -40,8 +40,8 @@ class UploadTask:
         video_path: str,
         title: str,
         desc: str = "",
-        tags: List[str] = None,
-        cover_path: str = None,
+        tags: Optional[List[str]] = None,
+        cover_path: Optional[str] = None,
         **kwargs
     ):
         self.task_id = task_id
@@ -55,8 +55,8 @@ class UploadTask:
         
         self.status = UploadStatus.PENDING
         self.progress = 0
-        self.result = None
-        self.error = None
+        self.result: Optional[Dict[str, Any]] = None
+        self.error: Optional[str] = None
         self.created_at = None
         self.started_at = None
         self.completed_at = None
@@ -106,8 +106,8 @@ class UploadManager:
         video_path: str,
         title: str,
         desc: str = "",
-        tags: List[str] = None,
-        cover_path: str = None,
+        tags: Optional[List[str]] = None,
+        cover_path: Optional[str] = None,
         auto_start: bool = True,
         **kwargs
     ) -> UploadTask:
@@ -209,16 +209,10 @@ class UploadManager:
             # else:
             raise NotImplementedError(f"平台 {task.platform.value} 暂未实现 (已移除 bilitool 相关功能)")
             
-            # 更新任务状态
-            if result.get("success"):
-                task.status = UploadStatus.SUCCESS
-                task.result = result
-                task.progress = 100
-                logger.info(f"上传成功：{task.task_id}")
-            else:
-                task.status = UploadStatus.FAILED
-                task.error = result.get("error", "未知错误")
-                logger.error(f"上传失败：{task.task_id} - {task.error}")
+            # 由于功能已移除，直接设置为失败状态
+            task.status = UploadStatus.FAILED
+            task.error = "平台暂未实现"
+            logger.error(f"上传失败：{task.task_id} - 平台暂未实现")
                 
         except asyncio.CancelledError:
             task.status = UploadStatus.CANCELLED
@@ -297,7 +291,8 @@ class UploadManager:
         Returns:
             List: 所有任务状态列表
         """
-        return [self.get_task_status(task_id) for task_id in self.tasks.keys()]
+        return [task_status for task_id in self.tasks.keys() 
+                if (task_status := self.get_task_status(task_id)) is not None]
     
     def get_platform_categories(self, platform: Platform) -> List[Dict[str, Any]]:
         """获取平台分区列表
@@ -316,22 +311,7 @@ class UploadManager:
             return uploader.get_video_categories()
         return []
     
-    async def verify_platform_credential(self, platform: Platform) -> bool:
-        """验证平台登录凭证
-        
-        Args:
-            platform: 平台类型
-            
-        Returns:
-            bool: 凭证是否有效
-        """
-        if platform not in self.uploaders:
-            return False
-            
-        uploader = self.uploaders[platform]
-        if hasattr(uploader, 'verify_credential'):
-            return uploader.verify_credential()
-        return False
+
     
     # def set_bilibili_credential(self, **kwargs) -> bool:
     #     """设置B站登录凭证（交互式登录） (已移除 bilitool 相关功能)
