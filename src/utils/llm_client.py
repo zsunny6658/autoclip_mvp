@@ -33,7 +33,7 @@ class LLMClient:
         """
         api_key = os.getenv("DASHSCOPE_API_KEY")
         if not api_key:
-            raise ValueError("请在Web界面的侧边栏输入API密钥，然后重试。")
+            raise ValueError("请配置API密钥，可以通过环境变量DASHSCOPE_API_KEY或在前端设置页面配置。")
 
         try:
             # 构建完整的输入
@@ -75,7 +75,7 @@ class LLMClient:
                 message = response.message if hasattr(response, 'message') else '未知API错误'
                 
                 if "Invalid ApiKey" in str(message):
-                    raise ValueError("API Key无效或不正确，请在侧边栏重新输入。")
+                    raise ValueError("API Key无效或不正确，请检查配置并重新输入。")
 
                 error_msg = f"API调用失败 - Status: {response.status_code}, Code: {code}, Message: {message}"
                 logger.error(error_msg)

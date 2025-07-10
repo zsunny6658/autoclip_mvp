@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Callable
 from datetime import datetime
 import yt_dlp
+import subprocess
 
 try:
     from .error_handler import FileIOError, ValidationError, ProcessingError
@@ -104,7 +105,8 @@ class BilibiliDownloader:
         }
         
         if self.browser:
-            ydl_opts['cookiesfrombrowser'] = (self.browser.lower(),)
+            ydl_opts['cookies_from_browser'] = self.browser.lower()
+            logger.info(f'yt-dlp cookies_from_browser: {ydl_opts.get("cookies_from_browser")}')
         
         try:
             loop = asyncio.get_event_loop()
@@ -147,10 +149,11 @@ class BilibiliDownloader:
         # 清理文件名，移除特殊字符
         safe_title = self._sanitize_filename(video_info.title)
         
-        # 设置下载选项 - 简化配置，专注AI字幕
+        # 设置下载选项 - 专注AI字幕
         ydl_opts = {
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-            'writesubtitles': True,
+            'writeautosub': True,  # 下载AI字幕
+            'writesubtitles': True,  # 下载普通字幕
             'subtitleslangs': ['ai-zh'],  # 专注AI字幕
             'subtitlesformat': 'srt',  # 强制SRT格式
             'outtmpl': str(self.download_dir / f'{safe_title}.%(ext)s'),
@@ -160,7 +163,8 @@ class BilibiliDownloader:
         }
         
         if self.browser:
-            ydl_opts['cookiesfrombrowser'] = (self.browser.lower(),)
+            ydl_opts['cookies_from_browser'] = self.browser.lower()
+            logger.info(f'yt-dlp cookies_from_browser: {ydl_opts.get("cookies_from_browser")}')
         
         # 添加进度钩子
         if progress_callback:
@@ -201,9 +205,86 @@ class BilibiliDownloader:
             raise ProcessingError(error_msg)
     
     def _download_sync(self, url: str, ydl_opts: Dict[str, Any]):
-        """同步方式下载"""
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+        """同步方式下载 - 使用subprocess确保cookie正确传递，并支持进度回调"""
+        # 构造yt-dlp命令
+        browser = self.browser.lower() if self.browser else "chrome"
+        safe_title = ydl_opts.get('outtmpl', '').split('/')[-1].replace('%(ext)s', '')
+        if not safe_title:
+            safe_title = "video"
+        
+        # 获取进度回调函数
+        progress_callback = None
+        if 'progress_hooks' in ydl_opts and ydl_opts['progress_hooks']:
+            # 从第一个hook中提取回调函数
+            original_hook = ydl_opts['progress_hooks'][0]
+            if hasattr(original_hook, '__closure__') and original_hook.__closure__:
+                progress_callback = original_hook.__closure__[0].cell_contents
+        
+        cmd = [
+            "yt-dlp",
+            "--write-sub",
+            "--sub-lang", "ai-zh",
+            "--sub-format", "srt",
+            "--output", f"{safe_title}.%(ext)s",  # 只用文件名
+            "--cookies-from-browser", browser,
+            "--progress",  # 启用进度输出
+            url
+        ]
+        logger.info(f"[subprocess] yt-dlp命令: {' '.join(cmd)}")
+        
+        # 执行命令并实时解析进度
+        import subprocess
+        import re
+        
+        process = subprocess.Popen(
+            cmd, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.STDOUT,
+            text=True,
+            cwd=str(self.download_dir),
+            bufsize=1,
+            universal_newlines=True
+        )
+        
+        # 解析进度信息
+        progress_pattern = re.compile(r'\[download\]\s+(\d+\.?\d*)%')
+        
+        while True:
+            output = process.stdout.readline()
+            if output == '' and process.poll() is not None:
+                break
+            if output:
+                logger.info(f"[subprocess] {output.strip()}")
+                
+                # 解析进度
+                if progress_callback:
+                    match = progress_pattern.search(output)
+                    if match:
+                        try:
+                            progress = float(match.group(1))
+                            progress_callback(f"下载中... {progress:.1f}%", progress)
+                        except ValueError:
+                            pass
+        
+        result = process.poll()
+        if result != 0:
+            logger.error(f"yt-dlp命令执行失败，返回码: {result}")
+        
+        # 列出下载目录所有文件
+        import os
+        files = os.listdir(self.download_dir)
+        logger.info(f"[subprocess] 下载目录内容: {files}")
+        
+        # 查找字幕文件
+        subtitle_file = None
+        for f in files:
+            if f.endswith('.srt') or f.endswith('.ass'):
+                subtitle_file = f
+                break
+        if subtitle_file:
+            logger.info(f"[subprocess] 找到字幕文件: {subtitle_file}")
+        else:
+            logger.warning(f"[subprocess] 未找到字幕文件，标题: {safe_title}")
     
     def _create_progress_hook(self, progress_callback: Callable[[str, float], None]):
         """创建进度回调钩子"""
@@ -345,6 +426,40 @@ class BilibiliDownloader:
                     temp_file.unlink(missing_ok=True)
         except Exception as e:
             logger.warning(f"清理临时文件失败: {e}")
+
+    def download(self, url, safe_title):
+        # 1. 构造yt-dlp命令
+        browser = self.browser.lower() if self.browser else "chrome"
+        cmd = [
+            "yt-dlp",
+            "--write-sub",
+            "--sub-lang", "ai-zh",
+            "--sub-format", "srt",
+            "--output", str(self.download_dir / f'{safe_title}.%(ext)s'),
+            "--cookies-from-browser", browser,
+            url
+        ]
+        logger.info(f"[subprocess] yt-dlp命令: {' '.join(cmd)}")
+        # 2. 执行命令
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(self.download_dir))
+        logger.info(f"[subprocess] yt-dlp stdout: {result.stdout}")
+        logger.info(f"[subprocess] yt-dlp stderr: {result.stderr}")
+        if result.returncode != 0:
+            logger.error(f"yt-dlp命令执行失败，返回码: {result.returncode}")
+        # 3. 列出下载目录所有文件
+        import os
+        files = os.listdir(self.download_dir)
+        logger.info(f"[subprocess] 下载目录内容: {files}")
+        # 4. 查找字幕文件
+        subtitle_file = None
+        for f in files:
+            if f.endswith('.srt') or f.endswith('.ass'):
+                subtitle_file = f
+                break
+        if subtitle_file:
+            logger.info(f"[subprocess] 找到字幕文件: {subtitle_file}")
+        else:
+            logger.warning(f"[subprocess] 未找到字幕文件，标题: {safe_title}")
 
 # 便捷函数
 async def download_bilibili_video(

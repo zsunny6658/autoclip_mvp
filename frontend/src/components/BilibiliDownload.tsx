@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Button, message, Progress, Input, Card, Typography, Space, Spin, Select } from 'antd'
-import { DownloadOutlined } from '@ant-design/icons'
+import { Button, message, Progress, Input, Card, Typography, Space, Spin, Select, Alert } from 'antd'
+import { DownloadOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { projectApi, bilibiliApi, VideoCategory, BilibiliDownloadTask } from '../services/api'
 import { useProjectStore } from '../store/useProjectStore'
 
@@ -16,7 +16,6 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
   const [url, setUrl] = useState('')
   const [projectName, setProjectName] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [selectedBrowser, setSelectedBrowser] = useState<string>('')
   const [categories, setCategories] = useState<VideoCategory[]>([])
   const [loadingCategories, setLoadingCategories] = useState(false)
   const [downloading, setDownloading] = useState(false)
@@ -25,10 +24,24 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
   const [videoInfo, setVideoInfo] = useState<any>(null)
   const [parsing, setParsing] = useState(false)
   const [error, setError] = useState('')
+  const [defaultBrowser, setDefaultBrowser] = useState<string>('')
   
   const { addProject } = useProjectStore()
 
-  // 加载视频分类配置
+  // 从设置中获取默认浏览器
+  const loadDefaultBrowser = async () => {
+    try {
+      const response = await fetch('/api/settings')
+      if (response.ok) {
+        const settings = await response.json()
+        setDefaultBrowser(settings.default_browser || '')
+      }
+    } catch (error) {
+      console.error('获取默认浏览器设置失败:', error)
+    }
+  }
+
+  // 加载视频分类配置和默认浏览器
   useEffect(() => {
     const loadCategories = async () => {
       setLoadingCategories(true)
@@ -49,6 +62,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
     }
 
     loadCategories()
+    loadDefaultBrowser()
   }, [])
 
   // 清理轮询
@@ -87,11 +101,11 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
     
     try {
       const requestBody: any = { url: url.trim() }
-      if (selectedBrowser) {
-        requestBody.browser = selectedBrowser
+      if (defaultBrowser) {
+        requestBody.browser = defaultBrowser
       }
 
-      const response = await bilibiliApi.parseVideoInfo(url.trim(), selectedBrowser)
+      const response = await bilibiliApi.parseVideoInfo(url.trim(), defaultBrowser)
       const parsedVideoInfo = response.video_info
       
       setVideoInfo(parsedVideoInfo)
@@ -166,8 +180,8 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
         requestBody.project_name = projectName.trim()
       }
       
-      if (selectedBrowser) {
-        requestBody.browser = selectedBrowser
+      if (defaultBrowser) {
+        requestBody.browser = defaultBrowser
       }
 
       const response = await bilibiliApi.createDownloadTask(requestBody)
@@ -178,7 +192,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
         url: url.trim(),
         project_name: projectName.trim() || '',
         video_category: selectedCategory,
-        browser: selectedBrowser,
+        browser: defaultBrowser,
         status: 'pending',
         progress: 0,
         created_at: new Date().toISOString(),
@@ -203,7 +217,6 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
     if (categories.length > 0) {
       setSelectedCategory(categories[0].value)
     }
-    setSelectedBrowser('')
   }
 
   const stopDownload = () => {
@@ -325,33 +338,23 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
                 />
               </div>
               
-              <div>
-                <Text style={{ color: '#ffffff', marginBottom: '12px', display: 'block', fontSize: '16px', fontWeight: 500 }}>浏览器选择（获取AI字幕需要）</Text>
-                <Select
-                  placeholder="选择浏览器以获取cookie（可选）"
-                  value={selectedBrowser || undefined}
-                  onChange={(value) => setSelectedBrowser(value || '')}
-                  allowClear
-                  style={{
-                    width: '100%',
-                    height: '48px'
-                  }}
-                  dropdownStyle={{
-                    background: 'rgba(38, 38, 38, 0.95)',
-                    border: '1px solid rgba(79, 172, 254, 0.3)',
-                    borderRadius: '12px'
-                  }}
-                  disabled={downloading}
-                >
-                  <Select.Option value="chrome">Chrome</Select.Option>
-                  <Select.Option value="firefox">Firefox</Select.Option>
-                  <Select.Option value="safari">Safari</Select.Option>
-                  <Select.Option value="edge">Edge</Select.Option>
-                </Select>
-                <Text style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px', marginTop: '8px', display: 'block' }}>
-                  选择浏览器可获取登录状态，用于下载AI字幕。如不选择将只能下载公开字幕。
-                </Text>
-              </div>
+              {defaultBrowser && (
+                <div>
+                  <Alert
+                    message="浏览器配置"
+                    description={`将使用 ${defaultBrowser} 浏览器获取B站登录状态。如需修改，请在设置页面配置默认浏览器。`}
+                    type="info"
+                    showIcon
+                    icon={<InfoCircleOutlined />}
+                    style={{
+                      background: 'rgba(79, 172, 254, 0.1)',
+                      border: '1px solid rgba(79, 172, 254, 0.3)',
+                      borderRadius: '8px',
+                      marginBottom: '16px'
+                    }}
+                  />
+                </div>
+              )}
               
               <div>
                 <Text style={{ color: '#ffffff', marginBottom: '12px', display: 'block', fontSize: '16px', fontWeight: 500 }}>视频分类</Text>

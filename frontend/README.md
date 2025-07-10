@@ -1,4 +1,4 @@
-# Auto Clips Frontend
+# AutoClip MVP Frontend
 
 基于 React + TypeScript + Vite + Ant Design 的视频自动切片前端应用。
 

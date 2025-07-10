@@ -69,21 +69,32 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# API Keys and sensitive data
+data/settings.json
+
 # Upload directories (may contain large files)
 uploads/*/
 !uploads/.gitkeep
+!uploads/tmp/
 
-# Output directories
-output/clips/*
-output/collections/*
-output/metadata/*
-!output/clips/.gitkeep
-!output/collections/.gitkeep
-!output/metadata/.gitkeep
+# Temporary download files
+uploads/tmp/*.zip
 
 # Test files
 test_*.json
 test_*.html
+
+# Assets directory (keep for QR codes)
+!assets/
+!assets/*.png
+!assets/*.jpg
+!assets/*.jpeg
+
+# GitHub configuration directory
+!.github/
+!.github/*.png
+!.github/*.jpg
+!.github/*.jpeg
 
 # Coverage reports
 htmlcov/

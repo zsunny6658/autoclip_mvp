@@ -12,7 +12,7 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from contextlib import asynccontextmanager
 from urllib.parse import quote
 
@@ -94,6 +94,7 @@ class ApiSettings(BaseModel):
     chunk_size: int = 5000
     min_score_threshold: float = 0.7
     max_clips_per_collection: int = 5
+    default_browser: Optional[str] = None
 
 # 以下上传相关模型已移除bilitool相关功能
 # class UploadRequest(BaseModel):
@@ -337,7 +338,7 @@ app = FastAPI(
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -371,6 +372,100 @@ async def get_video_categories():
         "categories": categories,
         "default_category": VideoCategory.DEFAULT
     }
+
+@app.get("/api/browsers/detect")
+async def detect_available_browsers():
+    """检测系统中可用的浏览器"""
+    import subprocess
+    import platform
+    
+    browsers = []
+    
+    # 检测Chrome
+    try:
+        if platform.system() == "Darwin":  # macOS
+            # macOS上Chrome通常在Applications目录
+            chrome_paths = [
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
+            ]
+            available = any(Path(path).exists() for path in chrome_paths)
+            browsers.append({"name": "Chrome", "value": "chrome", "available": available, "priority": 1})
+        elif platform.system() == "Windows":
+            # Windows Chrome 通常在固定位置
+            chrome_paths = [
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+            ]
+            available = any(Path(path).exists() for path in chrome_paths)
+            browsers.append({"name": "Chrome", "value": "chrome", "available": available, "priority": 1})
+        else:  # Linux
+            result = subprocess.run(["which", "google-chrome"], capture_output=True, text=True)
+            if result.returncode == 0:
+                browsers.append({"name": "Chrome", "value": "chrome", "available": True, "priority": 1})
+            else:
+                browsers.append({"name": "Chrome", "value": "chrome", "available": False, "priority": 1})
+    except Exception:
+        browsers.append({"name": "Chrome", "value": "chrome", "available": False, "priority": 1})
+    
+    # 检测Edge
+    try:
+        if platform.system() == "Darwin":  # macOS
+            result = subprocess.run(["which", "microsoft-edge"], capture_output=True, text=True)
+            if result.returncode == 0:
+                browsers.append({"name": "Edge", "value": "edge", "available": True, "priority": 2})
+            else:
+                browsers.append({"name": "Edge", "value": "edge", "available": False, "priority": 2})
+        elif platform.system() == "Windows":
+            edge_paths = [
+                r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+                r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+            ]
+            available = any(Path(path).exists() for path in edge_paths)
+            browsers.append({"name": "Edge", "value": "edge", "available": available, "priority": 2})
+        else:  # Linux
+            result = subprocess.run(["which", "microsoft-edge"], capture_output=True, text=True)
+            if result.returncode == 0:
+                browsers.append({"name": "Edge", "value": "edge", "available": True, "priority": 2})
+            else:
+                browsers.append({"name": "Edge", "value": "edge", "available": False, "priority": 2})
+    except Exception:
+        browsers.append({"name": "Edge", "value": "edge", "available": False, "priority": 2})
+    
+    # 检测Firefox
+    try:
+        if platform.system() == "Darwin":  # macOS
+            result = subprocess.run(["which", "firefox"], capture_output=True, text=True)
+            if result.returncode == 0:
+                browsers.append({"name": "Firefox", "value": "firefox", "available": True, "priority": 3})
+            else:
+                browsers.append({"name": "Firefox", "value": "firefox", "available": False, "priority": 3})
+        elif platform.system() == "Windows":
+            firefox_paths = [
+                r"C:\Program Files\Mozilla Firefox\firefox.exe",
+                r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+            ]
+            available = any(Path(path).exists() for path in firefox_paths)
+            browsers.append({"name": "Firefox", "value": "firefox", "available": available, "priority": 3})
+        else:  # Linux
+            result = subprocess.run(["which", "firefox"], capture_output=True, text=True)
+            if result.returncode == 0:
+                browsers.append({"name": "Firefox", "value": "firefox", "available": True, "priority": 3})
+            else:
+                browsers.append({"name": "Firefox", "value": "firefox", "available": False, "priority": 3})
+    except Exception:
+        browsers.append({"name": "Firefox", "value": "firefox", "available": False, "priority": 3})
+    
+    # Safari (仅macOS)
+    if platform.system() == "Darwin":
+        browsers.append({"name": "Safari", "value": "safari", "available": True, "priority": 4})
+    else:
+        browsers.append({"name": "Safari", "value": "safari", "available": False, "priority": 4})
+    
+    # 按优先级排序
+    browsers.sort(key=lambda x: x["priority"])
+    
+    return {"browsers": browsers}
 
 # B站视频相关API
 @app.post("/api/bilibili/parse")
@@ -1310,16 +1405,32 @@ async def download_project_video(project_id: str, clip_id: str = None, collectio
         # 使用项目特定的合集目录路径
         collection_clips_dir = Path(f"./uploads/{project_id}/output/collections")
         
-        # 使用合集标题查找文件
+        # 首先尝试使用合集标题查找文件
         from src.utils.video_processor import VideoProcessor
         safe_title = VideoProcessor.sanitize_filename(collection.collection_title)
         file_path = collection_clips_dir / f"{safe_title}.mp4"
-        filename = f"{safe_title}.mp4"
         
         # 如果找不到，尝试使用collection_id
         if not file_path.exists():
             file_path = collection_clips_dir / f"{collection_id}.mp4"
-            filename = f"collection_{collection_id}.mp4"
+        
+        # 如果还是找不到，尝试查找任何以合集标题开头的文件
+        if not file_path.exists():
+            matching_files = list(collection_clips_dir.glob(f"*{collection.collection_title}*.mp4"))
+            if matching_files:
+                file_path = matching_files[0]
+        
+        # 如果还是找不到，尝试查找任何mp4文件
+        if not file_path.exists():
+            mp4_files = list(collection_clips_dir.glob("*.mp4"))
+            if mp4_files:
+                file_path = mp4_files[0]
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="合集视频文件不存在")
+        
+        # 使用实际存在的文件名作为下载文件名
+        filename = file_path.name
     else:
         # 下载原始视频
         file_path = Path(project.video_path)
@@ -1339,6 +1450,187 @@ async def download_project_video(project_id: str, clip_id: str = None, collectio
             'Content-Disposition': filename_header
         }
     )
+
+@app.get("/api/projects/{project_id}/download-all")
+async def download_project_all(project_id: str):
+    """打包下载项目的所有视频文件"""
+    import zipfile
+    import tempfile
+    import shutil
+    from pathlib import Path
+    import os
+
+    logger.info(f"开始处理打包下载请求: {project_id}")
+    
+    project = project_manager.get_project(project_id)
+    if not project:
+        logger.error(f"项目不存在: {project_id}")
+        raise HTTPException(status_code=404, detail="项目不存在")
+    
+    if project.status != 'completed':
+        logger.error(f"项目状态不是completed: {project.status}")
+        raise HTTPException(status_code=400, detail="项目尚未完成处理，无法下载")
+    
+    logger.info(f"项目信息: {project.name}, 状态: {project.status}")
+    
+    try:
+        # 创建临时目录
+        logger.info("创建临时目录")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            zip_path = temp_path / f"{project.name}_完整项目.zip"
+            
+            logger.info(f"临时目录: {temp_dir}")
+            logger.info(f"ZIP文件路径: {zip_path}")
+            
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                project_dir = Path(f"./uploads/{project_id}")
+                logger.info(f"项目目录: {project_dir}")
+                logger.info(f"项目目录是否存在: {project_dir.exists()}")
+                
+                # 添加原始视频
+                video_path = Path(project.video_path)
+                logger.info(f"原始视频路径: {video_path}")
+                logger.info(f"原始视频是否存在: {video_path.exists()}")
+                if video_path.exists():
+                    logger.info(f"添加原始视频: {video_path}")
+                    zipf.write(video_path, f"原始视频/{video_path.name}")
+                else:
+                    logger.warning(f"原始视频不存在: {video_path}")
+                
+                # 添加切片视频
+                clips_dir = project_dir / "output" / "clips"
+                logger.info(f"切片目录: {clips_dir}")
+                logger.info(f"切片目录是否存在: {clips_dir.exists()}")
+                if clips_dir.exists():
+                    clip_files = list(clips_dir.glob("*.mp4"))
+                    logger.info(f"找到 {len(clip_files)} 个切片文件")
+                    for clip_file in clip_files:
+                        logger.info(f"处理切片文件: {clip_file}")
+                        # 获取对应的切片信息
+                        clip_id = clip_file.stem.split('_')[0]
+                        clip_info = next((clip for clip in project.clips if clip.id == clip_id), None)
+                        if clip_info:
+                            # 使用切片标题作为文件名
+                            title = clip_info.title or clip_info.generated_title or f"切片_{clip_id}"
+                            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                            safe_title = safe_title[:50]  # 限制长度
+                            zipf.write(clip_file, f"视频切片/{safe_title}.mp4")
+                            logger.info(f"添加切片: {safe_title}")
+                        else:
+                            zipf.write(clip_file, f"视频切片/{clip_file.name}")
+                            logger.info(f"添加切片: {clip_file.name}")
+                else:
+                    logger.warning(f"切片目录不存在: {clips_dir}")
+                
+                # 添加合集视频
+                collections_dir = project_dir / "output" / "collections"
+                logger.info(f"合集目录: {collections_dir}")
+                logger.info(f"合集目录是否存在: {collections_dir.exists()}")
+                if collections_dir.exists():
+                    collection_files = list(collections_dir.glob("*.mp4"))
+                    logger.info(f"找到 {len(collection_files)} 个合集文件")
+                    for collection_file in collection_files:
+                        logger.info(f"处理合集文件: {collection_file}")
+                        # 获取对应的合集信息
+                        collection_title = collection_file.stem
+                        collection_info = next((coll for coll in project.collections if coll.collection_title == collection_title), None)
+                        if collection_info:
+                            safe_title = "".join(c for c in collection_info.collection_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                            safe_title = safe_title[:50]  # 限制长度
+                            zipf.write(collection_file, f"合集视频/{safe_title}.mp4")
+                            logger.info(f"添加合集: {safe_title}")
+                        else:
+                            zipf.write(collection_file, f"合集视频/{collection_file.name}")
+                            logger.info(f"添加合集: {collection_file.name}")
+                else:
+                    logger.warning(f"合集目录不存在: {collections_dir}")
+                
+                # 添加项目信息文件
+                project_info = {
+                    "项目名称": project.name,
+                    "创建时间": project.created_at,
+                    "更新时间": project.updated_at,
+                    "视频分类": project.video_category,
+                    "切片数量": len(project.clips),
+                    "合集数量": len(project.collections),
+                    "切片列表": [
+                        {
+                            "ID": clip.id,
+                            "标题": clip.title or clip.generated_title,
+                            "开始时间": clip.start_time,
+                            "结束时间": clip.end_time,
+                            "评分": clip.final_score,
+                            "推荐理由": clip.recommend_reason
+                        } for clip in project.clips
+                    ],
+                    "合集列表": [
+                        {
+                            "ID": coll.id,
+                            "标题": coll.collection_title,
+                            "简介": coll.collection_summary,
+                            "类型": coll.collection_type,
+                            "包含切片": coll.clip_ids
+                        } for coll in project.collections
+                    ]
+                }
+                
+                import json
+                info_file = temp_path / "项目信息.json"
+                with open(info_file, 'w', encoding='utf-8') as f:
+                    json.dump(project_info, f, ensure_ascii=False, indent=2)
+                zipf.write(info_file, "项目信息.json")
+                logger.info("添加项目信息文件")
+            
+            # 复制到持久目录
+            persist_dir = Path("./uploads/tmp")
+            persist_dir.mkdir(parents=True, exist_ok=True)
+            persist_zip_path = persist_dir / zip_path.name
+            shutil.copy(zip_path, persist_zip_path)
+
+        # 返回zip文件
+        filename_header = f"attachment; filename*=UTF-8''{quote(persist_zip_path.name)}"
+        logger.info(f"打包完成，文件大小: {persist_zip_path.stat().st_size} bytes")
+        return FileResponse(
+            path=persist_zip_path,
+            filename=persist_zip_path.name,
+            media_type='application/zip',
+            headers={
+                'Content-Disposition': filename_header
+            }
+        )
+    except Exception as e:
+        logger.error(f"打包下载项目 {project_id} 失败: {e}")
+        import traceback
+        logger.error(f"错误详情: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"打包下载失败: {str(e)}")
+
+@app.get("/api/test-zip")
+async def test_zip():
+    """测试zip文件创建"""
+    import zipfile
+    import tempfile
+    
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            zip_path = temp_path / "test.zip"
+            
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                # 创建一个测试文件
+                test_file = temp_path / "test.txt"
+                with open(test_file, 'w') as f:
+                    f.write('test content')
+                zipf.write(test_file, "test.txt")
+            
+            return FileResponse(
+                path=zip_path,
+                filename="test.zip",
+                media_type='application/zip'
+            )
+    except Exception as e:
+        logger.error(f"测试zip创建失败: {e}")
+        raise HTTPException(status_code=500, detail=f"测试失败: {str(e)}")
 
 @app.delete("/api/projects/{project_id}")
 async def delete_project(project_id: str):
@@ -1413,7 +1705,8 @@ async def get_settings():
                 "model_name": "qwen-plus",
                 "chunk_size": 5000,
                 "min_score_threshold": 0.7,
-                "max_clips_per_collection": 5
+                "max_clips_per_collection": 5,
+                "default_browser": "chrome"
             }
         return settings
     except Exception as e:
@@ -1481,6 +1774,23 @@ async def test_api_key(request: dict):
 async def health_check():
     """健康检查"""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+# SPA路由兜底 - 处理前端路由
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    """SPA路由兜底，所有非API路径都返回前端页面"""
+    # 如果是API路径，返回404
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="API路径不存在")
+    
+    # 如果是静态资源路径，返回404
+    if full_path.startswith(("static/", "uploads/")):
+        raise HTTPException(status_code=404, detail="静态资源不存在")
+    
+    # 其他所有路径都重定向到前端
+    from fastapi.responses import RedirectResponse
+    frontend_url = f"http://localhost:3000/{full_path}"
+    return RedirectResponse(url=frontend_url, status_code=302)
 
 if __name__ == "__main__":
     # 确保必要的目录存在

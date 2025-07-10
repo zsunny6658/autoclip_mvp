@@ -92,23 +92,28 @@ const CollectionCardMini: React.FC<CollectionCardMiniProps> = ({
             >
               {collection.collection_title}
             </Title>
-            <Tag 
-              color={collection.collection_type === 'manual' ? 'green' : 'purple'}
+            <span
               style={{ 
                 fontSize: '10px', 
                 margin: 0,
                 borderRadius: '6px',
                 border: 'none',
                 background: collection.collection_type === 'manual' 
-                  ? 'linear-gradient(45deg, #52c41a, #73d13d)'
+                  ? 'linear-gradient(45deg, #1890ff, #40a9ff)'
                   : 'linear-gradient(45deg, #722ed1, #9254de)',
                 color: '#ffffff',
-                fontWeight: 500,
-                flexShrink: 0
+                fontWeight: 600,
+                flexShrink: 0,
+                display: 'inline-block',
+                padding: '2px 8px',
+                lineHeight: '1.4',
+                boxShadow: collection.collection_type === 'manual'
+                  ? '0 2px 4px rgba(24, 144, 255, 0.2)'
+                  : '0 2px 4px rgba(114, 46, 209, 0.2)'
               }}
             >
               {collection.collection_type === 'manual' ? '手动创建' : 'AI推荐'}
-            </Tag>
+            </span>
           </div>
           
           {/* 简介 */}

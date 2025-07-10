@@ -300,6 +300,52 @@ export const projectApi = {
     }
   },
 
+  // 打包下载项目的所有文件
+  downloadProjectAll: async (projectId: string) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/projects/${projectId}/download-all`, { 
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/zip'
+        }
+      })
+      
+      // 从响应头获取文件名
+      const contentDisposition = response.headers['content-disposition']
+      let filename = `project_${projectId}_完整项目.zip`
+      
+      if (contentDisposition) {
+        const filenameStarMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/)
+        if (filenameStarMatch) {
+          filename = decodeURIComponent(filenameStarMatch[1])
+        } else {
+          const filenameMatch = contentDisposition.match(/filename="([^"]+)"/)
+          if (filenameMatch) {
+            filename = filenameMatch[1]
+          }
+        }
+      }
+      
+      // 创建下载链接
+      const blob = new Blob([response.data], { type: 'application/zip' })
+      const downloadUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = filename
+      
+      // 触发下载
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
+      
+      return response.data
+    } catch (error) {
+      console.error('打包下载失败:', error)
+      throw error
+    }
+  },
+
   // 获取项目独立的文件URL
   getProjectFileUrl: (projectId: string, filePath: string): string => {
     return `http://localhost:8000/api/projects/${projectId}/files/${filePath}`

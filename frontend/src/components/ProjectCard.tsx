@@ -442,26 +442,36 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
                   <Space size={4}>
                     {/* 下载按钮 - 仅在完成状态显示 */}
                     {project.status === 'completed' && (
-                      <Button
-                        type="text"
-                        icon={<DownloadOutlined />}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // 实现下载功能
-                          message.info('下载功能开发中...')
-                        }}
-                        style={{
-                          width: '20px',
-                          height: '20px',
-                          borderRadius: '3px',
-                          color: 'rgba(255, 255, 255, 0.8)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          padding: 0,
-                          minWidth: '20px',
-                          fontSize: '10px'
-                        }}
-                      />
+                      <Tooltip title="打包下载所有文件" placement="top">
+                        <Button
+                          type="text"
+                          icon={<DownloadOutlined />}
+                          onClick={async (e) => {
+                            e.stopPropagation()
+                            try {
+                              message.loading('正在打包下载...', 0)
+                              await projectApi.downloadProjectAll(project.id)
+                              message.destroy()
+                              message.success('下载完成！')
+                            } catch (error) {
+                              message.destroy()
+                              console.error('下载失败:', error)
+                              message.error('下载失败，请稍后再试')
+                            }
+                          }}
+                          style={{
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '3px',
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            padding: 0,
+                            minWidth: '20px',
+                            fontSize: '10px'
+                          }}
+                        />
+                      </Tooltip>
                     )}
                     
                     {/* 删除按钮 */}

@@ -239,9 +239,39 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
               
               <div>
                 {collection.collection_type === 'manual' ? (
-                  <Tag color="green">手动创建</Tag>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      border: 'none',
+                      background: 'linear-gradient(45deg, #1890ff, #40a9ff)',
+                      fontSize: '12px',
+                      borderRadius: '6px',
+                      padding: '3px 10px',
+                      lineHeight: '1.4',
+                      boxShadow: '0 2px 4px rgba(24, 144, 255, 0.2)'
+                    }}
+                  >
+                    手动创建
+                  </span>
                 ) : (
-                  <Tag color="purple">AI推荐</Tag>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      border: 'none',
+                      background: 'linear-gradient(45deg, #722ed1, #9254de)',
+                      fontSize: '12px',
+                      borderRadius: '6px',
+                      padding: '3px 10px',
+                      lineHeight: '1.4',
+                      boxShadow: '0 2px 4px rgba(114, 46, 209, 0.2)'
+                    }}
+                  >
+                    AI推荐
+                  </span>
                 )}
               </div>
               

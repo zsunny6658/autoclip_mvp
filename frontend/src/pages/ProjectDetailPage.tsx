@@ -63,7 +63,7 @@ const ProjectDetailPage: React.FC = () => {
   const [statusLoading, setStatusLoading] = useState(false)
   const [showCreateCollection, setShowCreateCollection] = useState(false)
   // 移除不再需要的状态变量，新组件内部管理
-  const [sortBy, setSortBy] = useState<'time' | 'score'>('time')
+  const [sortBy, setSortBy] = useState<'time' | 'score'>('score')
   const [progressCollapsed, setProgressCollapsed] = useState(false)
   const [showCollectionDetail, setShowCollectionDetail] = useState(false)
   const [selectedCollection, setSelectedCollection] = useState<any>(null)
@@ -394,6 +394,15 @@ const ProjectDetailPage: React.FC = () => {
                   type="primary" 
                   icon={<PlusOutlined />}
                   onClick={() => setShowCreateCollection(true)}
+                  style={{
+                    borderRadius: '8px',
+                    background: 'linear-gradient(45deg, #1890ff, #36cfc9)',
+                    border: 'none',
+                    fontWeight: 500,
+                    height: '40px',
+                    padding: '0 20px',
+                    fontSize: '14px'
+                  }}
                 >
                   创建合集
                 </Button>

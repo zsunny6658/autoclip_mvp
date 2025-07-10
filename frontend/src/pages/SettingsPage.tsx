@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Layout, Card, Form, Input, Button, message, Typography, Space, Alert, Divider, Row, Col } from 'antd'
-import { KeyOutlined, SaveOutlined, ApiOutlined, SettingOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { Layout, Card, Form, Input, Button, message, Typography, Space, Alert, Divider, Row, Col, Spin } from 'antd'
+import { KeyOutlined, SaveOutlined, SettingOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { settingsApi } from '../services/api'
 import './SettingsPage.css'
 
@@ -8,29 +8,87 @@ const { Content } = Layout
 const { Title, Text, Paragraph } = Typography
 const { TextArea } = Input
 
+interface BrowserInfo {
+  name: string
+  value: string
+  available: boolean
+  priority: number
+}
+
 interface ApiSettings {
   dashscope_api_key: string
   model_name: string
   chunk_size: number
   min_score_threshold: number
   max_clips_per_collection: number
+  default_browser?: string
 }
 
 const SettingsPage: React.FC = () => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [testLoading, setTestLoading] = useState(false)
   const [settings, setSettings] = useState<ApiSettings | null>(null)
+  const [availableBrowsers, setAvailableBrowsers] = useState<BrowserInfo[]>([])
+  const [detectingBrowsers, setDetectingBrowsers] = useState(false)
+  const [selectedBrowser, setSelectedBrowser] = useState<string>('')
 
   useEffect(() => {
     loadSettings()
+    detectAvailableBrowsers()
   }, [])
+
+  // 检测可用浏览器
+  const detectAvailableBrowsers = async () => {
+    setDetectingBrowsers(true)
+    try {
+      const response = await fetch('http://localhost:8000/api/browsers/detect')
+      if (response.ok) {
+        const data = await response.json()
+        const browsers: BrowserInfo[] = data.browsers
+        setAvailableBrowsers(browsers)
+        
+        // 自动选择第一个可用的浏览器，优先选择Chrome
+        const chromeBrowser = browsers.find(b => b.value === 'chrome' && b.available)
+        const firstAvailable = chromeBrowser || browsers.find(b => b.available)
+        if (firstAvailable) {
+          form.setFieldValue('default_browser', firstAvailable.value)
+          setSelectedBrowser(firstAvailable.value)
+        }
+      } else {
+        // 如果API调用失败，使用默认配置
+        const browsers: BrowserInfo[] = [
+          { name: 'Chrome', value: 'chrome', available: true, priority: 1 },
+          { name: 'Edge', value: 'edge', available: true, priority: 2 },
+          { name: 'Firefox', value: 'firefox', available: true, priority: 3 },
+          { name: 'Safari', value: 'safari', available: true, priority: 4 }
+        ]
+        setAvailableBrowsers(browsers)
+        form.setFieldValue('default_browser', 'chrome')
+        setSelectedBrowser('chrome')
+      }
+    } catch (error) {
+      console.error('检测浏览器失败:', error)
+      // 使用默认配置
+      const browsers: BrowserInfo[] = [
+        { name: 'Chrome', value: 'chrome', available: true, priority: 1 },
+        { name: 'Edge', value: 'edge', available: true, priority: 2 },
+        { name: 'Firefox', value: 'firefox', available: true, priority: 3 },
+        { name: 'Safari', value: 'safari', available: true, priority: 4 }
+      ]
+      setAvailableBrowsers(browsers)
+      form.setFieldValue('default_browser', 'chrome')
+      setSelectedBrowser('chrome')
+    } finally {
+      setDetectingBrowsers(false)
+    }
+  }
 
   const loadSettings = async () => {
     try {
       const data = await settingsApi.getSettings()
       setSettings(data)
       form.setFieldsValue(data)
+      if (data.default_browser) setSelectedBrowser(data.default_browser)
     } catch (error) {
       message.error('加载配置失败')
       console.error('Load settings error:', error)
@@ -48,24 +106,6 @@ const SettingsPage: React.FC = () => {
       console.error('Save settings error:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleTestConnection = async () => {
-    setTestLoading(true)
-    try {
-      const values = form.getFieldsValue()
-      const result = await settingsApi.testApiKey(values.dashscope_api_key)
-      if (result.success) {
-        message.success('API密钥测试成功')
-      } else {
-        message.error(`API密钥测试失败: ${result.error}`)
-      }
-    } catch (error) {
-      message.error('测试连接失败')
-      console.error('Test connection error:', error)
-    } finally {
-      setTestLoading(false)
     }
   }
 
@@ -111,18 +151,6 @@ const SettingsPage: React.FC = () => {
                 prefix={<KeyOutlined />}
                 className="settings-input"
               />
-            </Form.Item>
-
-            <Form.Item className="form-item">
-              <Button
-                type="default"
-                icon={<ApiOutlined />}
-                onClick={handleTestConnection}
-                loading={testLoading}
-                className="test-button"
-              >
-                测试连接
-              </Button>
             </Form.Item>
 
             <Divider className="settings-divider" />
@@ -192,6 +220,97 @@ const SettingsPage: React.FC = () => {
               </Col>
             </Row>
 
+            <Divider className="settings-divider" />
+
+            <Title level={4} className="section-title">浏览器配置</Title>
+            
+            <Alert
+              message="B站链接导入设置"
+              description="配置默认浏览器用于获取B站登录状态，下载AI字幕。如不配置将只能下载公开字幕。"
+              type="info"
+              showIcon
+              style={{
+                background: 'rgba(79, 172, 254, 0.1)',
+                border: '1px solid rgba(79, 172, 254, 0.3)',
+                borderRadius: '8px',
+                marginBottom: '16px'
+              }}
+            />
+
+            {detectingBrowsers ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px',
+                background: 'rgba(79, 172, 254, 0.1)',
+                borderRadius: '8px',
+                border: '1px solid rgba(79, 172, 254, 0.3)',
+                marginBottom: '16px'
+              }}>
+                <Spin size="small" />
+                <Text style={{ color: '#4facfe', fontSize: '14px' }}>
+                  正在检测可用浏览器...
+                </Text>
+              </div>
+            ) : (
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '8px',
+                marginBottom: '16px'
+              }}>
+                {availableBrowsers.map(browser => {
+                  const isSelected = selectedBrowser === browser.value
+                  return (
+                    <div
+                      key={browser.value}
+                      onClick={() => {
+                        if (!browser.available) return
+                        setSelectedBrowser(browser.value)
+                        form.setFieldValue('default_browser', browser.value)
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: isSelected 
+                          ? '2px solid #4facfe' 
+                          : '2px solid rgba(255, 255, 255, 0.1)',
+                        background: isSelected 
+                          ? 'rgba(79, 172, 254, 0.2)' 
+                          : 'rgba(255, 255, 255, 0.05)',
+                        color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
+                        cursor: browser.available ? 'pointer' : 'not-allowed',
+                        transition: 'all 0.2s ease',
+                        fontSize: '13px',
+                        fontWeight: isSelected ? 600 : 400,
+                        userSelect: 'none',
+                        opacity: browser.available ? 1 : 0.5
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected && browser.available) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                        }
+                      }}
+                    >
+                      {browser.name}
+                      {!browser.available && <span style={{ fontSize: '10px', opacity: 0.6 }}> (未安装)</span>}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
             <Form.Item className="form-item">
               <Button
                 type="primary"
@@ -200,6 +319,10 @@ const SettingsPage: React.FC = () => {
                 loading={loading}
                 size="large"
                 className="save-button"
+                onClick={() => {
+                  // 保存时同步selectedBrowser和form
+                  form.setFieldValue('default_browser', selectedBrowser)
+                }}
               >
                 保存配置
               </Button>
@@ -229,14 +352,6 @@ const SettingsPage: React.FC = () => {
               </Paragraph>
             </div>
             
-            <div className="instruction-item">
-              <Title level={5} className="instruction-title">
-                <InfoCircleOutlined /> 3. 测试连接
-              </Title>
-              <Paragraph className="instruction-text">
-                保存前建议先测试API密钥是否有效，确保服务正常运行
-              </Paragraph>
-            </div>
           </Space>
         </Card>
       </div>

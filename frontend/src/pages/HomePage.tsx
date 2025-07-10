@@ -287,28 +287,40 @@ const HomePage: React.FC = () => {
                 alignItems: 'center'
               }}>
                 <Select
-                  placeholder="状态筛选"
+                  placeholder="选择状态"
                   value={statusFilter}
                   onChange={setStatusFilter}
                   style={{ 
-                    minWidth: '160px',
-                    height: '40px',
-                    background: 'rgba(38, 38, 38, 0.8)',
-                    border: '1px solid rgba(79, 172, 254, 0.3)',
-                    borderRadius: '12px',
-                    color: '#ffffff'
+                    minWidth: '140px',
+                    height: '36px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(79, 172, 254, 0.2)',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '14px'
                   }}
                   dropdownStyle={{
-                    background: 'rgba(38, 38, 38, 0.95)',
+                    background: 'rgba(26, 26, 46, 0.95)',
                     border: '1px solid rgba(79, 172, 254, 0.3)',
-                    backdropFilter: 'blur(20px)'
+                    borderRadius: '8px',
+                    backdropFilter: 'blur(20px)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
                   }}
+                  suffixIcon={
+                    <span style={{ 
+                      color: '#8c8c8c', 
+                      fontSize: '10px',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      ⌄
+                    </span>
+                  }
                   allowClear
                 >
-                  <Option value="all">全部状态</Option>
-                  <Option value="completed">已完成</Option>
-                  <Option value="processing">处理中</Option>
-                  <Option value="error">处理失败</Option>
+                  <Option value="all" style={{ color: '#ffffff' }}>全部状态</Option>
+                  <Option value="completed" style={{ color: '#52c41a' }}>已完成</Option>
+                  <Option value="processing" style={{ color: '#1890ff' }}>处理中</Option>
+                  <Option value="error" style={{ color: '#ff4d4f' }}>处理失败</Option>
                 </Select>
               </div>
             </div>
