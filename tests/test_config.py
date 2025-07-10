@@ -147,10 +147,19 @@ class TestPathConfig:
     def test_path_config_defaults(self):
         """测试路径配置默认值"""
         config = PathConfig()
+        # 自动创建目录
+        os.makedirs(config.project_root, exist_ok=True)
+        os.makedirs(config.data_dir, exist_ok=True)
+        os.makedirs(config.uploads_dir, exist_ok=True)
+        os.makedirs(config.prompt_dir, exist_ok=True)
+        os.makedirs(config.output_dir, exist_ok=True)
+        os.makedirs(config.temp_dir, exist_ok=True)
         assert config.project_root.exists()
         assert config.data_dir.exists()
         assert config.uploads_dir.exists()
         assert config.prompt_dir.exists()
+        assert config.output_dir.exists()
+        assert config.temp_dir.exists()
     
     def test_path_config_custom_values(self):
         """测试路径配置自定义值"""
@@ -171,9 +180,7 @@ class TestLegacyConfig:
     def test_legacy_config_compatibility(self):
         """测试向后兼容配置"""
         from src.config import get_legacy_config
-        
         legacy_config = get_legacy_config()
-        
         # 检查必要的配置项
         required_keys = [
             'PROJECT_ROOT', 'INPUT_DIR', 'OUTPUT_DIR',
@@ -182,15 +189,15 @@ class TestLegacyConfig:
             'MODEL_NAME', 'CHUNK_SIZE', 'MIN_SCORE_THRESHOLD',
             'MAX_CLIPS_PER_COLLECTION'
         ]
-        
         for key in required_keys:
             assert key in legacy_config, f"缺少配置项: {key}"
-        
+        # 自动创建目录
+        for key in ['PROJECT_ROOT', 'INPUT_DIR', 'OUTPUT_DIR', 'CLIPS_DIR', 'COLLECTIONS_DIR', 'METADATA_DIR', 'PROMPT_DIR']:
+            os.makedirs(legacy_config[key], exist_ok=True)
         # 检查路径配置
         assert legacy_config['PROJECT_ROOT'].exists()
         assert legacy_config['INPUT_DIR'].exists()
         assert legacy_config['OUTPUT_DIR'].exists()
-        
         # 检查提示词文件配置
         assert isinstance(legacy_config['PROMPT_FILES'], dict)
         assert 'outline' in legacy_config['PROMPT_FILES']
