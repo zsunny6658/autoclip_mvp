@@ -2,6 +2,7 @@
 错误处理系统单元测试
 """
 import time
+import pytest
 from unittest.mock import patch, MagicMock
 
 from src.utils.error_handler import (

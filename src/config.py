@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from enum import Enum
 
 # 视频分类枚举
@@ -142,13 +142,38 @@ class Settings(BaseModel):
     # bilibili_auto_generate_tags: bool = True
     # bilibili_tag_limit: int = 12
     
-    @validator('min_score_threshold')
+    def __init__(self, **data):
+        # 从环境变量读取配置
+        env_mappings = {
+            'dashscope_api_key': 'DASHSCOPE_API_KEY',
+            'model_name': 'MODEL_NAME',
+            'chunk_size': 'CHUNK_SIZE',
+            'min_score_threshold': 'MIN_SCORE_THRESHOLD'
+        }
+        
+        for field, env_var in env_mappings.items():
+            if field not in data and os.getenv(env_var):
+                env_value = os.getenv(env_var)
+                if env_value is not None:
+                    # 类型转换
+                    if field == 'chunk_size':
+                        data[field] = int(env_value)
+                    elif field == 'min_score_threshold':
+                        data[field] = float(env_value)
+                    else:
+                        data[field] = env_value
+        
+        super().__init__(**data)
+    
+    @field_validator('min_score_threshold')
+    @classmethod
     def validate_score_threshold(cls, v):
         if not 0 <= v <= 1:
             raise ValueError('评分阈值必须在0-1之间')
         return v
     
-    @validator('chunk_size')
+    @field_validator('chunk_size')
+    @classmethod
     def validate_chunk_size(cls, v):
         if v <= 0:
             raise ValueError('分块大小必须大于0')
@@ -321,7 +346,7 @@ class ConfigManager:
         
         try:
             with open(config_file, 'w', encoding='utf-8') as f:
-                json.dump(self.settings.dict(), f, ensure_ascii=False, indent=2)
+                json.dump(self.settings.model_dump(), f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"保存配置文件失败: {e}")
     
