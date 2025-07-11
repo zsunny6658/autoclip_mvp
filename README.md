@@ -1,59 +1,59 @@
-# AutoClip - 智能视频切片工具
+# AutoClip - AI-Powered Video Slicing Tool
 
-🎬 基于AI的智能视频切片和合集推荐系统，支持从B站视频自动下载、字幕提取、智能切片和合集生成。
+🎬 An intelligent video slicing and collection recommendation system based on AI, supporting automatic Bilibili video download, subtitle extraction, intelligent slicing, and collection generation.
 
-## ✨ 功能特性
+## ✨ Features
 
-- 🔥 **智能视频切片**：基于AI分析视频内容，自动生成高质量切片
-- 📺 **B站视频下载**：支持B站视频自动下载和字幕提取
-- 🎯 **智能合集推荐**：AI自动分析切片内容，推荐相关合集
-- 🎨 **手动合集编辑**：支持拖拽排序、添加/删除切片
-- 📦 **一键打包下载**：支持所有切片和合集的一键打包下载
-- 🌐 **现代化Web界面**：React + TypeScript + Ant Design
-- ⚡ **实时处理状态**：实时显示处理进度和日志
+- 🔥 **Intelligent Video Slicing**: AI-powered video content analysis for high-quality automatic slicing
+- 📺 **Bilibili Video Download**: Support for automatic Bilibili video download and subtitle extraction
+- 🎯 **Smart Collection Recommendations**: AI automatically analyzes slice content and recommends related collections
+- 🎨 **Manual Collection Editing**: Support drag-and-drop sorting, adding/removing slices
+- 📦 **One-Click Package Download**: Support one-click package download for all slices and collections
+- 🌐 **Modern Web Interface**: React + TypeScript + Ant Design
+- ⚡ **Real-time Processing Status**: Real-time display of processing progress and logs
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 环境要求
+### Requirements
 
 - Python 3.8+
 - Node.js 16+
-- 通义千问API密钥（用于AI分析）
+- DashScope API Key (for AI analysis)
 
-### 安装步骤
+### Installation
 
-1. **克隆项目**
+1. **Clone the project**
 ```bash
 git clone git@github.com:zhouxiaoka/autoclip_mvp.git
 cd autoclip_mvp
 ```
 
-2. **安装后端依赖**
+2. **Install backend dependencies**
 ```bash
-# 创建虚拟环境
+# Create virtual environment
 python3 -m venv venv
 source venv/bin/activate  # Linux/Mac
-# 或 venv\Scripts\activate  # Windows
+# or venv\Scripts\activate  # Windows
 
-# 安装依赖
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-3. **安装前端依赖**
+3. **Install frontend dependencies**
 ```bash
 cd frontend
 npm install
 cd ..
 ```
 
-4. **配置API密钥**
+4. **Configure API keys**
 ```bash
-# 复制示例配置文件
+# Copy example configuration file
 cp data/settings.example.json data/settings.json
 
-# 编辑配置文件，填入你的API密钥
+# Edit configuration file and add your API key
 {
-  "dashscope_api_key": "你的通义千问API密钥",
+  "dashscope_api_key": "your-dashscope-api-key",
   "model_name": "qwen-plus",
   "chunk_size": 5000,
   "min_score_threshold": 0.7,
@@ -62,115 +62,115 @@ cp data/settings.example.json data/settings.json
 }
 ```
 
-### 启动服务
+### Start Services
 
-#### 方式一：使用启动脚本（推荐）
+#### Method 1: Using startup script (Recommended)
 ```bash
 chmod +x start_dev.sh
 ./start_dev.sh
 ```
 
-#### 方式二：手动启动
+#### Method 2: Manual startup
 ```bash
-# 启动后端服务
+# Start backend service
 source venv/bin/activate
 python backend_server.py
 
-# 新开终端，启动前端服务
+# Open new terminal, start frontend service
 cd frontend
 npm run dev
 ```
 
-#### 方式三：命令行工具
+#### Method 3: Command line tool
 ```bash
-# 处理本地视频文件
-python main.py --video input.mp4 --srt input.srt --project-name "我的项目"
+# Process local video files
+python main.py --video input.mp4 --srt input.srt --project-name "My Project"
 
-# 处理现有项目
+# Process existing project
 python main.py --project-id <project_id>
 
-# 列出所有项目
+# List all projects
 python main.py --list-projects
 ```
 
-### 访问地址
+### Access URLs
 
-- 🌐 **前端界面**: http://localhost:3000
-- 🔌 **后端API**: http://localhost:8000
-- 📚 **API文档**: http://localhost:8000/docs
+- 🌐 **Frontend Interface**: http://localhost:3000
+- 🔌 **Backend API**: http://localhost:8000
+- 📚 **API Documentation**: http://localhost:8000/docs
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 autoclip_mvp/
-├── backend_server.py          # FastAPI后端服务
-├── main.py                   # 命令行入口
-├── start_dev.sh              # 开发环境启动脚本
-├── requirements.txt           # Python依赖
-├── .gitignore               # Git忽略文件
-├── README.md                # 项目文档
+├── backend_server.py          # FastAPI backend service
+├── main.py                   # Command line entry
+├── start_dev.sh              # Development environment startup script
+├── requirements.txt           # Python dependencies
+├── .gitignore               # Git ignore file
+├── README.md                # Project documentation
 │
-├── frontend/                # React前端
+├── frontend/                # React frontend
 │   ├── src/
-│   │   ├── components/      # React组件
-│   │   ├── pages/          # 页面组件
-│   │   ├── services/       # API服务
-│   │   ├── store/          # 状态管理
-│   │   └── hooks/          # 自定义Hooks
-│   ├── package.json        # 前端依赖
-│   └── vite.config.ts      # Vite配置
+│   │   ├── components/      # React components
+│   │   ├── pages/          # Page components
+│   │   ├── services/       # API services
+│   │   ├── store/          # State management
+│   │   └── hooks/          # Custom Hooks
+│   ├── package.json        # Frontend dependencies
+│   └── vite.config.ts      # Vite configuration
 │
-├── src/                    # 核心业务逻辑
-│   ├── main.py            # 主处理逻辑
-│   ├── config.py          # 配置管理
-│   ├── api.py             # API接口
-│   ├── pipeline/          # 处理流水线
-│   │   ├── step1_outline.py    # 大纲提取
-│   │   ├── step2_timeline.py   # 时间轴生成
-│   │   ├── step3_scoring.py    # 评分计算
-│   │   ├── step4_title.py      # 标题生成
-│   │   ├── step5_clustering.py # 聚类分析
-│   │   └── step6_video.py      # 视频生成
-│   ├── utils/             # 工具函数
-│   │   ├── llm_client.py      # AI客户端
-│   │   ├── video_processor.py # 视频处理
-│   │   ├── text_processor.py  # 文本处理
-│   │   ├── project_manager.py # 项目管理
-│   │   ├── error_handler.py   # 错误处理
-│   │   └── bilibili_downloader.py # B站下载
-│   └── upload/            # 文件上传
+├── src/                    # Core business logic
+│   ├── main.py            # Main processing logic
+│   ├── config.py          # Configuration management
+│   ├── api.py             # API interfaces
+│   ├── pipeline/          # Processing pipeline
+│   │   ├── step1_outline.py    # Outline extraction
+│   │   ├── step2_timeline.py   # Timeline generation
+│   │   ├── step3_scoring.py    # Score calculation
+│   │   ├── step4_title.py      # Title generation
+│   │   ├── step5_clustering.py # Clustering analysis
+│   │   └── step6_video.py      # Video generation
+│   ├── utils/             # Utility functions
+│   │   ├── llm_client.py      # AI client
+│   │   ├── video_processor.py # Video processing
+│   │   ├── text_processor.py  # Text processing
+│   │   ├── project_manager.py # Project management
+│   │   ├── error_handler.py   # Error handling
+│   │   └── bilibili_downloader.py # Bilibili downloader
+│   └── upload/            # File upload
 │       └── upload_manager.py
 │
-├── data/                  # 数据文件
-│   ├── projects.json     # 项目数据
-│   └── settings.json     # 配置文件
+├── data/                  # Data files
+│   ├── projects.json     # Project data
+│   └── settings.json     # Configuration file
 │
-├── uploads/              # 上传文件存储
-│   ├── tmp/             # 临时下载文件
-│   └── {project_id}/    # 项目文件
-│       ├── input/       # 原始文件
-│       └── output/      # 处理结果
-│           ├── clips/   # 切片视频
-│           └── collections/ # 合集视频
+├── uploads/              # Upload file storage
+│   ├── tmp/             # Temporary download files
+│   └── {project_id}/    # Project files
+│       ├── input/       # Original files
+│       └── output/      # Processing results
+│           ├── clips/   # Sliced videos
+│           └── collections/ # Collection videos
 │
-├── prompt/               # AI提示词模板
-│   ├── business/        # 商业财经
-│   ├── knowledge/       # 知识科普
-│   ├── entertainment/   # 娱乐内容
+├── prompt/               # AI prompt templates
+│   ├── business/        # Business & Finance
+│   ├── knowledge/       # Knowledge & Science
+│   ├── entertainment/   # Entertainment content
 │   └── ...
 │
-└── tests/               # 测试文件
+└── tests/               # Test files
     ├── test_config.py
     └── test_error_handler.py
 ```
 
-## 🔧 配置说明
+## 🔧 Configuration
 
-### API密钥配置
-在 `data/settings.json` 中配置你的通义千问API密钥：
+### API Key Configuration
+Configure your DashScope API key in `data/settings.json`:
 ```json
 {
-  "dashscope_api_key": "your-api-key-here",
+  "dashscope_api_key": "your-dashscope-api-key",
   "model_name": "qwen-plus",
   "chunk_size": 5000,
   "min_score_threshold": 0.7,
@@ -179,120 +179,124 @@ autoclip_mvp/
 }
 ```
 
-### 浏览器配置
-支持Chrome、Firefox、Safari等浏览器用于B站视频下载：
+### Browser Configuration
+Support for Chrome, Firefox, Safari and other browsers for Bilibili video download:
 ```json
 {
   "default_browser": "chrome"
 }
 ```
 
-## 📖 使用指南
+## 📖 User Guide
 
-### 1. 上传本地视频
-1. 访问 http://localhost:3000
-2. 点击"上传视频"按钮
-3. 选择视频文件和字幕文件（可选）
-4. 填写项目名称和分类
-5. 点击"开始处理"
+### 1. Upload Local Video
+1. Visit http://localhost:3000
+2. Click "Upload Video" button
+3. Select video file and subtitle file (required)
+4. Fill in project name and category
+5. Click "Start Processing"
 
-### 2. 下载B站视频
-1. 在首页点击"B站视频下载"
-2. 输入B站视频链接
-3. 选择浏览器（用于获取登录状态）
-4. 点击"开始下载"
+### 2. Download Bilibili Video
+1. Click "Bilibili Video Download" on homepage
+2. Enter Bilibili video link (must be a video with subtitles)
+3. Select browser (for login status)
+4. Click "Start Download"
 
-### 3. 编辑合集
-1. 进入项目详情页面
-2. 点击合集卡片进入编辑模式
-3. 拖拽切片调整顺序
-4. 添加或删除切片
-5. 保存更改
+### 3. Edit Collections
+1. Enter project detail page
+2. Click collection card to enter edit mode
+3. Drag and drop slices to adjust order
+4. Add or remove slices
+5. Save changes
 
-### 4. 下载项目
-1. 在项目卡片上点击下载按钮
-2. 自动打包所有切片和合集
-3. 下载完整的zip文件
+### 4. Download Project
+1. Click download button on project card
+2. Automatically package all slices and collections
+3. Download complete zip file
 
-## 🛠️ 开发指南
+## 🛠️ Development Guide
 
-### 后端开发
+### Backend Development
 ```bash
-# 启动开发服务器（支持热重载）
+# Start development server (with hot reload)
 python backend_server.py
 
-# 运行测试
+# Run tests
 pytest tests/
 ```
 
-### 前端开发
+### Frontend Development
 ```bash
 cd frontend
-npm run dev    # 开发模式
-npm run build  # 生产构建
-npm run lint   # 代码检查
+npm run dev    # Development mode
+npm run build  # Production build
+npm run lint   # Code linting
 ```
 
-### 添加新的视频分类
-1. 在 `prompt/` 目录下创建新的分类文件夹
-2. 添加对应的提示词模板文件
-3. 在前端 `src/services/api.ts` 中添加分类选项
+### Adding New Video Categories
+1. Create new category folder in `prompt/` directory
+2. Add corresponding prompt template files
+3. Add category options in frontend `src/services/api.ts`
 
-## 🐛 常见问题
+## 🐛 FAQ
 
-### Q: 下载B站视频失败？
-A: 确保已登录B站账号，并选择正确的浏览器。建议使用Chrome浏览器。
+### Q: Bilibili video download failed?
+A: Make sure you're logged into your Bilibili account and select the correct browser. Chrome browser is recommended.
 
-### Q: AI分析速度慢？
-A: 可以调整 `chunk_size` 参数，较小的值会提高速度但可能影响质量。
+### Q: AI analysis is slow?
+A: You can adjust the `chunk_size` parameter. Smaller values will improve speed but may affect quality.
 
-### Q: 切片质量不高？
-A: 调整 `min_score_threshold` 参数，较高的值会提高切片质量但减少数量。
+### Q: Slice quality is not good?
+A: Adjust the `min_score_threshold` parameter. Higher values will improve slice quality but reduce quantity.
 
-### Q: 合集数量太少？
-A: 调整 `max_clips_per_collection` 参数，增加每个合集的最大切片数量。
+### Q: Too few collections?
+A: Adjust the `max_clips_per_collection` parameter to increase the maximum number of slices per collection.
 
-## 📄 许可证
+## 📄 License
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🤝 贡献指南
+## 🤝 Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Welcome to submit Issues and Pull Requests!
 
-1. Fork 本项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
+1. Fork this project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📞 联系方式
+## 📞 Contact
 
-如有问题或建议，请通过以下方式联系：
+For questions or suggestions, please contact us through:
 
-### 💬 QQ交流群
-> 请扫描下方二维码加入QQ交流群
+### 💬 QQ Group
+> Please scan the QR code below to join our QQ group
 > 
-> ![QQ群二维码](./assets/qq_qr.jpg)
-
-### 📱 飞书交流群  
-> 请扫描下方二维码加入飞书交流群
+> Due to GitHub image display issues, please click the link below to view the QR code:
 > 
-> ![飞书群二维码](./assets/feishu_qr.jpg)
+> 📱 [QQ Group QR Code](https://github.com/zhouxiaoka/autoclip_mvp/blob/main/assets/qq_qr.jpg)
 
-### 📧 其他联系方式
-- 提交 [GitHub Issue](https://github.com/zhouxiaoka/autoclip_mvp/issues)
-- 发送邮件至：your-email@example.com
-- 加入上述QQ或飞书交流群
+### 📱 Feishu Group
+> Please scan the QR code below to join our Feishu group
+> 
+> Due to GitHub image display issues, please click the link below to view the QR code:
+> 
+> 📱 [Feishu Group QR Code](https://github.com/zhouxiaoka/autoclip_mvp/blob/main/assets/feishu_qr.jpg)
 
-## 🤝 贡献
+### 📧 Other Contact Methods
+- Submit a [GitHub Issue](https://github.com/zhouxiaoka/autoclip_mvp/issues)
+- Send email to: christine_zhouye@163.com
+- Add the above QQ or Feishu contact
 
-欢迎贡献代码！请查看 [贡献指南](CONTRIBUTING.md) 了解详情。
+## 🤝 Contributing
 
-## 📄 许可证
+Welcome to contribute code! Please see [Contributing Guide](CONTRIBUTING.md) for details.
 
-本项目采用 [MIT 许可证](LICENSE)。
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-⭐ 如果这个项目对你有帮助，请给它一个星标！
+⭐ If this project helps you, please give it a star! 
