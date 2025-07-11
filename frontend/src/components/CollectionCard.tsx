@@ -313,7 +313,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
           <Button key="close" onClick={() => setShowClipList(false)}>
             关闭
           </Button>,
-          onGenerateVideo && (
+          ...(onGenerateVideo ? [
             <Button 
               key="generate" 
               type="primary" 
@@ -324,8 +324,8 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
             >
               导出完整视频
             </Button>
-          )
-        ].filter(Boolean)}
+          ] : [])
+        ]}
         width={600}
       >
         <div style={{ marginBottom: '16px' }}>

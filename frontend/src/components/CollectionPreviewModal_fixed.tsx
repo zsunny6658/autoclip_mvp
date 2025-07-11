@@ -29,7 +29,7 @@ const CollectionPreviewModal: React.FC<CollectionPreviewModalProps> = ({
   clips,
   projectId,
   onClose,
-  onUpdateCollection,
+
   onRemoveClip,
   onReorderClips,
   onAddClip,
@@ -37,7 +37,7 @@ const CollectionPreviewModal: React.FC<CollectionPreviewModalProps> = ({
 }) => {
   const [currentClipIndex, setCurrentClipIndex] = useState(0)
   const [playing, setPlaying] = useState(false)
-  const [autoPlay, setAutoPlay] = useState(true)
+  const [autoPlay] = useState(true)
   const [downloadingClip, setDownloadingClip] = useState<string | null>(null)
   const [downloadingCollection, setDownloadingCollection] = useState(false)
   const [generatingVideo, setGeneratingVideo] = useState(false)

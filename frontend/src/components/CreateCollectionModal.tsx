@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, Input, Checkbox, Typography, Space, Button, Divider } from 'antd'
+import { Modal, Input, Checkbox, Typography, Button, Divider } from 'antd'
 import { PlusOutlined, TagOutlined, FileTextOutlined, VideoCameraOutlined } from '@ant-design/icons'
 import './CreateCollectionModal.css'
 

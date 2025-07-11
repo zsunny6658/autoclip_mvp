@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, message, Progress, Space, Typography, Card, Input, Spin } from 'antd'
+import { Button, message, Progress, Space, Typography, Input } from 'antd'
 import { InboxOutlined, VideoCameraOutlined, FileTextOutlined, SubnodeOutlined } from '@ant-design/icons'
 import { useDropzone } from 'react-dropzone'
 import { projectApi, VideoCategory, VideoCategoriesResponse } from '../services/api'

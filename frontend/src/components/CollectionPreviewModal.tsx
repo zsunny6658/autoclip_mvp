@@ -39,8 +39,7 @@ const CollectionPreviewModal: React.FC<CollectionPreviewModalProps> = ({
   const [currentClipIndex, setCurrentClipIndex] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [autoPlay] = useState(true)
-  const [downloadingClip, setDownloadingClip] = useState<string | null>(null)
-  const [downloadingCollection, setDownloadingCollection] = useState(false)
+
   const [showAddClipModal, setShowAddClipModal] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const playerRef = useRef<ReactPlayer>(null)
