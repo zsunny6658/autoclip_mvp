@@ -26,7 +26,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
   const [error, setError] = useState('')
   const [defaultBrowser, setDefaultBrowser] = useState<string>('')
   
-  const { addProject } = useProjectStore()
+
 
   // 从设置中获取默认浏览器
   const loadDefaultBrowser = async () => {
@@ -201,7 +201,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
       
     } catch (error: unknown) {
       setDownloading(false)
-      const errorMessage = (error as any)?.response?.data?.detail || (error as Error)?.message || '创建下载任务失败'
+      const errorMessage = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || (error as Error)?.message || '创建下载任务失败'
       message.error(errorMessage)
     }
   }

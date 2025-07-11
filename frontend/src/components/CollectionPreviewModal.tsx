@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Modal, Row, Col, Button, Space, Typography, Tag, Tooltip, message, Popconfirm } from 'antd'
-import { PlayCircleOutlined, PauseCircleOutlined, DownloadOutlined, DeleteOutlined, MenuOutlined, CloseOutlined, LeftOutlined, RightOutlined, PlusOutlined } from '@ant-design/icons'
+import { Modal, Row, Col, Button, Space, Typography, Tag, message, Popconfirm } from 'antd'
+import { PlayCircleOutlined, DeleteOutlined, MenuOutlined, CloseOutlined, LeftOutlined, RightOutlined, PlusOutlined } from '@ant-design/icons'
 import ReactPlayer from 'react-player'
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
 import { Collection, Clip, useProjectStore } from '../store/useProjectStore'
@@ -30,7 +30,7 @@ const CollectionPreviewModal: React.FC<CollectionPreviewModalProps> = ({
   clips,
   projectId,
   onClose,
-  onUpdateCollection,
+
   onRemoveClip,
   onReorderClips,
   onAddClip,
@@ -38,7 +38,7 @@ const CollectionPreviewModal: React.FC<CollectionPreviewModalProps> = ({
 }) => {
   const [currentClipIndex, setCurrentClipIndex] = useState(0)
   const [playing, setPlaying] = useState(false)
-  const [autoPlay, setAutoPlay] = useState(true)
+  const [autoPlay] = useState(true)
   const [downloadingClip, setDownloadingClip] = useState<string | null>(null)
   const [downloadingCollection, setDownloadingCollection] = useState(false)
   const [showAddClipModal, setShowAddClipModal] = useState(false)
