@@ -4,7 +4,7 @@ import { SearchOutlined, PlayCircleOutlined } from '@ant-design/icons'
 import { Clip } from '../store/useProjectStore'
 import './AddClipToCollectionModal.css'
 
-const { Text, Title } = Typography
+const { Text } = Typography
 const { Search } = Input
 
 interface AddClipToCollectionModalProps {

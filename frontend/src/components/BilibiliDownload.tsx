@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Button, message, Progress, Input, Card, Typography, Space, Spin, Select, Alert } from 'antd'
+import { Button, message, Progress, Input, Card, Typography, Space, Spin, Alert } from 'antd'
 import { DownloadOutlined, InfoCircleOutlined } from '@ant-design/icons'
-import { projectApi, bilibiliApi, VideoCategory, BilibiliDownloadTask } from '../services/api'
+import { projectApi, bilibiliApi, VideoCategory, BilibiliDownloadTask, BilibiliVideoInfo, BilibiliDownloadRequest } from '../services/api'
 import { useProjectStore } from '../store/useProjectStore'
 
 const { Text } = Typography
@@ -21,7 +21,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
   const [downloading, setDownloading] = useState(false)
   const [currentTask, setCurrentTask] = useState<BilibiliDownloadTask | null>(null)
   const [pollingInterval, setPollingInterval] = useState<number | null>(null)
-  const [videoInfo, setVideoInfo] = useState<any>(null)
+  const [videoInfo, setVideoInfo] = useState<BilibiliVideoInfo | null>(null)
   const [parsing, setParsing] = useState(false)
   const [error, setError] = useState('')
   const [defaultBrowser, setDefaultBrowser] = useState<string>('')
@@ -100,7 +100,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
     setError('') // 清除之前的错误信息
     
     try {
-      const requestBody: any = { url: url.trim() }
+      const requestBody: { url: string; browser?: string } = { url: url.trim() }
       if (defaultBrowser) {
         requestBody.browser = defaultBrowser
       }
@@ -117,7 +117,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
       }
       
       return parsedVideoInfo
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('请输入正确的视频链接')
       setVideoInfo(null)
     } finally {
@@ -171,13 +171,10 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
     setDownloading(true)
     
     try {
-      const requestBody: any = {
+      const requestBody: BilibiliDownloadRequest = {
         url: url.trim(),
+        project_name: projectName.trim() || '未命名项目',
         video_category: selectedCategory
-      }
-      
-      if (projectName.trim()) {
-        requestBody.project_name = projectName.trim()
       }
       
       if (defaultBrowser) {

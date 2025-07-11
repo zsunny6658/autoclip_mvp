@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Card, Typography, Button, Tag, Tooltip, Modal, Space } from 'antd'
+import { Card, Typography, Button, Tag, Tooltip, Modal } from 'antd'
 import { PlayCircleOutlined, DownloadOutlined, ClockCircleOutlined, StarFilled } from '@ant-design/icons'
 import ReactPlayer from 'react-player'
 import { Clip } from '../store/useProjectStore'
@@ -22,7 +22,6 @@ const ClipCard: React.FC<ClipCardProps> = ({
   const [showPlayer, setShowPlayer] = useState(false)
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null)
   const playerRef = useRef<ReactPlayer>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
 
 
 
