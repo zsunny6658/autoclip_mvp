@@ -149,7 +149,7 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
           setDownloading(false)
           message.error(`下载失败: ${task.error_message || '未知错误'}`)
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('轮询任务状态失败:', error)
       }
     }, 2000)
@@ -199,9 +199,9 @@ const BilibiliDownload: React.FC<BilibiliDownloadProps> = ({ onDownloadSuccess }
       // 开始轮询任务状态
       startPolling(response.task_id)
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       setDownloading(false)
-      const errorMessage = error.response?.data?.detail || error.message || '创建下载任务失败'
+      const errorMessage = (error as any)?.response?.data?.detail || (error as Error)?.message || '创建下载任务失败'
       message.error(errorMessage)
     }
   }

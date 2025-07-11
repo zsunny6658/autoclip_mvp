@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Modal, Row, Col, List, Button, Space, Typography, Tag, Tooltip, message, Popconfirm } from 'antd'
+import { Modal, Row, Col, Button, Space, Typography, Tag, Tooltip, message, Popconfirm } from 'antd'
 import { PlayCircleOutlined, PauseCircleOutlined, DownloadOutlined, DeleteOutlined, MenuOutlined, CloseOutlined, LeftOutlined, RightOutlined, PlusOutlined } from '@ant-design/icons'
 import ReactPlayer from 'react-player'
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'

@@ -105,13 +105,7 @@ const ClipCard: React.FC<ClipCardProps> = ({
     setShowPlayer(false)
   }
 
-  // 生成内容摘要（一句话总结）
-  const getContentSummary = () => {
-    if (clip.content && clip.content.length > 0) {
-      return clip.content[0] // 取第一个要点作为摘要
-    }
-    return clip.recommend_reason || '暂无内容摘要'
-  }
+
 
   const formatTime = (timeStr: string) => {
     // 将 SRT 时间格式转换为显示格式

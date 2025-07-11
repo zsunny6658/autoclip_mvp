@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { Card, Typography, Button, Space, Input, Tag, List, Modal, Tooltip, Divider, Popconfirm } from 'antd'
-import { EditOutlined, DownloadOutlined, SaveOutlined, CloseOutlined, PlayCircleOutlined, DragOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Card, Typography, Button, Space, Input, Tag, List, Modal, Tooltip, Popconfirm } from 'antd'
+import { EditOutlined, SaveOutlined, CloseOutlined, PlayCircleOutlined, DragOutlined, DeleteOutlined } from '@ant-design/icons'
 import { Collection, Clip } from '../store/useProjectStore'
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
 
@@ -21,7 +21,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
   collection, 
   clips,
   onUpdate, 
-  onDownload,
+
   onDelete,
   onGenerateVideo,
   onReorderClips

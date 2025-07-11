@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Card, Typography, Tag, Button, Popconfirm } from 'antd'
+import { Card, Typography, Button, Popconfirm } from 'antd'
 import { DeleteOutlined } from '@ant-design/icons'
 import { Collection, Clip } from '../store/useProjectStore'
 
@@ -17,7 +17,7 @@ const CollectionCardMini: React.FC<CollectionCardMiniProps> = ({
   collection, 
   clips,
   onView,
-  onGenerateVideo,
+
   onDelete
 }) => {
   const [isHovered, setIsHovered] = useState(false)
