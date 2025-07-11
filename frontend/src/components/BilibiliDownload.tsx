@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button, message, Progress, Input, Card, Typography, Space, Spin, Alert } from 'antd'
 import { DownloadOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { projectApi, bilibiliApi, VideoCategory, BilibiliDownloadTask, BilibiliVideoInfo, BilibiliDownloadRequest } from '../services/api'
-import { useProjectStore } from '../store/useProjectStore'
+
 
 const { Text } = Typography
 

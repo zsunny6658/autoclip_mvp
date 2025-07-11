@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Modal, Row, Col, List, Button, Space, Typography, Tag, Tooltip, message, Popconfirm } from 'antd'
-import { PlayCircleOutlined, PauseCircleOutlined, DownloadOutlined, DeleteOutlined, DragOutlined, CloseOutlined, LeftOutlined, RightOutlined, PlusOutlined } from '@ant-design/icons'
+import { Modal, Row, Col, Button, Space, Typography, Tag, Tooltip, message, Popconfirm } from 'antd'
+import { PlayCircleOutlined, DownloadOutlined, DeleteOutlined, DragOutlined, CloseOutlined, LeftOutlined, RightOutlined, PlusOutlined } from '@ant-design/icons'
 import ReactPlayer from 'react-player'
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
 import { Collection, Clip, useProjectStore } from '../store/useProjectStore'

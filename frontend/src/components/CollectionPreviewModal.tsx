@@ -179,33 +179,7 @@ const CollectionPreviewModal: React.FC<CollectionPreviewModalProps> = ({
     }
   }
 
-  const handleDownloadClip = async (clipId: string) => {
-    setDownloadingClip(clipId)
-    try {
-      await projectApi.downloadVideo(projectId, clipId)
-      message.success('切片下载成功')
-    } catch (error) {
-      console.error('Download clip failed:', error)
-      message.error('切片下载失败')
-    } finally {
-      setDownloadingClip(null)
-    }
-  }
 
-  const handleDownloadCollection = async () => {
-    if (!latestCollection) return
-    
-    setDownloadingCollection(true)
-    try {
-      await projectApi.downloadVideo(projectId, undefined, latestCollection.id)
-      message.success('合集下载成功')
-    } catch (error) {
-      console.error('Download collection failed:', error)
-      message.error('合集下载失败')
-    } finally {
-      setDownloadingCollection(false)
-    }
-  }
 
   const handleGenerateVideo = async () => {
     if (!latestCollection) return
