@@ -1,10 +1,10 @@
-# AutoClip - AI-Powered Video Slicing Tool
+# AutoClip - AI-Powered Video Clipping Tool
 
-🎬 An intelligent video slicing and collection recommendation system based on AI, supporting automatic Bilibili video download, subtitle extraction, intelligent slicing, and collection generation.
+🎬 An intelligent video clipping and collection recommendation system based on AI, supporting automatic Bilibili video download, subtitle extraction, intelligent slicing, and collection generation.
 
 ## ✨ Features
 
-- 🔥 **Intelligent Video Slicing**: AI-powered video content analysis for high-quality automatic slicing
+- 🔥 **Intelligent Video Clipping**: AI-powered video content analysis for high-quality automatic clipping
 - 📺 **Bilibili Video Download**: Support for automatic Bilibili video download and subtitle extraction
 - 🎯 **Smart Collection Recommendations**: AI automatically analyzes slice content and recommends related collections
 - 🎨 **Manual Collection Editing**: Support drag-and-drop sorting, adding/removing slices
@@ -270,19 +270,11 @@ Welcome to submit Issues and Pull Requests!
 
 For questions or suggestions, please contact us through:
 
-### 💬 QQ Group
-> Please scan the QR code below to join our QQ group
-> 
-> Due to GitHub image display issues, please click the link below to view the QR code:
-> 
-> 📱 [QQ Group QR Code](https://github.com/zhouxiaoka/autoclip_mvp/blob/main/assets/qq_qr.jpg)
+### 💬 QQ  
+<img src="./qq_qr.jpg" alt="QQ二维码" width="150">
 
-### 📱 Feishu Group
-> Please scan the QR code below to join our Feishu group
-> 
-> Due to GitHub image display issues, please click the link below to view the QR code:
-> 
-> 📱 [Feishu Group QR Code](https://github.com/zhouxiaoka/autoclip_mvp/blob/main/assets/feishu_qr.jpg)
+### 📱 Feishu  
+<img src="./feishu_qr.jpg" alt="飞书二维码" width="150">
 
 ### 📧 Other Contact Methods
 - Submit a [GitHub Issue](https://github.com/zhouxiaoka/autoclip_mvp/issues)
