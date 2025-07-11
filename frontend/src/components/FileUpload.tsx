@@ -16,8 +16,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [projectName, setProjectName] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-    const [categories, setCategories] = useState<VideoCategory[]>([])
-  const [loadingCategories, setLoadingCategories] = useState(false)
+  const [categories, setCategories] = useState<VideoCategory[]>([])
   const [files, setFiles] = useState<{
     video?: File
     srt?: File
@@ -28,7 +27,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
   // 加载视频分类配置
   useEffect(() => {
     const loadCategories = async () => {
-      setLoadingCategories(true)
       try {
         const response = await projectApi.getVideoCategories()
         setCategories(response.categories)
@@ -41,8 +39,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       } catch (error) {
         console.error('Failed to load video categories:', error)
         message.error('加载视频分类失败')
-      } finally {
-        setLoadingCategories(false)
       }
     }
 

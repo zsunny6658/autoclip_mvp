@@ -292,8 +292,8 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
               
               <div style={{ marginTop: '8px' }}>
                 <Text type="secondary" style={{ fontSize: '11px' }}>
-                  包含片段：{collectionClips.slice(0, 2).map((clip) => (
-                    <span key={clip.id}>{clip.title || clip.outline}</span>
+                  包含片段：{collectionClips.slice(0, 2).map((clip, idx) => (
+                    <span key={clip.id || idx}>{clip.title || clip.outline}</span>
                   )).reduce((prev, curr) => [prev, '、', curr], [] as React.ReactNode[])}
                   {collectionClips.length > 2 && `等${collectionClips.length}个`}
                 </Text>

@@ -66,7 +66,7 @@ const HomePage: React.FC = () => {
     }
   }
 
-  const handleRetryProject = async (id: string) => {
+  const handleRetryProject = async () => {
     // 重新加载项目列表以获取最新状态
     await loadProjects()
   }
@@ -84,12 +84,12 @@ const HomePage: React.FC = () => {
         }
       }, 1000)
     } catch (error: unknown) {
-      const errorMessage = (error as any)?.userMessage || '启动处理失败'
+      const errorMessage = (error as { userMessage?: string })?.userMessage || '启动处理失败'
       message.error(errorMessage)
       console.error('Start processing error:', error)
       
       // 如果是超时错误，提示用户项目可能仍在处理
-      if ((error as any)?.code === 'ECONNABORTED' || (error as any)?.message?.includes('timeout')) {
+      if ((error as { code?: string; message?: string })?.code === 'ECONNABORTED' || (error as { code?: string; message?: string })?.message?.includes('timeout')) {
         message.info('请求超时，但项目可能已开始处理，请查看项目状态', 5)
         // 延迟刷新项目列表
         setTimeout(async () => {
