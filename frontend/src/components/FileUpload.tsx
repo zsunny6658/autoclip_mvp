@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { Button, message, Progress, Space, Typography, Input } from 'antd'
 import { InboxOutlined, VideoCameraOutlined, FileTextOutlined, SubnodeOutlined } from '@ant-design/icons'
 import { useDropzone } from 'react-dropzone'
-import { projectApi, VideoCategory, VideoCategoriesResponse } from '../services/api'
+import { projectApi, VideoCategory } from '../services/api'
 import { useProjectStore } from '../store/useProjectStore'
 
-const { Text, Title } = Typography
+const { Text } = Typography
 
 interface FileUploadProps {
   onUploadSuccess?: (projectId: string) => void
@@ -16,7 +16,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [projectName, setProjectName] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [categories, setCategories] = useState<VideoCategory[]>([])
+    const [categories, setCategories] = useState<VideoCategory[]>([])
   const [loadingCategories, setLoadingCategories] = useState(false)
   const [files, setFiles] = useState<{
     video?: File

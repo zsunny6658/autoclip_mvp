@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Tag, Button, Space, Typography, Progress, Popconfirm, message, Tooltip } from 'antd'
-import { PlayCircleOutlined, DeleteOutlined, EyeOutlined, DownloadOutlined, ReloadOutlined, LoadingOutlined } from '@ant-design/icons'
+import { Card, Tag, Button, Space, Typography, Popconfirm, message, Tooltip } from 'antd'
+import { PlayCircleOutlined, DeleteOutlined, DownloadOutlined, ReloadOutlined, LoadingOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { Project } from '../store/useProjectStore'
 import { projectApi } from '../services/api'
@@ -10,8 +10,7 @@ import 'dayjs/locale/zh-cn'
 
 dayjs.extend(relativeTime)
 
-const { Text, Title } = Typography
-const { Meta } = Card
+const { Text } = Typography
 
 interface ProjectCardProps {
   project: Project
@@ -180,25 +179,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
     return () => clearInterval(interval)
   }, [logs.length])
 
-  const getStatusColor = (status: Project['status']) => {
-    switch (status) {
-      case 'completed': return 'success'
-      case 'processing': return 'processing'
-      case 'error': return 'error'
-      case 'uploading': return 'default'
-      default: return 'default'
-    }
-  }
 
-  const getStatusText = (status: Project['status']) => {
-    switch (status) {
-      case 'completed': return '已完成'
-      case 'processing': return '处理中'
-      case 'error': return '处理失败'
-      case 'uploading': return '上传中'
-      default: return '未知状态'
-    }
-  }
 
   const getProgressPercent = () => {
     if (project.status === 'completed') return 100
