@@ -271,10 +271,10 @@ A: 调整 `max_clips_per_collection` 参数，增加每个合集的最大切片�
 如有问题或建议，请通过以下方式联系：
 
 ### 💬 QQ交流群
-![QQ群二维码](assets/qq_qr.png)
+![QQ群二维码](assets/qq_qr.jpg)
 
 ### 📱 飞书交流群  
-![飞书群二维码](assets/feishu_qr.png)
+![飞书群二维码](assets/feishu_qr.jpg)
 
 ### 📧 其他联系方式
 - 提交 [GitHub Issue](https://github.com/zhouxiaoka/autoclip_mvp/issues)
