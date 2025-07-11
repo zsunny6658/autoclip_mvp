@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { 
   Layout, 
-  Card, 
   Typography, 
-  Button, 
   Select, 
-  Space, 
   Spin, 
   Empty,
   message 
 } from 'antd'
-import { 
-  PlusOutlined, 
-  VideoCameraOutlined 
-} from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import ProjectCard from '../components/ProjectCard'
 import FileUpload from '../components/FileUpload'
@@ -90,13 +83,13 @@ const HomePage: React.FC = () => {
           console.error('Failed to refresh after starting processing:', refreshError)
         }
       }, 1000)
-    } catch (error: any) {
-      const errorMessage = error.userMessage || '启动处理失败'
+    } catch (error: unknown) {
+      const errorMessage = (error as any)?.userMessage || '启动处理失败'
       message.error(errorMessage)
       console.error('Start processing error:', error)
       
       // 如果是超时错误，提示用户项目可能仍在处理
-      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      if ((error as any)?.code === 'ECONNABORTED' || (error as any)?.message?.includes('timeout')) {
         message.info('请求超时，但项目可能已开始处理，请查看项目状态', 5)
         // 延迟刷新项目列表
         setTimeout(async () => {

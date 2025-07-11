@@ -7,8 +7,7 @@ export const useCollectionVideoDownload = () => {
 
   const generateAndDownloadCollectionVideo = async (
     projectId: string, 
-    collectionId: string,
-    collectionTitle: string
+    collectionId: string
   ) => {
     if (isGenerating) return
 

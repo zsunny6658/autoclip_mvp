@@ -181,14 +181,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onRetry, o
 
 
 
-  const getProgressPercent = () => {
-    if (project.status === 'completed') return 100
-    if (project.status === 'error') return 0
-    if (project.current_step && project.total_steps) {
-      return Math.round((project.current_step / project.total_steps) * 100)
-    }
-    return 0
-  }
+
 
   const handleRetry = async () => {
     if (isRetrying) return
