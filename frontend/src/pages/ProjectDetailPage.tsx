@@ -6,32 +6,21 @@ import {
   Typography, 
   Button, 
   Space, 
-  Tabs, 
-  Row, 
-  Col, 
-  Progress, 
   Alert, 
   Spin, 
   Empty,
   message,
-  Input,
-  Radio,
-  Tag,
-  Divider,
-  List
+  Radio
 } from 'antd'
 import { 
   ArrowLeftOutlined, 
-  ReloadOutlined,
   PlayCircleOutlined,
-  PlusOutlined,
-  UpOutlined,
-  DownOutlined
+  PlusOutlined
 } from '@ant-design/icons'
 import { useProjectStore } from '../store/useProjectStore'
 import { projectApi } from '../services/api'
 import ClipCard from '../components/ClipCard'
-import CollectionCard from '../components/CollectionCard'
+
 import CollectionCardMini from '../components/CollectionCardMini'
 import CollectionPreviewModal from '../components/CollectionPreviewModal'
 import CreateCollectionModal from '../components/CreateCollectionModal'
@@ -39,8 +28,7 @@ import { useCollectionVideoDownload } from '../hooks/useCollectionVideoDownload'
 
 const { Content } = Layout
 const { Title, Text } = Typography
-const { TabPane } = Tabs
-const { TextArea } = Input
+
 
 const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -50,7 +38,6 @@ const ProjectDetailPage: React.FC = () => {
     loading, 
     error,
     setCurrentProject,
-    updateClip,
     updateCollection,
     addCollection,
     deleteCollection,
@@ -59,14 +46,11 @@ const ProjectDetailPage: React.FC = () => {
     addClipToCollection
   } = useProjectStore()
   
-  const [processingStatus, setProcessingStatus] = useState<any>(null)
   const [statusLoading, setStatusLoading] = useState(false)
   const [showCreateCollection, setShowCreateCollection] = useState(false)
-  // 移除不再需要的状态变量，新组件内部管理
   const [sortBy, setSortBy] = useState<'time' | 'score'>('score')
-  const [progressCollapsed, setProgressCollapsed] = useState(false)
   const [showCollectionDetail, setShowCollectionDetail] = useState(false)
-  const [selectedCollection, setSelectedCollection] = useState<any>(null)
+  const [selectedCollection, setSelectedCollection] = useState<unknown>(null)
   const { generateAndDownloadCollectionVideo } = useCollectionVideoDownload()
 
   useEffect(() => {
@@ -79,14 +63,7 @@ const ProjectDetailPage: React.FC = () => {
     }
   }, [id, currentProject])
 
-  // 当任务完成时自动折叠进度显示
-  useEffect(() => {
-    if (processingStatus && (processingStatus.status === 'completed' || processingStatus.status === 'error')) {
-      setProgressCollapsed(true)
-    } else if (processingStatus && processingStatus.status === 'processing') {
-      setProgressCollapsed(false)
-    }
-  }, [processingStatus])
+
 
   const loadProject = async () => {
     if (!id) return
@@ -103,8 +80,7 @@ const ProjectDetailPage: React.FC = () => {
     if (!id) return
     setStatusLoading(true)
     try {
-      const status = await projectApi.getProcessingStatus(id)
-      setProcessingStatus(status)
+      await projectApi.getProcessingStatus(id)
     } catch (error) {
       console.error('Failed to load processing status:', error)
     } finally {
@@ -126,74 +102,7 @@ const ProjectDetailPage: React.FC = () => {
 
   // 移除了handleDownloadProject和handleExportMetadata函数
 
-  const handleRestartStep = async (step: number) => {
-    if (!id) return
-    try {
-      await projectApi.restartStep(id, step)
-      message.success(`步骤 ${step} 重启成功`)
-      loadProcessingStatus()
-    } catch (error) {
-      console.error('Failed to restart step:', error)
-      message.error(`步骤 ${step} 重启失败`)
-    }
-  }
 
-  const getStepDetails = () => {
-    return [
-      { number: 1, name: '提取大纲', description: '从字幕文件中提取内容大纲' },
-      { number: 2, name: '时间定位', description: '定位每个大纲对应的时间区间' },
-      { number: 3, name: '内容评分', description: '对内容片段进行评分和筛选' },
-      { number: 4, name: '标题生成', description: '为高分片段生成爆点标题' },
-      { number: 5, name: '主题聚类', description: '将相似主题的片段聚类成合集' },
-      { number: 6, name: '视频生成', description: '生成切片视频和合集视频' }
-    ]
-  }
-
-  const getStepStatus = (stepNumber: number, status: any) => {
-    if (!status) return 'pending'
-    
-    // 处理部分完成状态
-    if (status.status === 'partial' || status.status === 'completed') {
-      if (status.current_step >= stepNumber) return 'completed'
-      return 'pending'
-    }
-    
-    if (status.status === 'error' && status.current_step === stepNumber) return 'error'
-    if (status.current_step > stepNumber) return 'completed'
-    if (status.current_step === stepNumber && status.status === 'processing') return 'processing'
-    if (status.current_step < stepNumber) return 'pending'
-    return 'pending'
-  }
-
-  const getStepStatusColor = (stepNumber: number, status: any) => {
-    const stepStatus = getStepStatus(stepNumber, status)
-    switch (stepStatus) {
-      case 'completed': return '#52c41a'
-      case 'processing': return '#1890ff'
-      case 'error': return '#ff4d4f'
-      default: return '#d9d9d9'
-    }
-  }
-
-  const getStepBackgroundColor = (stepNumber: number, status: any) => {
-    const stepStatus = getStepStatus(stepNumber, status)
-    switch (stepStatus) {
-      case 'completed': return '#f6ffed'
-      case 'processing': return '#e6f7ff'
-      case 'error': return '#fff2f0'
-      default: return '#fafafa'
-    }
-  }
-
-  const getStepStatusIcon = (stepNumber: number, status: any) => {
-    const stepStatus = getStepStatus(stepNumber, status)
-    switch (stepStatus) {
-      case 'completed': return '✓'
-      case 'processing': return '⟳'
-      case 'error': return '✗'
-      default: return stepNumber.toString()
-    }
-  }
 
   const handleCreateCollection = async (title: string, summary: string, clipIds: string[]) => {
     if (!currentProject) {
@@ -219,7 +128,7 @@ const ProjectDetailPage: React.FC = () => {
     }
   }
 
-  const handleViewCollection = (collection: any) => {
+  const handleViewCollection = (collection: unknown) => {
     setSelectedCollection(collection)
     setShowCollectionDetail(true)
   }
@@ -277,21 +186,7 @@ const ProjectDetailPage: React.FC = () => {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'success'
-      case 'processing': return 'processing'
-      case 'error': return 'exception'
-      default: return 'normal'
-    }
-  }
 
-  const getProgressPercent = (status: any) => {
-    if (!status) return 0
-    if (status.status === 'completed') return 100
-    if (status.status === 'error') return 0
-    return status.progress || 0
-  }
 
   // 排序视频片段
   const getSortedClips = () => {
@@ -473,10 +368,10 @@ const ProjectDetailPage: React.FC = () => {
                     size="small"
                     buttonStyle="solid"
                     style={{
-                      ['--ant-radio-button-bg' as any]: 'transparent',
-                      ['--ant-radio-button-checked-bg' as any]: '#1890ff',
-                      ['--ant-radio-button-color' as any]: '#b0b0b0',
-                      ['--ant-radio-button-checked-color' as any]: '#ffffff'
+                      ['--ant-radio-button-bg' as string]: 'transparent',
+                      ['--ant-radio-button-checked-bg' as string]: '#1890ff',
+                      ['--ant-radio-button-color' as string]: '#b0b0b0',
+                      ['--ant-radio-button-checked-color' as string]: '#ffffff'
                     }}
                   >
                     <Radio.Button 

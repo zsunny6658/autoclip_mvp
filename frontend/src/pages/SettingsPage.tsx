@@ -6,7 +6,6 @@ import './SettingsPage.css'
 
 const { Content } = Layout
 const { Title, Text, Paragraph } = Typography
-const { TextArea } = Input
 
 interface BrowserInfo {
   name: string
@@ -27,7 +26,6 @@ interface ApiSettings {
 const SettingsPage: React.FC = () => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [settings, setSettings] = useState<ApiSettings | null>(null)
   const [availableBrowsers, setAvailableBrowsers] = useState<BrowserInfo[]>([])
   const [detectingBrowsers, setDetectingBrowsers] = useState(false)
   const [selectedBrowser, setSelectedBrowser] = useState<string>('')
@@ -86,7 +84,6 @@ const SettingsPage: React.FC = () => {
   const loadSettings = async () => {
     try {
       const data = await settingsApi.getSettings()
-      setSettings(data)
       form.setFieldsValue(data)
       if (data.default_browser) setSelectedBrowser(data.default_browser)
     } catch (error) {
@@ -99,7 +96,6 @@ const SettingsPage: React.FC = () => {
     setLoading(true)
     try {
       await settingsApi.updateSettings(values)
-      setSettings(values)
       message.success('配置保存成功')
     } catch (error) {
       message.error('保存配置失败')

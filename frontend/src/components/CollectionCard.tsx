@@ -363,7 +363,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
                                 padding: '12px'
                               }}
                               actions={[
-                                <div {...provided.dragHandleProps}>
+                                <div key="drag" {...provided.dragHandleProps}>
                                   <DragOutlined style={{ cursor: 'grab' }} />
                                 </div>
                               ]}

@@ -116,12 +116,12 @@ export interface BilibiliDownloadTask {
 // 设置相关API
 export const settingsApi = {
   // 获取系统配置
-  getSettings: (): Promise<any> => {
+  getSettings: (): Promise<unknown> => {
     return api.get('/settings')
   },
 
   // 更新系统配置
-  updateSettings: (settings: any): Promise<any> => {
+  updateSettings: (settings: unknown): Promise<unknown> => {
     return api.post('/settings', settings)
   },
 
@@ -352,7 +352,7 @@ export const projectApi = {
   },
 
   // 获取切片视频URL
-  getClipVideoUrl: (projectId: string, clipId: string, clipTitle?: string): string => {
+  getClipVideoUrl: (projectId: string, clipId: string): string => {
     // 直接使用clipId，让后端处理文件查找
     return `http://localhost:8000/api/projects/${projectId}/clips/${clipId}`
   },
