@@ -2,6 +2,20 @@
 
 🎬 An intelligent video clipping and collection recommendation system based on AI, supporting automatic Bilibili video download, subtitle extraction, intelligent slicing, and collection generation.
 
+## 📋 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+- [📁 Project Structure](#-project-structure)
+- [🔧 Configuration](#-configuration)
+- [📖 User Guide](#-user-guide)
+- [🛠️ Development Guide](#️-development-guide)
+- [🐛 FAQ](#-faq)
+- [📝 Changelog](#-changelog)
+- [📄 License](#-license)
+- [🤝 Contributing](#-contributing)
+- [📞 Contact](#-contact)
+
 ## ✨ Features
 
 - 🔥 **Intelligent Video Clipping**: AI-powered video content analysis for high-quality automatic clipping
@@ -18,7 +32,7 @@
 
 - Python 3.8+
 - Node.js 16+
-- DashScope API Key (for AI analysis)
+- DashScope API Key or SiliconFlow API Key (for AI analysis)
 
 ### Installation
 
@@ -52,9 +66,24 @@ cd ..
 cp data/settings.example.json data/settings.json
 
 # Edit configuration file and add your API key
+# Choose between DashScope and SiliconFlow APIs:
+
+# For DashScope:
 {
+  "api_provider": "dashscope",
   "dashscope_api_key": "your-dashscope-api-key",
   "model_name": "qwen-plus",
+  "chunk_size": 5000,
+  "min_score_threshold": 0.7,
+  "max_clips_per_collection": 5,
+  "default_browser": "chrome"
+}
+
+# For SiliconFlow:
+{
+  "api_provider": "siliconflow",
+  "siliconflow_api_key": "your-siliconflow-api-key",
+  "siliconflow_model": "Qwen/Qwen2.5-72B-Instruct",
   "chunk_size": 5000,
   "min_score_threshold": 0.7,
   "max_clips_per_collection": 5,
@@ -132,7 +161,9 @@ autoclip_mvp/
 │   │   ├── step5_clustering.py # Clustering analysis
 │   │   └── step6_video.py      # Video generation
 │   ├── utils/             # Utility functions
-│   │   ├── llm_client.py      # AI client
+│   │   ├── llm_client.py      # DashScope AI client
+│   │   ├── siliconflow_client.py # SiliconFlow AI client
+│   │   ├── llm_factory.py     # LLM client factory
 │   │   ├── video_processor.py # Video processing
 │   │   ├── text_processor.py  # Text processing
 │   │   ├── project_manager.py # Project management
@@ -167,9 +198,12 @@ autoclip_mvp/
 ## 🔧 Configuration
 
 ### API Key Configuration
-Configure your DashScope API key in `data/settings.json`:
+Configure your API keys in `data/settings.json`. You can choose between DashScope and SiliconFlow APIs:
+
+#### DashScope Configuration
 ```json
 {
+  "api_provider": "dashscope",
   "dashscope_api_key": "your-dashscope-api-key",
   "model_name": "qwen-plus",
   "chunk_size": 5000,
@@ -178,6 +212,23 @@ Configure your DashScope API key in `data/settings.json`:
   "default_browser": "chrome"
 }
 ```
+
+#### SiliconFlow Configuration
+```json
+{
+  "api_provider": "siliconflow",
+  "siliconflow_api_key": "your-siliconflow-api-key",
+  "siliconflow_model": "Qwen/Qwen2.5-72B-Instruct",
+  "chunk_size": 5000,
+  "min_score_threshold": 0.7,
+  "max_clips_per_collection": 5,
+  "default_browser": "chrome"
+}
+```
+
+#### Getting API Keys
+- **DashScope**: Visit [Alibaba Cloud Console](https://dashscope.console.aliyun.com/) → AI Services → Tongyi Qianwen → API Key Management
+- **SiliconFlow**: Visit [SiliconCloud](https://siliconflow.cn) → Login → API Keys → Create New API Key
 
 ### Browser Configuration
 Support for Chrome, Firefox, Safari and other browsers for Bilibili video download:
@@ -238,7 +289,64 @@ npm run lint   # Code linting
 2. Add corresponding prompt template files
 3. Add category options in frontend `src/services/api.ts`
 
+## 📝 Changelog
+
+### [v1.1.0] - 2025-08-03
+
+#### ✨ New Features
+- **🔌 SiliconFlow API Support**: Added support for SiliconFlow API as an alternative to DashScope
+- **🎛️ Multi-API Provider Selection**: Users can now choose between DashScope and SiliconFlow APIs
+- **🔄 Dynamic UI**: Frontend settings page now dynamically shows configuration options based on selected API provider
+- **🧪 API Connection Testing**: Added built-in API connection testing functionality for both providers
+
+#### 🔧 Improvements
+- **🏭 LLM Factory Pattern**: Implemented unified LLM client factory for better API management
+- **⚙️ Enhanced Configuration**: Extended configuration system to support multiple API providers
+- **🎨 Improved UI/UX**: Better form validation and user experience in settings page
+- **📝 Better Documentation**: Added comprehensive integration guides and troubleshooting
+
+#### 🐛 Bug Fixes
+- **🔧 Fixed API Testing**: Resolved issues with API connection testing functionality
+- **🎯 Fixed Configuration Loading**: Improved configuration loading and validation
+- **🔄 Fixed Provider Switching**: Fixed issues with API provider switching in frontend
+
+#### 🛠️ Technical Changes
+- **📦 New Dependencies**: Added `openai` library for SiliconFlow API support
+- **🏗️ Architecture**: Implemented factory pattern for LLM client management
+- **🔧 Configuration**: Extended settings model to support multiple API providers
+- **📱 Frontend**: Enhanced settings page with conditional rendering and better validation
+
+#### 📋 Supported Models
+
+**DashScope (通义千问)**:
+- Qwen Plus
+- Qwen Turbo
+- Qwen Max
+
+**SiliconFlow (硅基流动)**:
+- Qwen2.5-72B-Instruct
+- Qwen3-8B
+- DeepSeek-R1
+
+---
+
+### [v1.0.0] - 2025-07-XX
+
+#### ✨ Initial Release
+- **🎬 AI-Powered Video Clipping**: Intelligent video content analysis and automatic clipping
+- **📺 Bilibili Video Download**: Support for automatic Bilibili video download and subtitle extraction
+- **🎯 Smart Collection Recommendations**: AI automatically analyzes slice content and recommends related collections
+- **🎨 Manual Collection Editing**: Support drag-and-drop sorting, adding/removing slices
+- **📦 One-Click Package Download**: Support one-click package download for all slices and collections
+- **🌐 Modern Web Interface**: React + TypeScript + Ant Design
+- **⚡ Real-time Processing Status**: Real-time display of processing progress and logs
+
+---
+
 ## 🐛 FAQ
+
+### Q: How do I choose between DashScope and SiliconFlow APIs?
+A: Both APIs provide similar AI capabilities. DashScope is from Alibaba Cloud, while SiliconFlow offers access to multiple AI models. Choose based on your needs and API availability.
 
 ### Q: Bilibili video download failed?
 A: Make sure you're logged into your Bilibili account and select the correct browser. Chrome browser is recommended.

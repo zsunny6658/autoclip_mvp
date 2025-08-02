@@ -89,8 +89,11 @@ class CollectionUpdate(BaseModel):
     clip_ids: Optional[List[str]] = None
 
 class ApiSettings(BaseModel):
-    dashscope_api_key: str
+    dashscope_api_key: str = ""
+    siliconflow_api_key: str = ""
+    api_provider: str = "dashscope"
     model_name: str = "qwen-plus"
+    siliconflow_model: str = "Qwen/Qwen2.5-72B-Instruct"
     chunk_size: int = 5000
     min_score_threshold: float = 0.7
     max_clips_per_collection: int = 5
@@ -1725,6 +1728,9 @@ async def update_settings(settings: ApiSettings):
         
         # 更新环境变量
         os.environ["DASHSCOPE_API_KEY"] = settings.dashscope_api_key
+        os.environ["SILICONFLOW_API_KEY"] = settings.siliconflow_api_key
+        os.environ["API_PROVIDER"] = settings.api_provider
+        os.environ["SILICONFLOW_MODEL"] = settings.siliconflow_model
         
         return {"message": "配置更新成功"}
     except Exception as e:
@@ -1736,20 +1742,26 @@ async def test_api_key(request: dict):
     """测试API密钥"""
     try:
         api_key = request.get("api_key")
+        provider = request.get("provider", "dashscope")
+        model = request.get("model")
+        
+        logger.info(f"测试API密钥: provider={provider}, model={model}, api_key={'已设置' if api_key else '未设置'}")
+        
         if not api_key:
             return {"success": False, "error": "API密钥不能为空"}
         
         # 创建临时LLM客户端测试连接
         try:
-            from src.utils.llm_client import LLMClient
-            llm_client = LLMClient(api_key=api_key)
-            # 发送一个简单的测试请求
-            test_response = llm_client.call_llm("测试连接", "请回复'连接成功'")
-            if test_response and "连接成功" in test_response:
+            from src.utils.llm_factory import LLMFactory
+            success = LLMFactory.test_connection(provider=provider, api_key=api_key, model=model)
+            if success:
+                logger.info("API连接测试成功")
                 return {"success": True}
             else:
-                return {"success": True}  # 即使回复不完全匹配也认为连接成功
+                logger.error("API连接测试失败")
+                return {"success": False, "error": "API连接测试失败"}
         except Exception as e:
+            logger.error(f"API密钥测试失败: {e}")
             return {"success": False, "error": f"API密钥测试失败: {str(e)}"}
     except Exception as e:
         logger.error(f"测试API密钥失败: {e}")
@@ -1807,8 +1819,19 @@ if __name__ == "__main__":
                 if settings.get("dashscope_api_key"):
                     os.environ["DASHSCOPE_API_KEY"] = settings["dashscope_api_key"]
                     logger.info("已从配置文件加载 DASHSCOPE_API_KEY")
-                else:
-                    logger.warning("配置文件中未找到有效的 DASHSCOPE_API_KEY")
+                if settings.get("siliconflow_api_key"):
+                    os.environ["SILICONFLOW_API_KEY"] = settings["siliconflow_api_key"]
+                    logger.info("已从配置文件加载 SILICONFLOW_API_KEY")
+                if settings.get("api_provider"):
+                    os.environ["API_PROVIDER"] = settings["api_provider"]
+                    logger.info(f"已从配置文件加载 API_PROVIDER: {settings['api_provider']}")
+                if settings.get("siliconflow_model"):
+                    os.environ["SILICONFLOW_MODEL"] = settings["siliconflow_model"]
+                    logger.info(f"已从配置文件加载 SILICONFLOW_MODEL: {settings['siliconflow_model']}")
+                
+                # 检查是否有有效的API密钥
+                if not settings.get("dashscope_api_key") and not settings.get("siliconflow_api_key"):
+                    logger.warning("配置文件中未找到有效的API密钥")
         else:
             logger.warning("配置文件不存在，请在前端设置 API 密钥")
     except Exception as e:

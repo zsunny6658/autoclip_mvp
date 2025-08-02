@@ -7,7 +7,7 @@ import re
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 
-from ..utils.llm_client import LLMClient
+from ..utils.llm_factory import LLMFactory
 from ..utils.text_processor import TextProcessor
 from ..config import PROMPT_FILES, METADATA_DIR
 
@@ -17,7 +17,7 @@ class OutlineExtractor:
     """大纲提取器（重构版）"""
     
     def __init__(self, metadata_dir: Path = None, prompt_files: Dict = None):
-        self.llm_client = LLMClient()
+        self.llm_client = LLMFactory.get_default_client()
         self.text_processor = TextProcessor()
         
         # 使用传入的metadata_dir或默认值

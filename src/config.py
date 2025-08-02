@@ -122,7 +122,10 @@ for dir_path in [CLIPS_DIR, COLLECTIONS_DIR, METADATA_DIR]:
 class Settings(BaseModel):
     """系统设置"""
     dashscope_api_key: Optional[str] = ""
+    siliconflow_api_key: Optional[str] = ""  # 新增硅基流动API密钥
+    api_provider: str = "dashscope"  # 新增API提供商选择：dashscope 或 siliconflow
     model_name: str = "qwen-plus"
+    siliconflow_model: str = "Qwen/Qwen2.5-72B-Instruct"  # 新增硅基流动模型名称
     chunk_size: int = 5000
     min_score_threshold: float = 0.7
     max_clips_per_collection: int = 5
@@ -146,7 +149,10 @@ class Settings(BaseModel):
         # 从环境变量读取配置
         env_mappings = {
             'dashscope_api_key': 'DASHSCOPE_API_KEY',
+            'siliconflow_api_key': 'SILICONFLOW_API_KEY',
+            'api_provider': 'API_PROVIDER',
             'model_name': 'MODEL_NAME',
+            'siliconflow_model': 'SILICONFLOW_MODEL',
             'chunk_size': 'CHUNK_SIZE',
             'min_score_threshold': 'MIN_SCORE_THRESHOLD'
         }
@@ -182,9 +188,13 @@ class Settings(BaseModel):
 @dataclass
 class APIConfig:
     """API配置"""
+    provider: str = "dashscope"  # dashscope 或 siliconflow
     model_name: str = "qwen-plus"
+    siliconflow_model: str = "Qwen/Qwen2.5-72B-Instruct"
     api_key: Optional[str] = None
+    siliconflow_api_key: Optional[str] = None
     base_url: str = "https://dashscope.aliyuncs.com"
+    siliconflow_base_url: str = "https://api.siliconflow.cn/v1"
     max_tokens: int = 4096
 
 @dataclass
@@ -229,6 +239,12 @@ class ConfigManager:
         # 从环境变量加载
         if os.getenv("DASHSCOPE_API_KEY"):
             self.settings.dashscope_api_key = os.getenv("DASHSCOPE_API_KEY")
+        if os.getenv("SILICONFLOW_API_KEY"):
+            self.settings.siliconflow_api_key = os.getenv("SILICONFLOW_API_KEY")
+        if os.getenv("API_PROVIDER"):
+            self.settings.api_provider = os.getenv("API_PROVIDER")
+        if os.getenv("SILICONFLOW_MODEL"):
+            self.settings.siliconflow_model = os.getenv("SILICONFLOW_MODEL")
         
         # 从配置文件加载
         config_file = PROJECT_ROOT / "data" / "settings.json"
@@ -270,8 +286,11 @@ class ConfigManager:
     def get_api_config(self) -> APIConfig:
         """获取API配置"""
         return APIConfig(
+            provider=self.settings.api_provider,
             model_name=self.settings.model_name,
-            api_key=self.settings.dashscope_api_key
+            siliconflow_model=self.settings.siliconflow_model,
+            api_key=self.settings.dashscope_api_key,
+            siliconflow_api_key=self.settings.siliconflow_api_key
         )
     
     def get_processing_config(self) -> ProcessingConfig:
@@ -323,10 +342,14 @@ class ConfigManager:
             "temp_dir": project_base / "temp"
         }
     
-    def update_api_key(self, api_key: str):
+    def update_api_key(self, api_key: str, provider: str = "dashscope"):
         """更新API密钥"""
-        self.settings.dashscope_api_key = api_key
-        os.environ["DASHSCOPE_API_KEY"] = api_key
+        if provider == "dashscope":
+            self.settings.dashscope_api_key = api_key
+            os.environ["DASHSCOPE_API_KEY"] = api_key
+        elif provider == "siliconflow":
+            self.settings.siliconflow_api_key = api_key
+            os.environ["SILICONFLOW_API_KEY"] = api_key
         
         # 保存到配置文件
         self._save_settings()
@@ -354,8 +377,11 @@ class ConfigManager:
         """导出配置"""
         return {
             "api_config": {
+                "provider": self.settings.api_provider,
                 "model_name": self.settings.model_name,
-                "api_key": self.settings.dashscope_api_key[:8] + "..." if self.settings.dashscope_api_key else None
+                "siliconflow_model": self.settings.siliconflow_model,
+                "dashscope_api_key": self.settings.dashscope_api_key[:8] + "..." if self.settings.dashscope_api_key else None,
+                "siliconflow_api_key": self.settings.siliconflow_api_key[:8] + "..." if self.settings.siliconflow_api_key else None
             },
             "processing_config": {
                 "chunk_size": self.settings.chunk_size,

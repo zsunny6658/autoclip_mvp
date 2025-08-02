@@ -1,36 +1,42 @@
 """
-大模型客户端 - 封装通义千问API调用
+硅基流动API客户端 - 封装硅基流动API调用
 """
 import json
 import logging
 import os
 import re
 from typing import Dict, Any, List
-from dashscope import Generation
-from dashscope.api_entities.dashscope_response import GenerationResponse
+from openai import OpenAI
 from collections.abc import Generator
-
-from ..config import MODEL_NAME
 
 logger = logging.getLogger(__name__)
 
-class LLMClient:
-    """通义千问API客户端"""
+class SiliconFlowClient:
+    """硅基流动API客户端"""
     
-    def __init__(self, api_key: str = None, model: str = None):
+    def __init__(self, api_key: str = None, model: str = "Qwen/Qwen2.5-72B-Instruct"):
         """
-        初始化通义千问客户端
+        初始化硅基流动客户端
         
         Args:
             api_key: API密钥，如果为None则从环境变量获取
-            model: 模型名称，如果为None则使用默认模型
+            model: 模型名称
         """
-        self.model = model or MODEL_NAME
-        self.api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
+        self.api_key = api_key or os.getenv("SILICONFLOW_API_KEY")
+        self.model = model
+        self.base_url = "https://api.siliconflow.cn/v1"
+        
+        if not self.api_key:
+            raise ValueError("请配置硅基流动API密钥，可以通过环境变量SILICONFLOW_API_KEY或在前端设置页面配置。")
+        
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url=self.base_url
+        )
     
     def call(self, prompt: str, input_data: Any = None) -> str:
         """
-        调用大模型API
+        调用硅基流动API
         
         Args:
             prompt: 提示词
@@ -39,10 +45,6 @@ class LLMClient:
         Returns:
             模型响应文本
         """
-        api_key = self.api_key
-        if not api_key:
-            raise ValueError("请配置API密钥，可以通过环境变量DASHSCOPE_API_KEY或在前端设置页面配置。")
-
         try:
             # 构建完整的输入
             if input_data:
@@ -54,48 +56,29 @@ class LLMClient:
                 full_input = prompt
             
             # 调用API
-            response_or_gen = Generation.call(
+            response = self.client.chat.completions.create(
                 model=self.model,
-                prompt=full_input,
-                api_key=api_key,
-                stream=False, # 确保使用非流式调用
+                messages=[
+                    {'role': 'user', 'content': full_input}
+                ],
+                stream=False
             )
             
-            response: GenerationResponse
-            if isinstance(response_or_gen, Generator):
-                response = next(response_or_gen)
-            else:
-                response = response_or_gen
-
-            # 详细检查API响应
-            if response and response.status_code == 200:
-                if response.output and response.output.text is not None:
-                    return response.output.text
+            # 检查响应
+            if response and response.choices:
+                content = response.choices[0].message.content
+                if content:
+                    return content
                 else:
-                    # API成功但输出为空，可能是内容安全过滤等原因
-                    finish_reason = response.output.finish_reason if response.output else 'unknown'
-                    error_msg = f"API请求成功，但输出为空。结束原因: {finish_reason}"
-                    logger.warning(error_msg)
-                    return "" # 返回空字符串，让上层处理
+                    logger.warning("API请求成功，但输出为空")
+                    return ""
             else:
-                # API调用失败
-                code = response.code if hasattr(response, 'code') else 'N/A'
-                message = response.message if hasattr(response, 'message') else '未知API错误'
-                
-                if "Invalid ApiKey" in str(message):
-                    raise ValueError("API Key无效或不正确，请检查配置并重新输入。")
-
-                error_msg = f"API调用失败 - Status: {response.status_code}, Code: {code}, Message: {message}"
+                error_msg = "API调用失败，未返回有效响应"
                 logger.error(error_msg)
-                raise Exception(message)
+                raise Exception(error_msg)
                 
-        except StopIteration:
-            # next(response_gen) 可能会在生成器为空时引发此异常
-            error_msg = "API调用未返回任何响应。"
-            logger.error(error_msg)
-            raise Exception(error_msg)
         except Exception as e:
-            logger.error(f"LLM调用发生未知异常: {str(e)}")
+            logger.error(f"硅基流动API调用发生异常: {str(e)}")
             raise
     
     def call_with_retry(self, prompt: str, input_data: Any = None, max_retries: int = 3) -> str:
@@ -116,80 +99,13 @@ class LLMClient:
             except ValueError: # 如果是API Key或参数错误，不重试
                 raise
             except Exception as e:
-                # 对于某些可重试的错误，可以添加特定逻辑，但目前对通用异常进行重试
                 if attempt == max_retries - 1:
-                    logger.error(f"LLM调用在{max_retries}次重试后彻底失败。")
+                    logger.error(f"硅基流动API调用在{max_retries}次重试后彻底失败。")
                     raise
                 logger.warning(f"第{attempt + 1}次调用失败，准备重试: {str(e)}")
                 import time
                 time.sleep(2 ** attempt)  # 指数退避
         return "" # 确保所有路径都有返回值
-    
-    def _preprocess_llm_response(self, response: str) -> str:
-        """
-        预处理LLM响应，移除常见的非JSON内容
-        """
-        # 移除开头的标题和说明文字
-        lines = response.split('\n')
-        json_start = -1
-        
-        for i, line in enumerate(lines):
-            stripped = line.strip()
-            if stripped.startswith('[') or stripped.startswith('{'):
-                json_start = i
-                break
-        
-        if json_start >= 0:
-            response = '\n'.join(lines[json_start:])
-        
-        # 移除末尾的非JSON内容
-        if '```' in response:
-            # 如果有多个```，取第一个之前的内容
-            parts = response.split('```')
-            if len(parts) > 1:
-                response = parts[0]
-        
-        return response.strip()
-    
-    def _auto_fix_response(self, response: str) -> str:
-        """
-        自动修复常见的响应问题
-        """
-        # 移除BOM和特殊字符
-        response = response.lstrip('\ufeff')
-        response = response.strip()
-        
-        # 修复中文引号
-        response = response.replace('"', '\"').replace('"', '\"')
-        
-        return response
-    
-    def _validate_json_structure(self, parsed_data: Any) -> bool:
-        """
-        验证JSON结构的有效性
-        """
-        try:
-            if not isinstance(parsed_data, list):
-                logger.error(f"响应不是数组格式，实际类型: {type(parsed_data)}")
-                return False
-            
-            for i, item in enumerate(parsed_data):
-                if not isinstance(item, dict):
-                    logger.error(f"第{i}个元素不是对象格式，实际类型: {type(item)}")
-                    return False
-                    
-                # 检查基本字段（可根据具体需求调整）
-                if 'outline' in item or 'start_time' in item or 'end_time' in item:
-                    required_fields = ['outline', 'start_time', 'end_time']
-                    for field in required_fields:
-                        if field not in item:
-                            logger.error(f"第{i}个元素缺少必需字段: {field}")
-                            return False
-        except Exception as e:
-            logger.error(f"验证JSON结构时出错: {e}")
-            return False
-        
-        return True
     
     def parse_json_response(self, response: str) -> Any:
         """
@@ -258,10 +174,34 @@ class LLMClient:
             
             return json_str
 
+        def _preprocess_llm_response(response: str) -> str:
+            """预处理LLM响应，移除常见的非JSON内容"""
+            # 移除开头的标题和说明文字
+            lines = response.split('\n')
+            json_start = -1
+            
+            for i, line in enumerate(lines):
+                stripped = line.strip()
+                if stripped.startswith('[') or stripped.startswith('{'):
+                    json_start = i
+                    break
+            
+            if json_start >= 0:
+                response = '\n'.join(lines[json_start:])
+            
+            # 移除末尾的非JSON内容
+            if '```' in response:
+                # 如果有多个```，取第一个之前的内容
+                parts = response.split('```')
+                if len(parts) > 1:
+                    response = parts[0]
+            
+            return response.strip()
+
         response = response.strip()
         
         # 0. 预处理响应，移除非JSON内容
-        response = self._preprocess_llm_response(response)
+        response = _preprocess_llm_response(response)
         logger.debug(f"预处理后的响应: {response[:200]}...")
         
         # 1. 优先尝试从Markdown代码块中提取
@@ -313,4 +253,4 @@ class LLMClient:
                         raise ValueError(f"无法从响应中解析出有效的JSON: {response[:200]}...") from final_e
             
             # 如果连通用正则都找不到，就彻底失败
-            raise ValueError(f"无法从响应中解析出有效的JSON: {response[:200]}...")
+            raise ValueError(f"无法从响应中解析出有效的JSON: {response[:200]}...") 

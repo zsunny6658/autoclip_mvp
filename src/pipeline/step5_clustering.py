@@ -6,7 +6,7 @@ import logging
 from typing import List, Dict, Optional
 from pathlib import Path
 
-from ..utils.llm_client import LLMClient
+from ..utils.llm_factory import LLMFactory
 from ..config import PROMPT_FILES, METADATA_DIR, MAX_CLIPS_PER_COLLECTION
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ class ClusteringEngine:
     """主题聚类引擎"""
     
     def __init__(self, metadata_dir: Optional[Path] = None, prompt_files: Dict = None):
-        self.llm_client = LLMClient()
+        self.llm_client = LLMFactory.get_default_client()
         
         # 加载提示词
         prompt_files_to_use = prompt_files if prompt_files is not None else PROMPT_FILES

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Layout, Card, Form, Input, Button, message, Typography, Space, Alert, Divider, Row, Col, Spin } from 'antd'
+import { Layout, Card, Form, Input, Button, message, Typography, Space, Alert, Divider, Row, Col, Spin, Select } from 'antd'
 import { KeyOutlined, SaveOutlined, SettingOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { settingsApi } from '../services/api'
 import './SettingsPage.css'
@@ -16,7 +16,10 @@ interface BrowserInfo {
 
 interface ApiSettings {
   dashscope_api_key: string
+  siliconflow_api_key: string
+  api_provider: string
   model_name: string
+  siliconflow_model: string
   chunk_size: number
   min_score_threshold: number
   max_clips_per_collection: number
@@ -29,6 +32,7 @@ const SettingsPage: React.FC = () => {
   const [availableBrowsers, setAvailableBrowsers] = useState<BrowserInfo[]>([])
   const [detectingBrowsers, setDetectingBrowsers] = useState(false)
   const [selectedBrowser, setSelectedBrowser] = useState<string>('')
+  const [selectedProvider, setSelectedProvider] = useState<string>('dashscope')
 
   useEffect(() => {
     loadSettings()
@@ -86,6 +90,7 @@ const SettingsPage: React.FC = () => {
       const data = await settingsApi.getSettings()
       form.setFieldsValue(data)
       if (data.default_browser) setSelectedBrowser(data.default_browser)
+      if (data.api_provider) setSelectedProvider(data.api_provider)
     } catch (error) {
       message.error('加载配置失败')
       console.error('Load settings error:', error)
@@ -105,6 +110,47 @@ const SettingsPage: React.FC = () => {
     }
   }
 
+  const handleTestApi = async () => {
+    const values = form.getFieldsValue()
+    const provider = values.api_provider || selectedProvider
+    
+    let apiKey = ''
+    let model = ''
+    
+    if (provider === 'dashscope') {
+      apiKey = values.dashscope_api_key
+      model = values.model_name
+    } else if (provider === 'siliconflow') {
+      apiKey = values.siliconflow_api_key
+      model = values.siliconflow_model
+    }
+    
+    if (!apiKey) {
+      message.error('请先输入API密钥')
+      return
+    }
+    
+    setLoading(true)
+    try {
+      const result = await settingsApi.testApiKey(apiKey, provider, model)
+      if (result.success) {
+        message.success('API连接测试成功')
+      } else {
+        message.error(`API连接测试失败: ${result.error}`)
+      }
+    } catch (error) {
+      message.error('API连接测试失败')
+      console.error('Test API error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleProviderChange = (value: string) => {
+    setSelectedProvider(value)
+    form.setFieldValue('api_provider', value)
+  }
+
   return (
     <Content className="settings-page">
       <div className="settings-container">
@@ -115,7 +161,7 @@ const SettingsPage: React.FC = () => {
         <Card title="API 配置" className="settings-card">
           <Alert
             message="配置说明"
-            description="请配置通义千问API密钥以启用AI自动切片功能。您可以在阿里云控制台获取API密钥。"
+            description="请选择API提供商并配置相应的API密钥以启用AI自动切片功能。"
             type="info"
             showIcon
             className="settings-alert"
@@ -127,43 +173,126 @@ const SettingsPage: React.FC = () => {
             onFinish={handleSave}
             className="settings-form"
             initialValues={{
+              api_provider: 'dashscope',
               model_name: 'qwen-plus',
+              siliconflow_model: 'Qwen/Qwen2.5-72B-Instruct',
               chunk_size: 5000,
               min_score_threshold: 0.7,
               max_clips_per_collection: 5
             }}
           >
+            {/* API提供商选择 */}
             <Form.Item
-              label="DashScope API Key"
-              name="dashscope_api_key"
+              label="API提供商"
+              name="api_provider"
               className="form-item"
-              rules={[
-                { required: true, message: '请输入API密钥' },
-                { min: 10, message: 'API密钥长度不能少于10位' }
-              ]}
+              rules={[{ required: true, message: '请选择API提供商' }]}
             >
-              <Input.Password
-                placeholder="请输入通义千问API密钥"
-                prefix={<KeyOutlined />}
+              <Select 
+                placeholder="请选择API提供商" 
                 className="settings-input"
-              />
+                onChange={handleProviderChange}
+                value={selectedProvider}
+              >
+                <Select.Option value="dashscope">阿里云 (DashScope)</Select.Option>
+                <Select.Option value="siliconflow">硅基流动 (SiliconFlow)</Select.Option>
+              </Select>
             </Form.Item>
 
-            <Divider className="settings-divider" />
-
-            <Title level={4} className="section-title">模型配置</Title>
-            
-            <Row gutter={16}>
-              <Col span={12}>
+            {/* 通义千问配置 */}
+            {selectedProvider === 'dashscope' && (
+              <>
                 <Form.Item
-                  label="模型名称"
+                  label="DashScope API Key"
+                  name="dashscope_api_key"
+                  className="form-item"
+                  rules={[
+                    { required: true, message: '请输入API密钥' },
+                    { min: 10, message: 'API密钥长度不能少于10位' }
+                  ]}
+                >
+                  <Input.Password
+                    placeholder="请输入通义千问API密钥"
+                    prefix={<KeyOutlined />}
+                    className="settings-input"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="通义千问模型"
                   name="model_name"
                   className="form-item"
                   rules={[{ required: true, message: '请选择模型' }]}
                 >
-                  <Input placeholder="qwen-plus" className="settings-input" />
+                  <Select placeholder="请选择模型" className="settings-input">
+                    <Select.Option value="qwen-plus">Qwen Plus</Select.Option>
+                    <Select.Option value="qwen-turbo">Qwen Turbo</Select.Option>
+                    <Select.Option value="qwen-max">Qwen Max</Select.Option>
+                  </Select>
                 </Form.Item>
-              </Col>
+              </>
+            )}
+
+            {/* 硅基流动配置 */}
+            {selectedProvider === 'siliconflow' && (
+              <>
+                <Form.Item
+                  label="SiliconFlow API Key"
+                  name="siliconflow_api_key"
+                  className="form-item"
+                  rules={[
+                    { required: true, message: '请输入API密钥' },
+                    { min: 10, message: 'API密钥长度不能少于10位' }
+                  ]}
+                >
+                  <Input.Password
+                    placeholder="请输入硅基流动API密钥"
+                    prefix={<KeyOutlined />}
+                    className="settings-input"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="硅基流动模型"
+                  name="siliconflow_model"
+                  className="form-item"
+                  rules={[{ required: true, message: '请选择模型' }]}
+                >
+                  <Select placeholder="请选择模型" className="settings-input">
+                    <Select.Option value="Qwen/Qwen2.5-72B-Instruct">Qwen2.5-72B-Instruct</Select.Option>
+                    <Select.Option value="Qwen/Qwen3-8B">Qwen3-8B</Select.Option>
+                    <Select.Option value="Pro/deepseek-ai/DeepSeek-R1">DeepSeek-R1</Select.Option>
+                  </Select>
+                </Form.Item>
+              </>
+            )}
+
+            {/* 操作按钮 */}
+            <Form.Item>
+              <Space>
+                <Button 
+                  type="primary" 
+                  icon={<SaveOutlined />} 
+                  htmlType="submit" 
+                  loading={loading}
+                >
+                  保存配置
+                </Button>
+                <Button 
+                  type="default" 
+                  onClick={handleTestApi}
+                  loading={loading}
+                >
+                  测试API连接
+                </Button>
+              </Space>
+            </Form.Item>
+
+            <Divider className="settings-divider" />
+
+            <Title level={4} className="section-title">处理参数配置</Title>
+            
+            <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   label="文本分块大小"
@@ -179,9 +308,6 @@ const SettingsPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-            </Row>
-
-            <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   label="最低评分阈值"
@@ -199,6 +325,9 @@ const SettingsPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+            </Row>
+
+            <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   label="每个合集最大切片数"
@@ -333,7 +462,8 @@ const SettingsPage: React.FC = () => {
                 <InfoCircleOutlined /> 1. 获取API密钥
               </Title>
               <Paragraph className="instruction-text">
-                访问阿里云控制台 → 人工智能 → 通义千问 → API密钥管理，创建新的API密钥
+                <strong>通义千问：</strong>访问阿里云控制台 → 人工智能 → 通义千问 → API密钥管理，创建新的API密钥<br />
+                <strong>硅基流动：</strong>访问 <a href="https://siliconflow.cn" target="_blank" rel="noopener noreferrer">SiliconCloud官网</a> → 登录 → API密钥页面 → 新建API密钥
               </Paragraph>
             </div>
             

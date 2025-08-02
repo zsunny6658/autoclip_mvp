@@ -126,8 +126,12 @@ export const settingsApi = {
   },
 
   // 测试API密钥
-  testApiKey: (apiKey: string): Promise<{ success: boolean; error?: string }> => {
-    return api.post('/settings/test-api-key', { api_key: apiKey })
+  testApiKey: (apiKey: string, provider: string = 'dashscope', model?: string): Promise<{ success: boolean; error?: string }> => {
+    return api.post('/settings/test-api-key', { 
+      api_key: apiKey,
+      provider: provider,
+      model: model
+    })
   }
 }
 
