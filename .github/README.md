@@ -2,6 +2,22 @@
 
 🎬 基于AI的智能视频切片和合集推荐系统，支持从B站视频自动下载、字幕提取、智能切片和合集生成。
 
+## 📋 版本更新记录
+
+### v1.1.0 (2025-08-03)
+- ✨ **新增硅基流动API支持**：支持使用硅基流动(SiliconFlow)作为AI服务提供商
+- 🔧 **多API提供商支持**：支持通义千问和硅基流动两种AI服务
+- 🎯 **智能API选择**：根据配置自动选择合适的AI服务提供商
+- 📝 **配置优化**：新增API提供商配置选项，支持动态切换
+- 🐛 **Bug修复**：修复API连接测试相关问题
+
+### v1.0.0 (2025-07)
+- 🎉 **首次发布**：完整的智能视频切片系统
+- 🔥 **核心功能**：AI视频分析、智能切片、合集推荐
+- 📺 **B站支持**：自动下载B站视频和字幕
+- 🎨 **Web界面**：现代化React前端界面
+- ⚡ **实时处理**：实时显示处理进度和状态
+
 ## ✨ 功能特性
 
 - 🔥 **智能视频切片**：基于AI分析视频内容，自动生成高质量切片
@@ -18,7 +34,7 @@
 
 - Python 3.8+
 - Node.js 16+
-- 通义千问API密钥（用于AI分析）
+- AI服务API密钥（支持通义千问或硅基流动）
 
 ### 安装步骤
 
@@ -53,7 +69,10 @@ cp data/settings.example.json data/settings.json
 
 # 编辑配置文件，填入你的API密钥
 {
+  "api_provider": "dashscope",  # 或 "siliconflow"
   "dashscope_api_key": "你的通义千问API密钥",
+  "siliconflow_api_key": "你的硅基流动API密钥",
+  "siliconflow_model": "Qwen/Qwen3-8B",  # 硅基流动模型名称
   "model_name": "qwen-plus",
   "chunk_size": 5000,
   "min_score_threshold": 0.7,
@@ -167,11 +186,27 @@ autoclip_mvp/
 ## 🔧 配置说明
 
 ### API密钥配置
-在 `data/settings.json` 中配置你的通义千问API密钥：
+在 `data/settings.json` 中配置你的AI服务API密钥：
+
+#### 通义千问配置
 ```json
 {
-  "dashscope_api_key": "your-api-key-here",
+  "api_provider": "dashscope",
+  "dashscope_api_key": "your-dashscope-api-key",
   "model_name": "qwen-plus",
+  "chunk_size": 5000,
+  "min_score_threshold": 0.7,
+  "max_clips_per_collection": 5,
+  "default_browser": "chrome"
+}
+```
+
+#### 硅基流动配置
+```json
+{
+  "api_provider": "siliconflow",
+  "siliconflow_api_key": "your-siliconflow-api-key",
+  "siliconflow_model": "Qwen/Qwen3-8B",
   "chunk_size": 5000,
   "min_score_threshold": 0.7,
   "max_clips_per_collection": 5,
@@ -244,13 +279,16 @@ npm run lint   # 代码检查
 A: 确保已登录B站账号，并选择正确的浏览器。建议使用Chrome浏览器。
 
 ### Q: AI分析速度慢？
-A: 可以调整 `chunk_size` 参数，较小的值会提高速度但可能影响质量。
+A: 可以调整 `chunk_size` 参数，较小的值会提高速度但可能影响质量。也可以尝试切换不同的API提供商（通义千问或硅基流动）来获得更好的性能。
 
 ### Q: 切片质量不高？
 A: 调整 `min_score_threshold` 参数，较高的值会提高切片质量但减少数量。
 
 ### Q: 合集数量太少？
 A: 调整 `max_clips_per_collection` 参数，增加每个合集的最大切片数量。
+
+### Q: 如何切换AI服务提供商？
+A: 在 `data/settings.json` 中修改 `api_provider` 字段，可选值：`"dashscope"`（通义千问）或 `"siliconflow"`（硅基流动）。确保对应的API密钥已正确配置。
 
 ## 📄 许可证
 
