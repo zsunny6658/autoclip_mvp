@@ -40,11 +40,40 @@
 
 ### 环境要求
 
+#### 开发环境
 - Python 3.8+
 - Node.js 16+
 - AI服务API密钥（支持通义千问或硅基流动）
 
+#### Docker部署（推荐）
+- Docker 20.10+
+- Docker Compose 2.0+
+- AI服务API密钥（支持通义千问或硅基流动）
+
 ### 安装步骤
+
+#### 🐳 Docker部署（推荐）
+
+**一键部署，无需配置复杂环境！**
+
+```bash
+# 1. 克隆项目
+git clone git@github.com:zhouxiaoka/autoclip_mvp.git
+cd autoclip_mvp
+
+# 2. 配置环境变量
+cp env.example .env
+# 编辑 .env 文件，配置你的 API 密钥
+
+# 3. 一键部署
+./docker-deploy.sh
+```
+
+**访问地址**: http://localhost:8000
+
+📖 **详细部署指南**: [Docker 部署文档](DOCKER_DEPLOY.md)
+
+#### 🔧 开发环境
 
 1. **克隆项目**
 ```bash
@@ -122,6 +151,11 @@ python main.py --list-projects
 
 ### 访问地址
 
+#### Docker部署
+- 🌐 **前端界面**: http://localhost:8000
+- 📚 **API文档**: http://localhost:8000/docs
+
+#### 开发环境
 - 🌐 **前端界面**: http://localhost:3000
 - 🔌 **后端API**: http://localhost:8000
 - 📚 **API文档**: http://localhost:8000/docs
@@ -136,6 +170,15 @@ autoclip_mvp/
 ├── requirements.txt           # Python依赖
 ├── .gitignore               # Git忽略文件
 ├── README.md                # 项目文档
+│
+├── Dockerfile               # Docker镜像构建文件
+├── docker-compose.yml       # Docker Compose配置
+├── docker-compose.prod.yml  # 生产环境Docker配置
+├── docker-deploy.sh         # Docker一键部署脚本
+├── docker-deploy-prod.sh    # 生产环境部署脚本
+├── test-docker.sh           # Docker环境测试脚本
+├── env.example              # 环境变量示例文件
+├── .dockerignore           # Docker构建忽略文件
 │
 ├── frontend/                # React前端
 │   ├── src/
@@ -257,6 +300,60 @@ autoclip_mvp/
 2. 自动打包所有切片和合集
 3. 下载完整的zip文件
 
+## 🐳 Docker部署
+
+### 快速部署
+```bash
+# 1. 克隆项目
+git clone git@github.com:zhouxiaoka/autoclip_mvp.git
+cd autoclip_mvp
+
+# 2. 配置环境变量
+cp env.example .env
+# 编辑 .env 文件，配置你的API密钥
+
+# 3. 一键部署
+./docker-deploy.sh
+```
+
+### 生产环境部署
+```bash
+# 使用生产环境配置
+./docker-deploy-prod.sh
+```
+
+### 常用Docker命令
+```bash
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+
+# 重启服务
+docker-compose restart
+
+# 更新服务
+docker-compose pull && docker-compose up -d
+
+# 测试Docker环境
+./test-docker.sh
+```
+
+### 环境变量配置
+在 `.env` 文件中配置：
+```bash
+# 选择其中一个API提供商
+DASHSCOPE_API_KEY=your-dashscope-api-key
+# 或者
+SILICONFLOW_API_KEY=your-siliconflow-api-key
+
+# API提供商选择
+API_PROVIDER=dashscope  # 或 siliconflow
+```
+
+📖 **详细Docker部署指南**: [Docker 部署文档](DOCKER_DEPLOY.md)
+
 ## 🛠️ 开发指南
 
 ### 后端开发
@@ -297,6 +394,18 @@ A: 调整 `max_clips_per_collection` 参数，增加每个合集的最大切片�
 
 ### Q: 如何切换AI服务提供商？
 A: 在 `data/settings.json` 中修改 `api_provider` 字段，可选值：`"dashscope"`（通义千问）或 `"siliconflow"`（硅基流动）。确保对应的API密钥已正确配置。
+
+### Q: Docker部署失败？
+A: 请先运行 `./test-docker.sh` 检查Docker环境。确保Docker和Docker Compose已正确安装，并且API密钥已在 `.env` 文件中配置。
+
+### Q: Docker容器无法访问？
+A: 检查端口是否被占用：`netstat -tulpn | grep 8000`。如果端口被占用，可以修改 `docker-compose.yml` 中的端口映射。
+
+### Q: Docker部署后数据丢失？
+A: 确保数据目录已正确挂载。检查 `docker-compose.yml` 中的 volumes 配置，数据会保存在宿主机的 `./uploads/` 和 `./output/` 目录中。
+
+### Q: 生产环境如何部署？
+A: 使用 `./docker-deploy-prod.sh` 脚本进行生产环境部署。该脚本会使用端口80，并配置自动重启和日志管理。
 
 ## 📄 许可证
 
