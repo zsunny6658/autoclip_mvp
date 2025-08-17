@@ -1787,6 +1787,15 @@ async def health_check():
     """健康检查"""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
+# 静态文件服务 - 提供前端构建文件
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
+# 挂载静态文件目录
+if os.path.exists("./frontend/dist"):
+    app.mount("/static", StaticFiles(directory="./frontend/dist"), name="static")
+
 # SPA路由兜底 - 处理前端路由
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
@@ -1799,10 +1808,23 @@ async def serve_spa(full_path: str):
     if full_path.startswith(("static/", "uploads/")):
         raise HTTPException(status_code=404, detail="静态资源不存在")
     
-    # 其他所有路径都重定向到前端
-    from fastapi.responses import RedirectResponse
-    frontend_url = f"http://localhost:3000/{full_path}"
-    return RedirectResponse(url=frontend_url, status_code=302)
+    # 检查是否是静态资源请求
+    if full_path.startswith("assets/") or full_path.endswith((".js", ".css", ".ico", ".png", ".jpg", ".jpeg", ".gif", ".svg")):
+        static_file_path = f"./frontend/dist/{full_path}"
+        if os.path.exists(static_file_path):
+            return FileResponse(static_file_path)
+        else:
+            raise HTTPException(status_code=404, detail="静态资源不存在")
+    
+    # 其他所有路径都返回前端index.html
+    index_path = "./frontend/dist/index.html"
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    else:
+        # 如果前端文件不存在，重定向到开发服务器
+        from fastapi.responses import RedirectResponse
+        frontend_url = f"http://localhost:3000/{full_path}"
+        return RedirectResponse(url=frontend_url, status_code=302)
 
 if __name__ == "__main__":
     # 确保必要的目录存在
@@ -1842,6 +1864,6 @@ if __name__ == "__main__":
         "backend_server:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,
+        reload=False,  # Docker环境中禁用热重载
         log_level="info"
     )

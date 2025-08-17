@@ -30,11 +30,40 @@
 
 ### Requirements
 
+#### Development Environment
 - Python 3.8+
 - Node.js 16+
 - DashScope API Key or SiliconFlow API Key (for AI analysis)
 
+#### Docker Deployment (Recommended)
+- Docker 20.10+
+- Docker Compose 2.0+
+- DashScope API Key or SiliconFlow API Key (for AI analysis)
+
 ### Installation
+
+#### 🐳 Docker Deployment (Recommended)
+
+**One-click deployment, no complex environment setup required!**
+
+```bash
+# 1. Clone the project
+git clone git@github.com:zhouxiaoka/autoclip_mvp.git
+cd autoclip_mvp
+
+# 2. Configure environment variables
+cp env.example .env
+# Edit .env file and configure your API keys
+
+# 3. One-click deployment
+./docker-deploy.sh
+```
+
+**Access URL**: http://localhost:8000
+
+📖 **Detailed Deployment Guide**: [Docker Deployment Guide](DOCKER_DEPLOY.md)
+
+#### 🔧 Development Environment
 
 1. **Clone the project**
 ```bash
@@ -124,6 +153,11 @@ python main.py --list-projects
 
 ### Access URLs
 
+#### Docker Deployment
+- 🌐 **Frontend Interface**: http://localhost:8000
+- 📚 **API Documentation**: http://localhost:8000/docs
+
+#### Development Environment
 - 🌐 **Frontend Interface**: http://localhost:3000
 - 🔌 **Backend API**: http://localhost:8000
 - 📚 **API Documentation**: http://localhost:8000/docs
@@ -138,6 +172,15 @@ autoclip_mvp/
 ├── requirements.txt           # Python dependencies
 ├── .gitignore               # Git ignore file
 ├── README.md                # Project documentation
+│
+├── Dockerfile               # Docker image build file
+├── docker-compose.yml       # Docker Compose configuration
+├── docker-compose.prod.yml  # Production Docker configuration
+├── docker-deploy.sh         # Docker one-click deployment script
+├── docker-deploy-prod.sh    # Production deployment script
+├── test-docker.sh           # Docker environment test script
+├── env.example              # Environment variables example file
+├── .dockerignore           # Docker build ignore file
 │
 ├── frontend/                # React frontend
 │   ├── src/
@@ -265,6 +308,60 @@ Support for Chrome, Firefox, Safari and other browsers for Bilibili video downlo
 2. Automatically package all slices and collections
 3. Download complete zip file
 
+## 🐳 Docker Deployment
+
+### Quick Deployment
+```bash
+# 1. Clone the project
+git clone git@github.com:zhouxiaoka/autoclip_mvp.git
+cd autoclip_mvp
+
+# 2. Configure environment variables
+cp env.example .env
+# Edit .env file and configure your API keys
+
+# 3. One-click deployment
+./docker-deploy.sh
+```
+
+### Production Deployment
+```bash
+# Use production environment configuration
+./docker-deploy-prod.sh
+```
+
+### Common Docker Commands
+```bash
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Restart services
+docker-compose restart
+
+# Update services
+docker-compose pull && docker-compose up -d
+
+# Test Docker environment
+./test-docker.sh
+```
+
+### Environment Variables Configuration
+Configure in `.env` file:
+```bash
+# Choose one API provider
+DASHSCOPE_API_KEY=your-dashscope-api-key
+# or
+SILICONFLOW_API_KEY=your-siliconflow-api-key
+
+# API provider selection
+API_PROVIDER=dashscope  # or siliconflow
+```
+
+📖 **Detailed Docker Deployment Guide**: [Docker Deployment Guide](DOCKER_DEPLOY.md)
+
 ## 🛠️ Development Guide
 
 ### Backend Development
@@ -290,6 +387,24 @@ npm run lint   # Code linting
 3. Add category options in frontend `src/services/api.ts`
 
 ## 📝 Changelog
+
+### [v1.1.1] - 2025-08-17
+
+#### 🐳 Docker Deployment
+- **🚀 One-Click Docker Deployment**: Support for Docker containerized deployment, simplifying environment setup
+- **🏗️ Multi-Stage Build**: Optimized Docker image size and improved build efficiency
+- **🔧 Production Environment Support**: Provided production Docker configuration and deployment scripts
+- **📦 Data Persistence**: Support for volume mounting to ensure data security
+- **🛡️ Health Checks**: Integrated container health checks for improved service reliability
+- **📚 Deployment Documentation**: Comprehensive Docker deployment guides and quick start documentation
+
+#### 🛠️ Technical Improvements
+- **🔧 Backend Optimization**: Enhanced static file serving for Docker environment
+- **🎨 Frontend Build**: Optimized production build configuration
+- **📋 Environment Management**: Improved environment variable configuration system
+- **🔍 Testing**: Added Docker environment testing scripts
+
+---
 
 ### [v1.1.0] - 2025-08-03
 
@@ -318,12 +433,12 @@ npm run lint   # Code linting
 
 #### 📋 Supported Models
 
-**DashScope (通义千问)**:
+**DashScope (Tongyi Qianwen)**:
 - Qwen Plus
 - Qwen Turbo
 - Qwen Max
 
-**SiliconFlow (硅基流动)**:
+**SiliconFlow (Silicon Cloud)**:
 - Qwen2.5-72B-Instruct
 - Qwen3-8B
 - DeepSeek-R1
@@ -360,6 +475,18 @@ A: Adjust the `min_score_threshold` parameter. Higher values will improve slice 
 ### Q: Too few collections?
 A: Adjust the `max_clips_per_collection` parameter to increase the maximum number of slices per collection.
 
+### Q: Docker deployment failed?
+A: First run `./test-docker.sh` to check your Docker environment. Make sure Docker and Docker Compose are properly installed, and API keys are configured in the `.env` file.
+
+### Q: Cannot access Docker container?
+A: Check if the port is occupied: `netstat -tulpn | grep 8000`. If the port is occupied, you can modify the port mapping in `docker-compose.yml`.
+
+### Q: Data lost after Docker deployment?
+A: Make sure the data directories are properly mounted. Check the volumes configuration in `docker-compose.yml`. Data will be saved in the host machine's `./uploads/` and `./output/` directories.
+
+### Q: How to deploy in production environment?
+A: Use the `./docker-deploy-prod.sh` script for production deployment. This script will use port 80 and configure automatic restart and log management.
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -379,10 +506,10 @@ Welcome to submit Issues and Pull Requests!
 For questions or suggestions, please contact us through:
 
 ### 💬 QQ  
-<img src="./qq_qr.jpg" alt="QQ二维码" width="150">
+<img src="./qq_qr.jpg" alt="QQ QR Code" width="150">
 
 ### 📱 Feishu  
-<img src="./feishu_qr.jpg" alt="飞书二维码" width="150">
+<img src="./feishu_qr.jpg" alt="Feishu QR Code" width="150">
 
 ### 📧 Other Contact Methods
 - Submit a [GitHub Issue](https://github.com/zhouxiaoka/autoclip_mvp/issues)

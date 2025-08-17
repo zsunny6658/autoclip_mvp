@@ -19,5 +19,19 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
-  }
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          antd: ['antd', '@ant-design/icons']
+        }
+      }
+    }
+  },
+  base: '/'  // 确保资源路径正确
 })
