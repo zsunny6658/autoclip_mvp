@@ -127,7 +127,30 @@ error TS2367: This comparison appears to be unintentional
 2. 修复类型比较逻辑
 3. 使用类型窄化处理联合类型
 
-### 内存不足
+### 文件权限问题
+
+**症状**：容器启动后报权限错误
+```
+[Errno 13] Permission denied: 'data/settings.json'
+[Errno 13] Permission denied: 'data/projects.json'
+```
+
+**解决方案**：
+1. 运行权限修复脚本
+   ```bash
+   # 开发环境
+   ./fix-permissions.sh
+   
+   # 生产环境
+   ./fix-permissions-prod.sh
+   ```
+
+2. 重新构建容器
+   ```bash
+   docker-compose down
+   docker-compose build --no-cache
+   docker-compose up -d
+   ```
 
 **症状**：构建过程中断，OOM错误
 **解决方案**：

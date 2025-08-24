@@ -101,11 +101,10 @@ COPY --chown=appuser:appuser prompt/ ./prompt/
 COPY --from=frontend-builder --chown=appuser:appuser /app/frontend/dist ./frontend/dist
 
 # 创建必要的目录并设置权限
-RUN mkdir -p input output/clips output/collections output/metadata uploads data logs && \
-    chown -R appuser:appuser /app
+RUN mkdir -p input output/clips output/collections output/metadata uploads data logs
 
 # 复制配置文件（如果存在）
-COPY data/settings.example.json ./data/settings.example.json
+COPY --chown=appuser:appuser data/settings.example.json ./data/settings.example.json
 
 # 创建健康检查脚本
 RUN echo '#!/bin/bash\n\
@@ -117,8 +116,10 @@ curl -f http://localhost:${PORT:-8000}/health > /dev/null 2>&1 || exit 1\n\
 [ -d "/app/output" ] || exit 1\n\
 echo "Health check passed"\n\
 exit 0' > /app/health-check.sh && \
-    chmod +x /app/health-check.sh && \
-    chown appuser:appuser /app/health-check.sh
+    chmod +x /app/health-check.sh
+
+# 设置所有目录和文件的所有权（必须在切换用户前执行）
+RUN chown -R appuser:appuser /app
 
 # 切换到非root用户
 USER appuser

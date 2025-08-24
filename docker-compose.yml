@@ -65,9 +65,6 @@ services:
       - ${INPUT_DIR:-./input}:/app/input
       - ./logs:/app/logs
       
-      # 配置文件挂载（可选）
-      - ${DATA_DIR:-./data}/settings.json:/app/data/settings.json:ro
-      
     restart: unless-stopped
     
     # 资源限制（开发环境）

@@ -73,9 +73,6 @@ services:
       - ${INPUT_DIR:-/var/lib/autoclip/input}:/app/input
       - ${LOG_DIR:-/var/log/autoclip}:/app/logs
       
-      # 配置文件挂载（可选）
-      - ${DATA_DIR:-/var/lib/autoclip/data}/settings.json:/app/data/settings.json:ro
-      
     restart: always  # 生产环境自动重启
     
     # 生产环境资源限制
