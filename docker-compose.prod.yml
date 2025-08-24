@@ -1,6 +1,5 @@
 # Docker Compose 生产环境配置文件 (兼容 v1+ 和 v2+)
 # 生产环境优化配置
-version: '3.8'
 
 services:
   autoclip:
@@ -102,7 +101,7 @@ services:
     
     # 健康检查（生产环境加强）
     healthcheck:
-      test: ["/app/health-check.sh"]
+      test: ["CMD-SHELL", "/app/health-check.sh"]
       interval: ${HEALTH_CHECK_INTERVAL:-20s}
       timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
       retries: ${HEALTH_CHECK_RETRIES:-5}
