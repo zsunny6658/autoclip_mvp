@@ -1,3 +1,5 @@
+# Docker Compose 生产环境配置文件 (兼容 v1+ 和 v2+)
+# 生产环境优化配置
 version: '3.8'
 
 services:
@@ -5,36 +7,75 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: autoclip-prod
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+      cache_from:
+        - ${DOCKER_IMAGE_TAG:-autoclip:latest}
+    image: ${DOCKER_IMAGE_TAG:-autoclip:latest}
+    container_name: ${CONTAINER_PREFIX:-autoclip}-prod
     ports:
-      - "80:8000"  # 生产环境使用80端口
+      - "${PROD_PORT:-80}:${PORT:-8000}"  # 生产环境端口
     environment:
-      # API配置
+      # API配置（生产环境必须配置）
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
       - SILICONFLOW_API_KEY=${SILICONFLOW_API_KEY}
       - API_PROVIDER=${API_PROVIDER:-dashscope}
       - MODEL_NAME=${MODEL_NAME:-qwen-plus}
       - SILICONFLOW_MODEL=${SILICONFLOW_MODEL:-Qwen/Qwen2.5-72B-Instruct}
       
-      # 处理参数
+      # 处理参数（生产环境优化）
       - CHUNK_SIZE=${CHUNK_SIZE:-5000}
       - MIN_SCORE_THRESHOLD=${MIN_SCORE_THRESHOLD:-0.7}
       - MAX_CLIPS_PER_COLLECTION=${MAX_CLIPS_PER_COLLECTION:-5}
+      - MAX_CONCURRENT_TASKS=${MAX_CONCURRENT_TASKS:-6}
+      - VIDEO_PROCESSING_TIMEOUT=${VIDEO_PROCESSING_TIMEOUT:-7200}
       
       # 服务器配置
-      - HOST=0.0.0.0
-      - PORT=8000
+      - HOST=${HOST:-0.0.0.0}
+      - PORT=${PORT:-8000}
       - DEBUG=false
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # 文件系统配置
+      - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE:-4096}
+      - TEMP_FILE_CLEANUP_HOURS=${TEMP_FILE_CLEANUP_HOURS:-12}
+      
+      # FFmpeg配置
+      - FFMPEG_PATH=${FFMPEG_PATH:-ffmpeg}
+      - VIDEO_CODEC=${VIDEO_CODEC:-libx264}
+      - AUDIO_CODEC=${AUDIO_CODEC:-aac}
+      - VIDEO_QUALITY=${VIDEO_QUALITY:-20}
+      
+      # B站下载配置
+      - DEFAULT_BROWSER=${DEFAULT_BROWSER:-chrome}
+      - DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-3600}
+      
+      # 安全配置
+      - ALLOWED_VIDEO_FORMATS=${ALLOWED_VIDEO_FORMATS:-mp4,avi,mov,mkv,flv,wmv}
+      - ALLOWED_AUDIO_FORMATS=${ALLOWED_AUDIO_FORMATS:-mp3,wav,flac,aac,ogg}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      
+      # 缓存和监控（生产环境启用）
+      - ENABLE_CACHE=${ENABLE_CACHE:-true}
+      - CACHE_EXPIRE_TIME=${CACHE_EXPIRE_TIME:-7200}
+      - ENABLE_MONITORING=${ENABLE_MONITORING:-true}
+      - MONITORING_INTERVAL=${MONITORING_INTERVAL:-60}
+      
+      # 并发配置（生产环境优化）
+      - WORKER_PROCESSES=${WORKER_PROCESSES:-2}
+      - WORKER_THREADS=${WORKER_THREADS:-8}
+      - REQUEST_QUEUE_SIZE=${REQUEST_QUEUE_SIZE:-200}
       
     volumes:
-      # 数据持久化
-      - ./uploads:/app/uploads
-      - ./output:/app/output
-      - ./data:/app/data
-      - ./input:/app/input
+      # 数据持久化（生产环境绝对路径）
+      - ${UPLOADS_DIR:-/var/lib/autoclip/uploads}:/app/uploads
+      - ${OUTPUT_DIR:-/var/lib/autoclip/output}:/app/output
+      - ${DATA_DIR:-/var/lib/autoclip/data}:/app/data
+      - ${INPUT_DIR:-/var/lib/autoclip/input}:/app/input
+      - ${LOG_DIR:-/var/log/autoclip}:/app/logs
       
-      # 配置文件挂载
-      - ./data/settings.json:/app/data/settings.json:ro
+      # 配置文件挂载（可选）
+      - ${DATA_DIR:-/var/lib/autoclip/data}/settings.json:/app/data/settings.json:ro
       
     restart: always  # 生产环境自动重启
     
@@ -42,27 +83,67 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4G
-          cpus: '2.0'
+          memory: ${MEMORY_LIMIT_PROD:-4G}
+          cpus: '${CPU_LIMIT_PROD:-2.0}'
         reservations:
-          memory: 1G
-          cpus: '0.5'
+          memory: ${MEMORY_RESERVATION_PROD:-1G}
+          cpus: '${CPU_RESERVATION_PROD:-0.5}'
+      # 生产环境更新策略
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
     
-    # 健康检查
+    # 健康检查（生产环境加强）
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      test: ["/app/health-check.sh"]
+      interval: ${HEALTH_CHECK_INTERVAL:-20s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-5}
+      start_period: ${HEALTH_CHECK_START_PERIOD:-60s}
     
     # 生产环境日志配置
     logging:
-      driver: "json-file"
+      driver: ${LOG_DRIVER:-json-file}
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: ${LOG_MAX_SIZE:-20m}
+        max-file: "${LOG_MAX_FILE:-5}"
+        labels: "service=autoclip,environment=production"
+    
+    # 网络配置
+    networks:
+      - autoclip-prod-network
+    
+    # 安全配置
+    security_opt:
+      - no-new-privileges:true
+    
+    # 读只文件系统（除了数据目录）
+    read_only: false  # 暂时关闭，因为需要写入临时文件
+    
+    # 系统资源限制
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
 
+# 生产环境网络配置（兼容v1和v2）
 networks:
-  default:
-    name: autoclip-prod-network
+  autoclip-prod-network:
+    name: ${DOCKER_NETWORK:-autoclip-prod-network}
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: autoclip-prod-br
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+    labels:
+      - "environment=production"
+      - "service=autoclip"

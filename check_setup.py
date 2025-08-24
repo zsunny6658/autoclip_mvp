@@ -108,22 +108,37 @@ def check_virtual_environment():
 def check_dependencies():
     """检查Python依赖"""
     print("📦 检查Python依赖...")
-    try:
-        import fastapi
-        import uvicorn
-        import dashscope
-        import pydub
-        import pysrt
-        import pydantic
-        import aiofiles
-        import requests
-        import aiohttp
-        print("✅ 所有Python依赖已安装")
-        return True
-    except ImportError as e:
-        print(f"❌ 缺少依赖: {e}")
+    
+    # 定义必需的依赖包
+    required_packages = [
+        'fastapi',
+        'uvicorn', 
+        'dashscope',
+        'pydub',
+        'pysrt',
+        'pydantic',
+        'aiofiles',
+        'requests',
+        'aiohttp'
+    ]
+    
+    missing_packages = []
+    
+    for package in required_packages:
+        try:
+            __import__(package)
+            print(f"✅ {package} 已安装")
+        except ImportError:
+            print(f"❌ {package} 未安装")
+            missing_packages.append(package)
+    
+    if missing_packages:
+        print(f"❌ 缺少依赖: {', '.join(missing_packages)}")
         print("请运行: pip install -r requirements.txt")
         return False
+    
+    print("✅ 所有Python依赖已安装")
+    return True
 
 def check_frontend_dependencies():
     """检查前端依赖"""
@@ -185,22 +200,155 @@ def check_uploads_directory():
     print("✅ 上传目录结构正确")
     return True
 
-def check_prompt_templates():
-    """检查提示词模板"""
-    print("📝 检查提示词模板...")
-    prompt_dir = Path('prompt')
-    if not prompt_dir.exists():
-        print("❌ 提示词模板目录不存在")
+def check_docker():
+    """检查Docker安装和状态"""
+    print("🐳 检查Docker...") 
+    try:
+        # 检查Docker命令
+        result = subprocess.run(['docker', '--version'], capture_output=True, text=True)
+        if result.returncode == 0:
+            version = result.stdout.strip()
+            print(f"✅ Docker已安装: {version}")
+        else:
+            print("❌ Docker未安装")
+            return False
+        
+        # 检查Docker服务状态
+        result = subprocess.run(['docker', 'info'], capture_output=True, text=True)
+        if result.returncode == 0:
+            print("✅ Docker服务正常运行")
+        else:
+            print("❌ Docker服务未运行，请启动Docker")
+            return False
+            
+        return True
+    except FileNotFoundError:
+        print("❌ Docker未安装")
         return False
-    
-    # 检查是否有模板文件
-    template_files = list(prompt_dir.rglob('*.txt'))
-    if not template_files:
-        print("❌ 未找到提示词模板文件")
+    except Exception as e:
+        print(f"❌ Docker检查失败: {e}")
         return False
+
+def check_docker_compose():
+    """检查Docker Compose安装和版本"""
+    print("🛠️  检查Docker Compose...")
     
-    print(f"✅ 找到 {len(template_files)} 个提示词模板")
-    return True
+    # 检查docker-compose命令
+    try:
+        result = subprocess.run(['docker-compose', '--version'], capture_output=True, text=True)
+        if result.returncode == 0:
+            version = result.stdout.strip()
+            print(f"✅ Docker Compose已安装: {version}")
+            return True
+    except FileNotFoundError:
+        pass
+    
+    # 检查docker compose命令（Docker v2+）
+    try:
+        result = subprocess.run(['docker', 'compose', 'version'], capture_output=True, text=True)
+        if result.returncode == 0:
+            version = result.stdout.strip()
+            print(f"✅ Docker Compose已安装: {version}")
+            return True
+    except FileNotFoundError:
+        pass
+    
+    print("❌ Docker Compose未安装")
+    print("安装指南: https://docs.docker.com/compose/install/")
+    return False
+
+def check_docker_files():
+    """检查Docker相关文件"""
+    print("📄 检查Docker文件...")
+    
+    docker_files = [
+        'Dockerfile',
+        'docker-compose.yml', 
+        'docker-compose.prod.yml',
+        '.dockerignore'
+    ]
+    
+    all_exist = True
+    for file_path in docker_files:
+        if Path(file_path).exists():
+            print(f"✅ 文件存在: {file_path}")
+        else:
+            if file_path == '.dockerignore':
+                print(f"⚠️  可选文件不存在: {file_path}")
+            else:
+                print(f"❌ 文件不存在: {file_path}")
+                all_exist = False
+    
+    return all_exist
+
+def check_env_file():
+    """检查环境变量文件"""
+    print("🌍 检查环境变量文件...")
+    
+    env_file = Path('.env')
+    env_example = Path('env.example')
+    
+    if env_file.exists():
+        print("✅ .env 文件存在")
+        
+        # 检查关键API密钥
+        try:
+            with open('.env', 'r') as f:
+                content = f.read()
+                if 'DASHSCOPE_API_KEY=' in content or 'SILICONFLOW_API_KEY=' in content:
+                    print("✅ API密钥配置已设置")
+                else:
+                    print("⚠️  API密钥未配置")
+        except Exception as e:
+            print(f"⚠️  读取.env文件失败: {e}")
+        return True
+    elif env_example.exists():
+        print("⚠️  .env 文件不存在，但找到 env.example")
+        print("请运行: cp env.example .env 并编辑配置")
+        return False
+    else:
+        print("❌ .env 和 env.example 文件都不存在")
+        return False
+
+def validate_docker_compose_files():
+    """验证Docker Compose文件语法"""
+    print("⚙️  验证Docker Compose文件...")
+    
+    compose_files = ['docker-compose.yml', 'docker-compose.prod.yml']
+    all_valid = True
+    
+    for compose_file in compose_files:
+        if not Path(compose_file).exists():
+            continue
+            
+        try:
+            # 尝试使用docker-compose
+            result = subprocess.run(
+                ['docker-compose', '-f', compose_file, 'config'], 
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                print(f"✅ {compose_file} 语法正确")
+                continue
+        except FileNotFoundError:
+            pass
+        
+        try:
+            # 尝试使用docker compose
+            result = subprocess.run(
+                ['docker', 'compose', '-f', compose_file, 'config'], 
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                print(f"✅ {compose_file} 语法正确")
+            else:
+                print(f"❌ {compose_file} 语法错误")
+                all_valid = False
+        except FileNotFoundError:
+            print(f"⚠️  无法验证 {compose_file}，Docker Compose不可用")
+            all_valid = False
+    
+    return all_valid
 
 def main():
     """主检查函数"""
@@ -217,7 +365,11 @@ def main():
         check_frontend_dependencies,
         check_config,
         check_uploads_directory,
-        check_prompt_templates
+        check_docker,
+        check_docker_compose,
+        check_docker_files,
+        check_env_file,
+        validate_docker_compose_files
     ]
     
     passed = 0
@@ -238,12 +390,25 @@ def main():
     if passed == total:
         print("🎉 所有检查通过！项目可以正常启动")
         print("\n🚀 启动命令:")
-        print("  ./start_dev.sh")
-        print("  或")
-        print("  python backend_server.py")
-        print("  cd frontend && npm run dev")
+        print("  本地开发:")
+        print("    ./start_dev.sh")
+        print("    或")
+        print("    python backend_server.py")
+        print("    cd frontend && npm run dev")
+        print("\n  Docker部署:")
+        print("    开发环境: ./docker-deploy.sh")
+        print("    生产环境: ./docker-deploy-prod.sh")
+        print("    测试配置: ./test-docker.sh")
     else:
         print("⚠️  请修复上述问题后重新运行检查")
+        print("\n📈 建议操作:")
+        if not Path('.env').exists():
+            print("  1. 创建环境变量文件: cp env.example .env")
+            print("  2. 编辑 .env 文件并设置 API 密钥")
+        if passed < total - 2:  # 如果失败较多
+            print("  3. 检查系统依赖安装")
+            print("  4. 检查项目文件完整性")
+        print("  5. 重新运行: python check_setup.py")
         return 1
     
     return 0

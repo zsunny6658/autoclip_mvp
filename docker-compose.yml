@@ -1,3 +1,5 @@
+# Docker Compose 配置文件 (兼容 v1+ 和 v2+)
+# 开发环境配置
 version: '3.8'
 
 services:
@@ -5,9 +7,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: autoclip-app
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: ${DOCKER_IMAGE_TAG:-autoclip:latest}
+    container_name: ${CONTAINER_PREFIX:-autoclip}-app
     ports:
-      - "8000:8000"
+      - "${DEV_PORT:-8000}:${PORT:-8000}"
     environment:
       # API配置
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
@@ -20,42 +25,86 @@ services:
       - CHUNK_SIZE=${CHUNK_SIZE:-5000}
       - MIN_SCORE_THRESHOLD=${MIN_SCORE_THRESHOLD:-0.7}
       - MAX_CLIPS_PER_COLLECTION=${MAX_CLIPS_PER_COLLECTION:-5}
+      - MAX_CONCURRENT_TASKS=${MAX_CONCURRENT_TASKS:-3}
+      - VIDEO_PROCESSING_TIMEOUT=${VIDEO_PROCESSING_TIMEOUT:-3600}
       
       # 服务器配置
-      - HOST=0.0.0.0
-      - PORT=8000
+      - HOST=${HOST:-0.0.0.0}
+      - PORT=${PORT:-8000}
       - DEBUG=${DEBUG:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # 文件系统配置
+      - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE:-2048}
+      - TEMP_FILE_CLEANUP_HOURS=${TEMP_FILE_CLEANUP_HOURS:-24}
+      
+      # FFmpeg配置
+      - FFMPEG_PATH=${FFMPEG_PATH:-ffmpeg}
+      - VIDEO_CODEC=${VIDEO_CODEC:-libx264}
+      - AUDIO_CODEC=${AUDIO_CODEC:-aac}
+      - VIDEO_QUALITY=${VIDEO_QUALITY:-23}
+      
+      # B站下载配置
+      - DEFAULT_BROWSER=${DEFAULT_BROWSER:-chrome}
+      - DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-1800}
+      
+      # 安全配置
+      - ALLOWED_VIDEO_FORMATS=${ALLOWED_VIDEO_FORMATS:-mp4,avi,mov,mkv,flv,wmv}
+      - ALLOWED_AUDIO_FORMATS=${ALLOWED_AUDIO_FORMATS:-mp3,wav,flac,aac,ogg}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000}
+      
+      # 缓存和监控
+      - ENABLE_CACHE=${ENABLE_CACHE:-true}
+      - CACHE_EXPIRE_TIME=${CACHE_EXPIRE_TIME:-3600}
+      - ENABLE_MONITORING=${ENABLE_MONITORING:-false}
       
     volumes:
       # 数据持久化
-      - ./uploads:/app/uploads
-      - ./output:/app/output
-      - ./data:/app/data
-      - ./input:/app/input
+      - ${UPLOADS_DIR:-./uploads}:/app/uploads
+      - ${OUTPUT_DIR:-./output}:/app/output
+      - ${DATA_DIR:-./data}:/app/data
+      - ${INPUT_DIR:-./input}:/app/input
+      - ./logs:/app/logs
       
-      # 配置文件挂载
-      - ./data/settings.json:/app/data/settings.json:ro
+      # 配置文件挂载（可选）
+      - ${DATA_DIR:-./data}/settings.json:/app/data/settings.json:ro
       
     restart: unless-stopped
     
-    # 资源限制
+    # 资源限制（开发环境）
     deploy:
       resources:
         limits:
-          memory: 2G
-          cpus: '1.0'
+          memory: ${MEMORY_LIMIT_DEV:-2G}
+          cpus: '${CPU_LIMIT_DEV:-1.0}'
         reservations:
-          memory: 512M
-          cpus: '0.5'
+          memory: ${MEMORY_RESERVATION_DEV:-512M}
+          cpus: '${CPU_RESERVATION_DEV:-0.5}'
     
     # 健康检查
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      test: ["/app/health-check.sh"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-3}
+      start_period: ${HEALTH_CHECK_START_PERIOD:-40s}
+    
+    # 日志配置
+    logging:
+      driver: ${LOG_DRIVER:-json-file}
+      options:
+        max-size: ${LOG_MAX_SIZE:-10m}
+        max-file: "${LOG_MAX_FILE:-3}"
+    
+    # 网络配置
+    networks:
+      - autoclip-network
 
+# 网络配置（兼容v1和v2）
 networks:
-  default:
-    name: autoclip-network
+  autoclip-network:
+    name: ${DOCKER_NETWORK:-autoclip-network}
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
