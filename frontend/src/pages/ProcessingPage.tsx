@@ -170,7 +170,7 @@ const ProcessingPage: React.FC = () => {
                 </div>
                 <Progress 
                   percent={status.progress} 
-                  status={status.status === 'completed' ? 'success' : 'active'}
+                  status={status.status === 'completed' ? 'success' : status.status === 'error' ? 'exception' : 'active'}
                   strokeColor={{
                     '0%': '#108ee9',
                     '100%': '#87d068',

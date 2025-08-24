@@ -17,7 +17,7 @@ import {
   PlayCircleOutlined,
   PlusOutlined
 } from '@ant-design/icons'
-import { useProjectStore } from '../store/useProjectStore'
+import { useProjectStore, Collection } from '../store/useProjectStore'
 import { projectApi } from '../services/api'
 import ClipCard from '../components/ClipCard'
 
@@ -50,7 +50,7 @@ const ProjectDetailPage: React.FC = () => {
   const [showCreateCollection, setShowCreateCollection] = useState(false)
   const [sortBy, setSortBy] = useState<'time' | 'score'>('score')
   const [showCollectionDetail, setShowCollectionDetail] = useState(false)
-  const [selectedCollection, setSelectedCollection] = useState<unknown>(null)
+  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
   const { generateAndDownloadCollectionVideo } = useCollectionVideoDownload()
 
   useEffect(() => {
@@ -128,7 +128,7 @@ const ProjectDetailPage: React.FC = () => {
     }
   }
 
-  const handleViewCollection = (collection: unknown) => {
+  const handleViewCollection = (collection: Collection) => {
     setSelectedCollection(collection)
     setShowCollectionDetail(true)
   }
@@ -201,8 +201,8 @@ const ProjectDetailPage: React.FC = () => {
       return clips.sort((a, b) => {
         const getTimeInSeconds = (timeStr: string) => {
           const parts = timeStr.split(':')
-          const hours = parseInt(parts[0])
-          const minutes = parseInt(parts[1])
+          const hours = parseInt(parts[0], 10)
+          const minutes = parseInt(parts[1], 10)
           const seconds = parseFloat(parts[2].replace(',', '.'))
           return hours * 3600 + minutes * 60 + seconds
         }
