@@ -17,15 +17,11 @@ RUN apk add --no-cache libc6-compat
 # 复制依赖文件（利用Docker缓存）
 COPY frontend/package*.json ./
 
-# 安装依赖（使用npm ci提高性能）
-RUN npm ci --only=production --frozen-lockfile
+# 安装依赖（包含devDependencies用于构建）
+RUN npm ci --frozen-lockfile
 
 # 复制源代码
 COPY frontend/ ./
-
-# 设置环境变量
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
 
 # 构建应用
 RUN npm run build
