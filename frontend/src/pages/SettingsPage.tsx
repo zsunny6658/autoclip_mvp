@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Layout, Card, Form, Input, Button, message, Typography, Space, Alert, Divider, Row, Col, Spin, Select } from 'antd'
 import { KeyOutlined, SaveOutlined, SettingOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { settingsApi } from '../services/api'
+import ENV_CONFIG from '../config/env'
 import './SettingsPage.css'
 
 const { Content } = Layout
@@ -43,7 +44,7 @@ const SettingsPage: React.FC = () => {
   const detectAvailableBrowsers = async () => {
     setDetectingBrowsers(true)
     try {
-      const response = await fetch('http://localhost:8000/api/browsers/detect')
+      const response = await fetch(`${ENV_CONFIG.getApiBaseUrl()}/browsers/detect`)
       if (response.ok) {
         const data = await response.json()
         const browsers: BrowserInfo[] = data.browsers

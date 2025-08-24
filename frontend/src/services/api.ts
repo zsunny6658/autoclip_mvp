@@ -7,22 +7,27 @@ export const getApiBaseUrl = (): string => {
   return ENV_CONFIG.getApiBaseUrl()
 }
 
+// 创建axios实例，不设置静态baseURL
 const api = axios.create({
-  baseURL: getApiBaseUrl(),
   timeout: ENV_CONFIG.timeout.api,
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
-// 请求拦截器
+// 请求拦截器 - 在每次请求时动态设置baseURL
 api.interceptors.request.use(
   (config) => {
+    // 每次请求时动态获取baseURL
+    const currentBaseURL = getApiBaseUrl()
+    config.baseURL = currentBaseURL
+    
     debugLog('API Request', {
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
-      fullURL: `${config.baseURL}${config.url}`
+      fullURL: `${config.baseURL}${config.url}`,
+      dynamicBaseURL: true
     })
     return config
   },

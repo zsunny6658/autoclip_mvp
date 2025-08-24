@@ -17,20 +17,25 @@ export const DebugInfo: React.FC = () => {
       const apiUrl = ENV_CONFIG.getApiBaseUrl()
       console.log('测试URL:', `${apiUrl}/health`)
       
-      const response = await fetch(`${apiUrl}/health`)
-      const result = {
-        url: `${apiUrl}/health`,
-        status: response.status,
-        ok: response.ok,
-        statusText: response.statusText
+      // 测试多个API端点
+      const testEndpoints = [
+        '/health',
+        '/video-categories', 
+        '/projects'
+      ]
+      
+      for (const endpoint of testEndpoints) {
+        const testUrl = `${apiUrl}${endpoint}`
+        console.log(`测试端点: ${testUrl}`)
+        
+        try {
+          const response = await fetch(testUrl)
+          console.log(`${endpoint}: ${response.status} ${response.statusText}`)
+        } catch (error) {
+          console.error(`${endpoint} 失败:`, error)
+        }
       }
       
-      console.log('API连接测试结果:', result)
-      
-      if (response.ok) {
-        const data = await response.text()
-        console.log('响应内容:', data)
-      }
     } catch (error) {
       console.error('API连接测试失败:', error)
     }
@@ -39,30 +44,28 @@ export const DebugInfo: React.FC = () => {
   // 分析当前环境
   const analyzeEnvironment = () => {
     const port = envInfo.port
-    let environmentType = '未知'
+    const networkType = envInfo.networkType
+    const isLocalDev = envInfo.isLocalDev
+    
+    let environmentType = envInfo.networkDescription
     let expectedApiUrl = ''
     
-    if (envInfo.hostname !== 'localhost' && envInfo.hostname !== '127.0.0.1') {
-      environmentType = '生产环境'
-      expectedApiUrl = `${envInfo.protocol}//${envInfo.hostname}/api`
-    } else if (port === '3000') {
-      environmentType = '前端开发环境'
+    if (isLocalDev) {
+      // 本地开发环境
       expectedApiUrl = 'http://localhost:8000/api'
-    } else if (port === '8063') {
-      environmentType = 'Docker开发环境'
-      expectedApiUrl = `${envInfo.protocol}//${envInfo.hostname}:8063/api`
-    } else if (port) {
-      environmentType = '自定义端口环境'
-      expectedApiUrl = `${envInfo.protocol}//${envInfo.hostname}:${port}/api`
     } else {
-      environmentType = '默认端口环境'
-      expectedApiUrl = `${envInfo.protocol}//${envInfo.hostname}/api`
+      // 生产环境或容器化环境
+      if (port) {
+        expectedApiUrl = `${envInfo.protocol}//${envInfo.hostname}:${port}/api`
+      } else {
+        expectedApiUrl = `${envInfo.protocol}//${envInfo.hostname}/api`
+      }
     }
     
-    return { environmentType, expectedApiUrl }
+    return { environmentType, expectedApiUrl, networkType }
   }
   
-  const { environmentType, expectedApiUrl } = analyzeEnvironment()
+  const { environmentType, expectedApiUrl, networkType } = analyzeEnvironment()
   const isApiUrlCorrect = envInfo.apiBaseUrl === expectedApiUrl
   
   return (
@@ -85,10 +88,22 @@ export const DebugInfo: React.FC = () => {
         {/* 基本环境信息 */}
         <div>
           <Text strong>🌍 环境类型: </Text>
-          <Text code style={{ color: environmentType.includes('Docker') ? '#52c41a' : '#1890ff' }}>
+          <Text code style={{ color: networkType === 'local-dev' ? '#52c41a' : networkType.includes('local') ? '#1890ff' : '#722ed1' }}>
             {environmentType}
           </Text>
         </div>
+        
+        <div>
+          <Text strong>📶 网络类型: </Text>
+          <Text code>{networkType}</Text>
+        </div>
+        
+        {envInfo.isPrivateIP && (
+          <div>
+            <Text strong>🏠 IP类型: </Text>
+            <Text code style={{ color: '#fa8c16' }}>内网IP</Text>
+          </div>
+        )}
         
         <Divider style={{ margin: '8px 0' }} />
         
@@ -160,11 +175,16 @@ export const DebugInfo: React.FC = () => {
         <div style={{ fontSize: '12px', color: '#666' }}>
           <Text strong>📝 环境配置说明:</Text>
           <ul style={{ margin: '4px 0', paddingLeft: '16px' }}>
-            <li>端口3000: 前端开发服务器 → API: localhost:8000</li>
-            <li>端叠8063: Docker开发环境 → API: localhost:8063</li>
-            <li>其他端口: 自定义配置 → API: 当前端口</li>
-            <li>非本地: 生产环境 → API: 当前域名/api</li>
+            <li><strong>本地开发:</strong> localhost:3000 → API: localhost:8000</li>
+            <li><strong>Docker本地:</strong> localhost:8063 → API: localhost:8063</li>
+            <li><strong>内网部署:</strong> 192.168.x.x:8063 → API: 192.168.x.x:8063</li>
+            <li><strong>外网部署:</strong> domain.com:8063 → API: domain.com:8063</li>
+            <li><strong>标准端口:</strong> domain.com → API: domain.com/api</li>
+            <li><strong>自定义端口:</strong> 使用当前页面的hostname和端口</li>
           </ul>
+          <Text type="secondary" style={{ fontSize: '11px' }}>
+            系统会根据当前访问的hostname和端口自动适配各种网络环境
+          </Text>
         </div>
       </Space>
     </Card>

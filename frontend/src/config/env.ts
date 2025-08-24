@@ -13,30 +13,105 @@ export const ENV_CONFIG = {
     const hostname = window.location.hostname
     const currentPort = window.location.port
     
-    // 生产环境：非localhost/127.0.0.1，使用当前域名+/api
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      return `${protocol}//${window.location.host}/api`
+    // 判断是否为本地开发环境
+    const isLocalDev = this.isLocalDevelopment(hostname, currentPort)
+    
+    if (isLocalDev) {
+      // 本地开发环境处理
+      return this.getLocalDevApiUrl(protocol, hostname, currentPort)
+    } else {
+      // 生产环境或内网/外网环境处理
+      return this.getProductionApiUrl(protocol, hostname, currentPort)
     }
+  },
+  
+  // 判断是否为本地开发环境
+  isLocalDevelopment(hostname: string, currentPort: string): boolean {
+    // 1. localhost或127.0.0.1且端口为3000（前端开发服务器）
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') && currentPort === '3000') {
+      return true
+    }
+    // 2. 其他情况视为生产环境或容器化环境
+    return false
+  },
+  
+  // 获取本地开发环境API URL
+  getLocalDevApiUrl(protocol: string, hostname: string, currentPort: string): string {
+    // 前端开发服务器模式：直接访问后端服务的内部端口
+    // 这里使用localhost确保能访问到本地后端服务
+    return 'http://localhost:8000/api'
+  },
+  
+  // 获取生产环境API URL（包括内网、外网、Docker等）
+  getProductionApiUrl(protocol: string, hostname: string, currentPort: string): string {
+    // 策略：使用当前页面的hostname和配置的端口
+    // 这样可以适配内网IP、外网IP、Docker容器等各种场景
     
-    // 开发环境：localhost/127.0.0.1
-    // 根据env.example配置：
-    // - FRONTEND_DEV_PORT=3000 (前端开发服务器)
-    // - DEV_PORT=8063 (Docker开发环境对外端口)
-    // - PORT=8000 (后端服务内部端口)
-    
-    if (currentPort === '3000') {
-      // 前端开发服务器模式：直接访问后端服务的内部端口
-      return 'http://localhost:8000/api'
-    } else if (currentPort === '8063') {
-      // Docker开发环境：前后端在同一端口
-      return `${protocol}//${hostname}:${currentPort}/api`
-    } else if (currentPort) {
-      // 其他端口：使用当前端口（可能是自定义配置）
+    if (currentPort) {
+      // 有端口：说明是非标准端口（非80/443）
+      // 通常是Docker环境或自定义端口，前后端使用同一端口
       return `${protocol}//${hostname}:${currentPort}/api`
     } else {
-      // 无端口：默认80/443，尝试同域名
+      // 无端口：标准端口（80/443）
+      // 通常是生产环境，前后端可能使用不同端口或通过代理
       return `${protocol}//${hostname}/api`
     }
+  },
+  
+  // 获取网络环境类型（用于调试）
+  getNetworkEnvironment(): { type: string; description: string } {
+    const hostname = window.location.hostname
+    const currentPort = window.location.port
+    
+    // 本地环境
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      if (currentPort === '3000') {
+        return { type: 'local-dev', description: '本地开发环境（前端开发服务器）' }
+      } else if (currentPort === '8063') {
+        return { type: 'local-docker', description: '本地Docker环境' }
+      } else if (currentPort) {
+        return { type: 'local-custom', description: `本地自定义端口环境（${currentPort}）` }
+      } else {
+        return { type: 'local-standard', description: '本地标准端口环境' }
+      }
+    }
+    
+    // 内网环境
+    if (this.isPrivateIP(hostname)) {
+      return { 
+        type: 'intranet', 
+        description: `内网环境（${hostname}${currentPort ? ':' + currentPort : ''}）` 
+      }
+    }
+    
+    // 外网环境
+    return { 
+      type: 'internet', 
+      description: `外网环境（${hostname}${currentPort ? ':' + currentPort : ''}）` 
+    }
+  },
+  
+  // 判断是否为内网IP
+  isPrivateIP(hostname: string): boolean {
+    // 检查是否为IP地址格式
+    const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/
+    if (!ipRegex.test(hostname)) {
+      return false // 不是IP地址，可能是域名
+    }
+    
+    // 内网IP范围
+    const parts = hostname.split('.').map(num => parseInt(num, 10))
+    
+    // 10.0.0.0/8
+    if (parts[0] === 10) return true
+    
+    // 172.16.0.0/12
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true
+    
+    // 192.168.0.0/16
+    if (parts[0] === 192 && parts[1] === 168) return true
+    
+    return false
   },
   
   // WebSocket URL配置
@@ -82,13 +157,18 @@ export const debugLog = (category: string, ...args: any[]) => {
 
 // 获取当前环境信息
 export const getEnvironmentInfo = () => {
+  const networkEnv = ENV_CONFIG.getNetworkEnvironment()
   return {
     environment: ENV_CONFIG.isProduction ? 'production' : 'development',
+    networkType: networkEnv.type,
+    networkDescription: networkEnv.description,
     apiBaseUrl: ENV_CONFIG.getApiBaseUrl(),
     currentUrl: window.location.href,
     hostname: window.location.hostname,
     port: window.location.port,
-    protocol: window.location.protocol
+    protocol: window.location.protocol,
+    isLocalDev: ENV_CONFIG.isLocalDevelopment(window.location.hostname, window.location.port),
+    isPrivateIP: ENV_CONFIG.isPrivateIP(window.location.hostname)
   }
 }
 

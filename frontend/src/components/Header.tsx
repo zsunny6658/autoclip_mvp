@@ -1,6 +1,6 @@
 import React from 'react'
 import { Layout, Button } from 'antd'
-import { SettingOutlined, HomeOutlined } from '@ant-design/icons'
+import { SettingOutlined, HomeOutlined, BugOutlined, WifiOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const { Header: AntHeader } = Layout
@@ -81,6 +81,50 @@ const Header: React.FC = () => {
             返回首页
           </Button>
         )}
+        <Button 
+          type="text" 
+          icon={<BugOutlined />}
+          onClick={() => navigate('/api-test')}
+          style={{
+            color: '#cccccc',
+            border: '1px solid transparent',
+            borderRadius: '8px',
+            height: '40px',
+            padding: '0 16px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#2d2d2d'
+            e.currentTarget.style.borderColor = '#404040'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent'
+            e.currentTarget.style.borderColor = 'transparent'
+          }}
+        >
+          API测试
+        </Button>
+        <Button 
+          type="text" 
+          icon={<WifiOutlined />}
+          onClick={() => navigate('/network-test')}
+          style={{
+            color: '#cccccc',
+            border: '1px solid transparent',
+            borderRadius: '8px',
+            height: '40px',
+            padding: '0 16px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#2d2d2d'
+            e.currentTarget.style.borderColor = '#404040'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent'
+            e.currentTarget.style.borderColor = 'transparent'
+          }}
+        >
+          网络测试
+        </Button>
         <Button 
           type="text" 
           icon={<SettingOutlined />}
