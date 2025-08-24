@@ -99,6 +99,16 @@ const ProcessingPage: React.FC = () => {
     }
   }
 
+  const getProgressStatus = (status: ProcessingStatus) => {
+    if (status.status === 'completed') return 'success'
+    if (status.status === 'error') return 'exception'
+    return 'active'
+  }
+
+  const getStepsStatus = (status: ProcessingStatus) => {
+    return status.status === 'error' ? 'error' : 'process'
+  }
+
   const getStepStatus = (stepIndex: number) => {
     if (!status) return 'wait'
     
@@ -160,7 +170,7 @@ const ProcessingPage: React.FC = () => {
           />
         )}
 
-        {status && status.status === 'processing' && (
+        {status && (
           <Card title="处理进度">
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
               <div>
@@ -170,7 +180,7 @@ const ProcessingPage: React.FC = () => {
                 </div>
                 <Progress 
                   percent={status.progress} 
-                  status={status.status === 'completed' ? 'success' : status.status === 'error' ? 'exception' : 'active'}
+                  status={getProgressStatus(status)}
                   strokeColor={{
                     '0%': '#108ee9',
                     '100%': '#87d068',
@@ -186,7 +196,7 @@ const ProcessingPage: React.FC = () => {
               <Steps 
                 direction="vertical" 
                 current={status.current_step}
-                status={status.status === 'error' ? 'error' : 'process'}
+                status={getStepsStatus(status)}
               >
                 {steps.map((step, index) => (
                   <Step

@@ -102,6 +102,18 @@ npm ERR! peer dep missing: @typescript-eslint/eslint-plugin@^7.18.0
 2. 统一TypeScript版本
 3. 使用智能依赖检查脚本
 
+### API函数参数错误
+
+**症状**：API函数调用参数数量不匹配
+```
+error TS2554: Expected 2 arguments, but got 3
+```
+
+**解决方案**：
+1. 检查API函数定义的参数数量
+2. 修正所有调用处的参数数量
+3. 移除多余的参数（如title参数）
+
 ### TypeScript编译错误
 
 **症状**：前端构建失败，类型检查错误
