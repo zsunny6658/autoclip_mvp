@@ -330,8 +330,7 @@ const ProjectDetailPage: React.FC = () => {
                       if (collection) {
                         await generateAndDownloadCollectionVideo(
                           currentProject.id, 
-                          collectionId, 
-                          collection.collection_title
+                          collectionId
                         )
                       }
                     }}
@@ -448,7 +447,7 @@ const ProjectDetailPage: React.FC = () => {
                   <ClipCard
                     key={clip.id}
                     clip={clip}
-                    videoUrl={projectApi.getClipVideoUrl(currentProject.id, clip.id, clip.generated_title || clip.title)}
+                    videoUrl={projectApi.getClipVideoUrl(currentProject.id, clip.id)}
                     onDownload={(clipId) => projectApi.downloadVideo(currentProject.id, clipId)}
                   />
                 ))}
