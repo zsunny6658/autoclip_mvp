@@ -348,6 +348,18 @@ app.add_middleware(
 )
 
 # 静态文件服务
+# 优先挂载前端资源文件
+if os.path.exists("./frontend/dist"):
+    # 挂载前端资源文件
+    if os.path.exists("./frontend/dist/assets"):
+        app.mount("/assets", StaticFiles(directory="./frontend/dist/assets"), name="frontend-assets")
+    # 挂载其他前端静态文件
+    app.mount("/frontend", StaticFiles(directory="./frontend/dist"), name="frontend")
+    logger.info("前端构建文件已挂载")
+else:
+    logger.warning("前端构建文件不存在: ./frontend/dist")
+
+# 挂载其他静态文件
 app.mount("/static", StaticFiles(directory="output"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
@@ -355,8 +367,13 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/")
 async def root():
-    """根路径"""
-    return {"message": "自动切片工具 API 服务", "version": "1.0.0"}
+    """根路径 - 返回前端应用"""
+    index_path = "./frontend/dist/index.html"
+    if os.path.exists(index_path):
+        return FileResponse(index_path, media_type="text/html")
+    else:
+        # 如果前端文件不存在，返回API信息
+        return {"message": "自动切片工具 API 服务", "version": "1.0.0", "error": "前端文件不存在"}
 
 @app.get("/api/video-categories")
 async def get_video_categories():
@@ -1792,9 +1809,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
-# 挂载静态文件目录
-if os.path.exists("./frontend/dist"):
-    app.mount("/static", StaticFiles(directory="./frontend/dist"), name="static")
+# 前端静态文件已在上面配置
 
 # SPA路由兜底 - 处理前端路由
 @app.get("/{full_path:path}")
@@ -1819,18 +1834,45 @@ async def serve_spa(full_path: str):
     # 其他所有路径都返回前端index.html
     index_path = "./frontend/dist/index.html"
     if os.path.exists(index_path):
-        return FileResponse(index_path)
+        return FileResponse(index_path, media_type="text/html")
     else:
-        # 如果前端文件不存在，重定向到开发服务器
-        from fastapi.responses import RedirectResponse
-        frontend_url = f"http://localhost:3000/{full_path}"
-        return RedirectResponse(url=frontend_url, status_code=302)
+        # 如果前端文件不存在，返回详细错误信息
+        logger.error(f"前端构建文件不存在: {index_path}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "前端文件不存在",
+                "message": "请检查Docker构建是否正确复制了前端文件",
+                "path": index_path,
+                "requested_path": full_path,
+                "exists_frontend_dist": os.path.exists("./frontend/dist"),
+                "frontend_dist_contents": os.listdir("./frontend/dist") if os.path.exists("./frontend/dist") else []
+            }
+        )
 
 if __name__ == "__main__":
     # 确保必要的目录存在
     Path("./uploads").mkdir(exist_ok=True)
     Path("./data").mkdir(exist_ok=True)
     Path("./output").mkdir(exist_ok=True)
+    
+    # 检查前端文件是否存在
+    frontend_dist_path = Path("./frontend/dist")
+    frontend_index_path = Path("./frontend/dist/index.html")
+    
+    logger.info(f"检查前端文件...")
+    logger.info(f"前端构建目录存在: {frontend_dist_path.exists()}")
+    logger.info(f"前端 index.html 存在: {frontend_index_path.exists()}")
+    
+    if frontend_dist_path.exists():
+        try:
+            dist_contents = list(frontend_dist_path.iterdir())
+            logger.info(f"前端构建目录内容 ({len(dist_contents)} 个文件/目录): {[f.name for f in dist_contents]}")
+        except Exception as e:
+            logger.error(f"无法读取前端构建目录: {e}")
+    else:
+        logger.warning("前端构建目录不存在，只能提供API服务")
+        logger.warning("请检查 Docker 构建是否正确复制了前端文件")
     
     # 加载配置文件并设置环境变量
     try:
