@@ -50,7 +50,7 @@ services:
       # 安全配置
       - ALLOWED_VIDEO_FORMATS=${ALLOWED_VIDEO_FORMATS:-mp4,avi,mov,mkv,flv,wmv}
       - ALLOWED_AUDIO_FORMATS=${ALLOWED_AUDIO_FORMATS:-mp3,wav,flac,aac,ogg}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000,http://localhost:8063,http://127.0.0.1:3000,http://127.0.0.1:8000,http://127.0.0.1:8063}
       
       # 缓存和监控
       - ENABLE_CACHE=${ENABLE_CACHE:-true}

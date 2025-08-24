@@ -264,15 +264,23 @@ show_deployment_instructions() {
     echo "   cp .env.prod .env"
     echo "   # 编辑 .env 文件并配置正确的API密钥"
     echo ""
+    # 检测 Docker Compose 命令
+    local compose_cmd="docker-compose"
+    if ! command -v docker-compose &> /dev/null; then
+        if docker compose version &> /dev/null 2>&1; then
+            compose_cmd="docker compose"
+        fi
+    fi
+    
     echo "2. 构建生产环境镜像："
-    echo "   docker-compose -f docker-compose.prod.yml build --no-cache"
+    echo "   $compose_cmd -f docker-compose.prod.yml build --no-cache"
     echo ""
     echo "3. 启动生产环境服务："
-    echo "   docker-compose -f docker-compose.prod.yml up -d"
+    echo "   $compose_cmd -f docker-compose.prod.yml up -d"
     echo ""
     echo "4. 查看服务状态："
-    echo "   docker-compose -f docker-compose.prod.yml ps"
-    echo "   docker-compose -f docker-compose.prod.yml logs -f"
+    echo "   $compose_cmd -f docker-compose.prod.yml ps"
+    echo "   $compose_cmd -f docker-compose.prod.yml logs -f"
     echo ""
 }
 

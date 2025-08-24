@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import ProjectCard from '../components/ProjectCard'
 import FileUpload from '../components/FileUpload'
 import BilibiliDownload from '../components/BilibiliDownload'
+import DebugInfo from '../components/DebugInfo'
 
 import { projectApi } from '../services/api'
 import { Project, useProjectStore } from '../store/useProjectStore'
@@ -224,6 +225,11 @@ const HomePage: React.FC = () => {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* 调试信息 */}
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <DebugInfo />
           </div>
 
           {/* 项目管理区域 */}

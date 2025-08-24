@@ -1,9 +1,15 @@
 import axios from 'axios'
 import { Project, Clip, Collection } from '../store/useProjectStore'
+import ENV_CONFIG, { debugLog } from '../config/env'
+
+// 动态获取API基础URL
+export const getApiBaseUrl = (): string => {
+  return ENV_CONFIG.getApiBaseUrl()
+}
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api', // FastAPI后端服务器地址
-  timeout: 300000, // 增加到5分钟超时
+  baseURL: getApiBaseUrl(),
+  timeout: ENV_CONFIG.timeout.api,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,9 +18,16 @@ const api = axios.create({
 // 请求拦截器
 api.interceptors.request.use(
   (config) => {
+    debugLog('API Request', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`
+    })
     return config
   },
   (error) => {
+    debugLog('API Request Error', error)
     return Promise.reject(error)
   }
 )
@@ -22,9 +35,21 @@ api.interceptors.request.use(
 // 响应拦截器
 api.interceptors.response.use(
   (response) => {
+    debugLog('API Response', {
+      status: response.status,
+      url: response.config.url,
+      method: response.config.method?.toUpperCase()
+    })
     return response.data
   },
   (error) => {
+    debugLog('API Error', {
+      status: error.response?.status,
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      message: error.message
+    })
+    
     console.error('API Error:', error)
     
     // 特殊处理429错误（系统繁忙）
@@ -257,7 +282,7 @@ export const projectApi = {
     
     try {
       // 对于blob类型的响应，需要直接使用axios而不是经过拦截器
-      const response = await axios.get(`http://localhost:8000/api${url}`, { 
+      const response = await axios.get(`${getApiBaseUrl()}${url}`, { 
         responseType: 'blob',
         headers: {
           'Accept': 'application/octet-stream'
@@ -307,7 +332,7 @@ export const projectApi = {
   // 打包下载项目的所有文件
   downloadProjectAll: async (projectId: string) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/projects/${projectId}/download-all`, { 
+      const response = await axios.get(`${getApiBaseUrl()}/projects/${projectId}/download-all`, { 
         responseType: 'blob',
         headers: {
           'Accept': 'application/zip'
@@ -352,18 +377,18 @@ export const projectApi = {
 
   // 获取项目独立的文件URL
   getProjectFileUrl: (projectId: string, filePath: string): string => {
-    return `http://localhost:8000/api/projects/${projectId}/files/${filePath}`
+    return `${getApiBaseUrl()}/projects/${projectId}/files/${filePath}`
   },
 
   // 获取切片视频URL
   getClipVideoUrl: (projectId: string, clipId: string): string => {
     // 直接使用clipId，让后端处理文件查找
-    return `http://localhost:8000/api/projects/${projectId}/clips/${clipId}`
+    return `${getApiBaseUrl()}/projects/${projectId}/clips/${clipId}`
   },
 
   // 获取合集视频URL
   getCollectionVideoUrl: (projectId: string, collectionId: string): string => {
-    return `http://localhost:8000/api/projects/${projectId}/files/output/collections/${collectionId}.mp4`
+    return `${getApiBaseUrl()}/projects/${projectId}/files/output/collections/${collectionId}.mp4`
   }
 }
 

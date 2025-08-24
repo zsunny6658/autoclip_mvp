@@ -207,9 +207,17 @@ main() {
         log_success "🎉 权限修复完成！"
         echo
         log_info "接下来可以重新构建Docker容器："
-        echo "  docker-compose down"
-        echo "  docker-compose build --no-cache"
-        echo "  docker-compose up -d"
+        # 检测 Docker Compose 命令
+        local compose_cmd="docker-compose"
+        if ! command -v docker-compose &> /dev/null; then
+            if docker compose version &> /dev/null 2>&1; then
+                compose_cmd="docker compose"
+            fi
+        fi
+        
+        echo "  $compose_cmd down"
+        echo "  $compose_cmd build --no-cache"
+        echo "  $compose_cmd up -d"
         echo
     else
         echo
