@@ -15,7 +15,7 @@ interface NetworkTestResult {
 }
 
 export const NetworkTestPage: React.FC = () => {
-  const [currentEnv, setCurrentEnv] = useState(getEnvironmentInfo())
+  const [currentEnv] = useState(getEnvironmentInfo())
   const [testResults, setTestResults] = useState<NetworkTestResult[]>([])
 
   useEffect(() => {

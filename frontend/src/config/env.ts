@@ -38,8 +38,8 @@ export const ENV_CONFIG = {
   // 获取本地开发环境API URL
   getLocalDevApiUrl(protocol: string, hostname: string, currentPort: string): string {
     // 前端开发服务器模式：直接访问后端服务的内部端口
-    // 这里使用localhost确保能访问到本地后端服务
-    return 'http://localhost:8000/api'
+    // 使用 protocol 和 hostname 动态构建，但端口固定为后端服务端口 8000
+    return `${protocol}//${hostname}:8000/api`
   },
   
   // 获取生产环境API URL（包括内网、外网、Docker等）

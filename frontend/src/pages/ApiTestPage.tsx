@@ -177,7 +177,7 @@ export const ApiTestPage: React.FC = () => {
                   </div>
                   
                   {item.status === 'loading' && (
-                    <Alert message="请求中..." type="info" showIcon size="small" />
+                    <Alert message="请求中..." type="info" showIcon />
                   )}
                   
                   {item.status === 'success' && (
@@ -186,7 +186,6 @@ export const ApiTestPage: React.FC = () => {
                       description={item.response}
                       type="success" 
                       showIcon 
-                      size="small" 
                     />
                   )}
                   
@@ -196,7 +195,6 @@ export const ApiTestPage: React.FC = () => {
                       description={item.error}
                       type="error" 
                       showIcon 
-                      size="small" 
                     />
                   )}
                 </div>

@@ -2,7 +2,7 @@ import React from 'react'
 import { Card, Typography, Space, Button, Divider } from 'antd'
 import { getEnvironmentInfo, ENV_CONFIG } from '../config/env'
 
-const { Text, Paragraph } = Typography
+const { Text } = Typography
 
 export const DebugInfo: React.FC = () => {
   const [envInfo, setEnvInfo] = React.useState(getEnvironmentInfo())
