@@ -15,10 +15,23 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN apk add --no-cache libc6-compat
 
 # 复制依赖文件（利用Docker缓存）
-COPY frontend/package*.json ./
+COPY frontend/package.json ./
+# 复制package-lock.json（如果存在）
+COPY frontend/package-lock.json* ./
 
 # 安装依赖（包含devDependencies用于构建）
-RUN npm ci --frozen-lockfile
+# 如果lock文件不存在或不同步，先生成新的lock文件
+RUN set -e; \
+    if [ ! -f package-lock.json ]; then \
+        echo "No lock file found, running npm install to generate one"; \
+        npm install; \
+    elif ! npm ci --frozen-lockfile 2>/dev/null; then \
+        echo "Lock file out of sync, regenerating with npm install"; \
+        rm -f package-lock.json; \
+        npm install; \
+    else \
+        echo "Using existing synchronized lock file"; \
+    fi
 
 # 复制源代码
 COPY frontend/ ./
