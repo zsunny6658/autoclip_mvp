@@ -11,8 +11,10 @@ WORKDIR /app/frontend
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# 安装必要的构建工具
-RUN apk add --no-cache libc6-compat
+# 安装必要的构建工具和网络工具
+RUN apk update && apk add --no-cache \
+    ca-certificates \
+    git
 
 # 复制依赖文件（利用Docker缓存）
 COPY frontend/package.json ./

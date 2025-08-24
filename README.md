@@ -61,7 +61,7 @@ cp env.example .env
 
 **Access URL**: http://localhost:8000
 
-📖 **Detailed Deployment Guide**: [Docker Deployment Guide](DOCKER_DEPLOY.md)
+📖 **详细部署指南**: [Docker部署与故障排除指南](DOCKER_GUIDE.md)
 
 #### 🔧 Development Environment
 

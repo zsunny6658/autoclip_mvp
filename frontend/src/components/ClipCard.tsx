@@ -116,8 +116,8 @@ const ClipCard: React.FC<ClipCardProps> = ({
     // 简单计算时长（实际项目中应该更精确）
     const start = clip.start_time.split(':')
     const end = clip.end_time.split(':')
-    const startSeconds = parseInt(start[0]) * 3600 + parseInt(start[1]) * 60 + parseFloat(start[2].replace(',', '.'))
-    const endSeconds = parseInt(end[0]) * 3600 + parseInt(end[1]) * 60 + parseFloat(end[2].replace(',', '.'))
+    const startSeconds = parseInt(start[0], 10) * 3600 + parseInt(start[1], 10) * 60 + parseFloat(start[2].replace(',', '.'))
+    const endSeconds = parseInt(end[0], 10) * 3600 + parseInt(end[1], 10) * 60 + parseFloat(end[2].replace(',', '.'))
     const duration = endSeconds - startSeconds
     return `${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, '0')}`
   }

@@ -62,8 +62,8 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
     // 简单计算总时长
     const start = clip.start_time.split(':')
     const end = clip.end_time.split(':')
-    const startSeconds = parseInt(start[0]) * 3600 + parseInt(start[1]) * 60 + parseFloat(start[2].replace(',', '.'))
-    const endSeconds = parseInt(end[0]) * 3600 + parseInt(end[1]) * 60 + parseFloat(end[2].replace(',', '.'))
+    const startSeconds = parseInt(start[0], 10) * 3600 + parseInt(start[1], 10) * 60 + parseFloat(start[2].replace(',', '.'))
+    const endSeconds = parseInt(end[0], 10) * 3600 + parseInt(end[1], 10) * 60 + parseFloat(end[2].replace(',', '.'))
     return total + (endSeconds - startSeconds)
   }, 0)
 

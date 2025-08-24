@@ -51,8 +51,8 @@ const AddClipToCollectionModal: React.FC<AddClipToCollectionModalProps> = ({
   const formatDuration = (clip: Clip) => {
     const start = clip.start_time.split(':')
     const end = clip.end_time.split(':')
-    const startSeconds = parseInt(start[0]) * 3600 + parseInt(start[1]) * 60 + parseFloat(start[2].replace(',', '.'))
-    const endSeconds = parseInt(end[0]) * 3600 + parseInt(end[1]) * 60 + parseFloat(end[2].replace(',', '.'))
+    const startSeconds = parseInt(start[0], 10) * 3600 + parseInt(start[1], 10) * 60 + parseFloat(start[2].replace(',', '.'))
+    const endSeconds = parseInt(end[0], 10) * 3600 + parseInt(end[1], 10) * 60 + parseFloat(end[2].replace(',', '.'))
     const duration = endSeconds - startSeconds
     const mins = Math.floor(duration / 60)
     const secs = Math.floor(duration % 60)
