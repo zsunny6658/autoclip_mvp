@@ -1,0 +1,11 @@
+# Netscape HTTP Cookie File
+# This is a generated file! Do not edit.
+# 此文件由AutoClip自动生成，包含Bilibili登录信息
+
+.bilibili.com	TRUE	/	FALSE	1787663908	SESSDATA	example_sessdata_value_12345
+.bilibili.com	TRUE	/	FALSE	1787663908	bili_jct	example_bili_jct_value_67890
+.bilibili.com	TRUE	/	FALSE	1787663908	DedeUserID	12345678
+.bilibili.com	TRUE	/	FALSE	1787663908	DedeUserID__ckMd5	example_ckmd5_value
+.bilibili.com	TRUE	/	FALSE	1787663908	_uuid	example_uuid_value
+.bilibili.com	TRUE	/	FALSE	1787663908	buvid3	example_buvid3_value
+.bilibili.com	TRUE	/	FALSE	1787663908	CURRENT_FNVAL	4048

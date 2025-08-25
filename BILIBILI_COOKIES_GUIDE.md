@@ -12,25 +12,33 @@ AutoClip 支持从 B 站下载视频，为了提高下载成功率和访问需�
 
 ## 配置步骤
 
-### 1. 从浏览器导出 Cookies
+### 1. 从浏览器获取 Cookies
 
-#### Chrome 浏览器
+#### 方法A：使用浏览器扩展（推荐）
 1. 安装 "Get cookies.txt LOCALLY" 扩展
 2. 访问 bilibili.com 并确保已登录
 3. 点击扩展图标，选择"Export"
 4. 保存为 `bilibili_cookies.txt`
 
-#### Firefox 浏览器
-1. 安装 "cookies.txt" 扩展
-2. 访问 bilibili.com 并确保已登录
-3. 点击扩展图标导出 cookies
-4. 保存为 `bilibili_cookies.txt`
-
-#### 手动导出（开发者工具）
+#### 方法B：手动复制原始 Cookies（新增支持）
 1. 在 bilibili.com 上打开开发者工具 (F12)
 2. 转到 Application/存储 → Cookies → https://www.bilibili.com
-3. 复制所需的 cookies（特别是 SESSDATA）
-4. 按照 Netscape 格式保存到文件
+3. 选中并复制所有cookies（可以直接复制一整行）
+4. 将复制的内容保存为 `bilibili_cookies.txt`
+
+**原始 cookies 字符串格式示例**：
+```
+SESSDATA=your_sessdata_here; bili_jct=your_bili_jct_here; DedeUserID=12345678; DedeUserID__ckMd5=your_ckmd5_here; _uuid=your_uuid_here
+```
+
+#### 方法C：手动创建 Netscape 格式
+按照 Netscape 格式手动创建：
+```
+# Netscape HTTP Cookie File
+.bilibili.com	TRUE	/	FALSE	1735689600	SESSDATA	your_sessdata_value
+.bilibili.com	TRUE	/	FALSE	1735689600	bili_jct	your_bili_jct_value
+.bilibili.com	TRUE	/	FALSE	1735689600	DedeUserID	12345678
+```
 
 ### 2. 放置 Cookies 文件
 
@@ -47,13 +55,16 @@ parent_directory/
 
 ### 3. 使用管理脚本
 
-提供了便捷的管理脚本来处理 cookies 文件：
+提供了便捷的管理脚本来处理 cookies 文件，**支持自动格式转换**：
 
 ```bash
 # 检查 cookies 文件状态
 ./manage-bilibili-cookies.sh status
 
-# 复制外部 cookies 文件到项目内部
+# 预览转换结果（不修改文件）
+./manage-bilibili-cookies.sh convert
+
+# 复制并自动转换外部 cookies 文件到项目内部
 ./manage-bilibili-cookies.sh copy
 
 # 验证 cookies 文件格式
@@ -65,6 +76,12 @@ parent_directory/
 # 查看帮助信息
 ./manage-bilibili-cookies.sh help
 ```
+
+**支持的 cookies 格式**：
+- ✅ **Netscape 格式**：标准的 cookies.txt 格式
+- ✅ **Tab 分隔格式**：缺少头部的 cookies 数据
+- ✅ **原始浏览器字符串**：分号分隔的 cookies 字符串
+- ❌ JSON 格式：暂不支持（需要手动转换）
 
 ### 4. 部署应用
 

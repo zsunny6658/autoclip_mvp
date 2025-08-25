@@ -177,17 +177,59 @@ setup_prod_bilibili_cookies() {
         # 确保目标目录存在
         mkdir -p "$data_dir"
         
-        # 复制cookies文件
-        cp "$external_cookies" "$cookies_file"
-        log_success "从Bilibili cookies文件复制成功: $external_cookies -> $cookies_file"
+        # 使用cookies管理脚本进行格式转换（生产环境优化）
+        if [ -f "./manage-bilibili-cookies.sh" ]; then
+            log_info "使用cookies管理脚本转换格式（生产环境模式）..."
+            
+            # 临时设置DATA_DIR环境变量以支持生产环境路径
+            export DATA_DIR="$data_dir"
+            
+            if ./manage-bilibili-cookies.sh copy >/dev/null 2>&1; then
+                log_success "Bilibili cookies文件转换并复制成功（生产环境）"
+                
+                # 生产环境设置更严格的权限（600 - 仅所有者可读写）
+                chmod 600 "$cookies_file"
+                log_info "设置cookies文件权限为600（仅所有者可读写）"
+                
+                # 验证转换后的文件
+                if grep -q "SESSDATA" "$cookies_file" && grep -q "bili_jct" "$cookies_file"; then
+                    log_success "验证通过：检测到关键的Bilibili cookies"
+                else
+                    log_warning "警告：未检测到关键的Bilibili cookies，可能影响下载功能"
+                fi
+            else
+                log_warning "cookies管理脚本执行失败，尝试直接复制..."
+                cp "$external_cookies" "$cookies_file"
+                chmod 600 "$cookies_file"
+                log_success "Bilibili cookies文件直接复制成功: $external_cookies -> $cookies_file"
+                log_info "设置cookies文件权限为600（仅所有者可读写）"
+                log_warning "注意：未经过格式转换，可能需要手动验证cookies格式"
+            fi
+            
+            # 清理临时环境变量
+            unset DATA_DIR
+        else
+            # 回退到直接复制
+            log_warning "cookies管理脚本不存在，使用直接复制模式"
+            cp "$external_cookies" "$cookies_file"
+            chmod 600 "$cookies_file"
+            log_success "Bilibili cookies文件直接复制成功: $external_cookies -> $cookies_file"
+            log_info "设置cookies文件权限为600（仅所有者可读写）"
+            log_warning "注意：未经过格式转换，如果遇到下载问题，请检查cookies格式"
+        fi
         
-        # 设置正确的文件权限（生产环境更严格）
-        chmod 600 "$cookies_file"
-        log_info "设置cookies文件权限为600（仅所有者可读写）"
     elif [ -f "$cookies_file" ]; then
         log_info "Bilibili cookies文件已存在: $cookies_file"
         # 检查生产环境文件权限
         chmod 600 "$cookies_file"
+        log_info "已更新cookies文件权限为600（仅所有者可读写）"
+        
+        # 验证现有文件
+        if grep -q "SESSDATA" "$cookies_file" && grep -q "bili_jct" "$cookies_file"; then
+            log_success "验证通过：检测到关键的Bilibili cookies"
+        else
+            log_warning "警告：未检测到关键的Bilibili cookies，可能影响下载功能"
+        fi
     else
         # 创建空的cookies文件作为占位符
         mkdir -p "$data_dir"
@@ -195,6 +237,8 @@ setup_prod_bilibili_cookies() {
         chmod 600 "$cookies_file"
         log_warning "Bilibili cookies文件不存在，已创建空文件"
         log_info "请将bilibili_cookies.txt文件放在项目同级目录中，然后重新部署"
+        log_info "支持格式：Netscape格式、原始浏览器cookies字符串等"
+        log_info "cookies管理脚本将自动检测并转换格式"
     fi
 }
 

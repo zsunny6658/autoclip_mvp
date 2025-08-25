@@ -128,9 +128,21 @@ setup_bilibili_cookies() {
         # 确保目标目录存在
         mkdir -p "$data_dir"
         
-        # 复制cookies文件
-        cp "$external_cookies" "$cookies_file"
-        log_success "从Bilibili cookies文件复制成功: $external_cookies -> $cookies_file"
+        # 使用cookies管理脚本进行格式转换
+        if [ -f "./manage-bilibili-cookies.sh" ]; then
+            log_info "使用cookies管理脚本转换格式..."
+            if ./manage-bilibili-cookies.sh copy >/dev/null 2>&1; then
+                log_success "Bilibili cookies文件转换并复制成功"
+            else
+                log_warning "cookies管理脚本执行失败，尝试直接复制..."
+                cp "$external_cookies" "$cookies_file"
+                log_success "Bilibili cookies文件直接复制成功: $external_cookies -> $cookies_file"
+            fi
+        else
+            # 回退到直接复制
+            cp "$external_cookies" "$cookies_file"
+            log_success "Bilibili cookies文件直接复制成功: $external_cookies -> $cookies_file"
+        fi
         
         # 设置正确的文件权限
         chmod 644 "$cookies_file"
