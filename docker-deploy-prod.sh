@@ -159,6 +159,43 @@ setup_prod_config() {
     else
         log_success "生产环境配置文件已存在"
     fi
+    
+    # 处理Bilibili cookies文件
+    setup_prod_bilibili_cookies
+}
+
+# 设置生产环境Bilibili cookies文件
+setup_prod_bilibili_cookies() {
+    log_step "设置生产环境Bilibili cookies文件..."
+    
+    local data_dir="${DATA_DIR:-/var/lib/autoclip/data}"
+    local cookies_file="$data_dir/bilibili_cookies.txt"
+    local external_cookies="../bilibili_cookies.txt"
+    
+    # 检查项目同级目录中的cookies文件
+    if [ -f "$external_cookies" ]; then
+        # 确保目标目录存在
+        mkdir -p "$data_dir"
+        
+        # 复制cookies文件
+        cp "$external_cookies" "$cookies_file"
+        log_success "从Bilibili cookies文件复制成功: $external_cookies -> $cookies_file"
+        
+        # 设置正确的文件权限（生产环境更严格）
+        chmod 600 "$cookies_file"
+        log_info "设置cookies文件权限为600（仅所有者可读写）"
+    elif [ -f "$cookies_file" ]; then
+        log_info "Bilibili cookies文件已存在: $cookies_file"
+        # 检查生产环境文件权限
+        chmod 600 "$cookies_file"
+    else
+        # 创建空的cookies文件作为占位符
+        mkdir -p "$data_dir"
+        touch "$cookies_file"
+        chmod 600 "$cookies_file"
+        log_warning "Bilibili cookies文件不存在，已创建空文件"
+        log_info "请将bilibili_cookies.txt文件放在项目同级目录中，然后重新部署"
+    fi
 }
 
 # 清理旧镜像

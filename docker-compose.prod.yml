@@ -48,6 +48,9 @@ services:
       # B站下载配置
       - DEFAULT_BROWSER=${DEFAULT_BROWSER:-chrome}
       - DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-3600}
+      - BILIBILI_COOKIES_FILE=${BILIBILI_COOKIES_FILE:-/app/data/bilibili_cookies.txt}
+      - CONTAINER_MODE=${CONTAINER_MODE:-auto}
+      - SKIP_BROWSER_COOKIES_IN_CONTAINER=${SKIP_BROWSER_COOKIES_IN_CONTAINER:-true}
       
       # 安全配置
       - ALLOWED_VIDEO_FORMATS=${ALLOWED_VIDEO_FORMATS:-mp4,avi,mov,mkv,flv,wmv}
