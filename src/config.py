@@ -137,6 +137,11 @@ class Settings(BaseModel):
     target_topic_duration_minutes: int = 5
     min_topics_per_chunk: int = 3
     max_topics_per_chunk: int = 8
+    # B站下载配置
+    default_browser: str = "chrome"
+    bilibili_cookies_file: Optional[str] = "/app/data/bilibili_cookies.txt"
+    container_mode: str = "auto"  # auto、true、false
+    skip_browser_cookies_in_container: bool = True
     # B站上传配置 (已移除 bilitool 相关功能)
     # bilibili_auto_upload: bool = False
     # bilibili_default_tid: int = 21  # 默认分区：日常
@@ -154,7 +159,11 @@ class Settings(BaseModel):
             'model_name': 'MODEL_NAME',
             'siliconflow_model': 'SILICONFLOW_MODEL',
             'chunk_size': 'CHUNK_SIZE',
-            'min_score_threshold': 'MIN_SCORE_THRESHOLD'
+            'min_score_threshold': 'MIN_SCORE_THRESHOLD',
+            'default_browser': 'DEFAULT_BROWSER',
+            'bilibili_cookies_file': 'BILIBILI_COOKIES_FILE',
+            'container_mode': 'CONTAINER_MODE',
+            'skip_browser_cookies_in_container': 'SKIP_BROWSER_COOKIES_IN_CONTAINER'
         }
         
         for field, env_var in env_mappings.items():
@@ -166,6 +175,8 @@ class Settings(BaseModel):
                         data[field] = int(env_value)
                     elif field == 'min_score_threshold':
                         data[field] = float(env_value)
+                    elif field == 'skip_browser_cookies_in_container':
+                        data[field] = env_value.lower() in ('true', '1', 'yes')
                     else:
                         data[field] = env_value
         
@@ -241,10 +252,30 @@ class ConfigManager:
             self.settings.dashscope_api_key = os.getenv("DASHSCOPE_API_KEY")
         if os.getenv("SILICONFLOW_API_KEY"):
             self.settings.siliconflow_api_key = os.getenv("SILICONFLOW_API_KEY")
-        if os.getenv("API_PROVIDER"):
-            self.settings.api_provider = os.getenv("API_PROVIDER")
-        if os.getenv("SILICONFLOW_MODEL"):
-            self.settings.siliconflow_model = os.getenv("SILICONFLOW_MODEL")
+        
+        api_provider = os.getenv("API_PROVIDER")
+        if api_provider:
+            self.settings.api_provider = api_provider
+        
+        siliconflow_model = os.getenv("SILICONFLOW_MODEL")
+        if siliconflow_model:
+            self.settings.siliconflow_model = siliconflow_model
+        
+        default_browser = os.getenv("DEFAULT_BROWSER")
+        if default_browser:
+            self.settings.default_browser = default_browser
+        
+        bilibili_cookies_file = os.getenv("BILIBILI_COOKIES_FILE")
+        if bilibili_cookies_file:
+            self.settings.bilibili_cookies_file = bilibili_cookies_file
+        
+        container_mode = os.getenv("CONTAINER_MODE")
+        if container_mode:
+            self.settings.container_mode = container_mode
+        
+        skip_browser_cookies = os.getenv("SKIP_BROWSER_COOKIES_IN_CONTAINER")
+        if skip_browser_cookies:
+            self.settings.skip_browser_cookies_in_container = skip_browser_cookies.lower() in ('true', '1', 'yes')
         
         # 从配置文件加载
         config_file = PROJECT_ROOT / "data" / "settings.json"
@@ -306,6 +337,15 @@ class ConfigManager:
     def get_path_config(self) -> PathConfig:
         """获取路径配置"""
         return PathConfig()
+    
+    def get_bilibili_config(self) -> Dict[str, Any]:
+        """获取B站下载配置"""
+        return {
+            'default_browser': self.settings.default_browser,
+            'bilibili_cookies_file': self.settings.bilibili_cookies_file,
+            'container_mode': self.settings.container_mode,
+            'skip_browser_cookies_in_container': self.settings.skip_browser_cookies_in_container
+        }
     
     # def get_bilibili_config(self) -> BilibiliConfig:
     #     """获取B站上传配置 (已移除 bilitool 相关功能)"""

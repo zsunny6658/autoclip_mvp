@@ -106,6 +106,14 @@ RUN mkdir -p input output/clips output/collections output/metadata uploads data 
 # 复制配置文件（如果存在）
 COPY --chown=appuser:appuser data/settings.example.json ./data/settings.example.json
 
+# 创建默认配置文件（如果不存在）
+RUN if [ ! -f "./data/settings.json" ]; then \
+        cp ./data/settings.example.json ./data/settings.json; \
+    fi
+
+# 创建空的bilibili cookies文件（容器环境占位符）
+RUN touch ./data/bilibili_cookies.txt
+
 # 创建健康检查脚本
 RUN echo '#!/bin/bash\n\
 set -e\n\

@@ -4,5 +4,8 @@
   "chunk_size": 5000,
   "min_score_threshold": 0.7,
   "max_clips_per_collection": 5,
-  "default_browser": null
+  "default_browser": "chrome",
+  "bilibili_cookies_file": "/app/data/bilibili_cookies.txt",
+  "container_mode": "auto",
+  "skip_browser_cookies_in_container": true
 } 

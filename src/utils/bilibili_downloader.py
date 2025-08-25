@@ -52,19 +52,70 @@ class BilibiliVideoInfo:
         }
 
 class BilibiliDownloader:
-    """B站视频下载器"""
+    """
+B站视频下载器
+    """
     
-    def __init__(self, download_dir: Optional[Path] = None, browser: Optional[str] = None):
+    def __init__(self, download_dir: Optional[Path] = None, browser: Optional[str] = None, settings: Optional[Dict[str, Any]] = None):
         """
         初始化下载器
         
         Args:
             download_dir: 下载目录，默认为当前目录
             browser: 浏览器类型，用于获取cookies
+            settings: 配置信息
         """
         self.download_dir = download_dir or Path.cwd()
         self.browser = browser
+        self.settings = settings or {}
         self.download_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 检测容器环境
+        self.is_container = self._detect_container_environment()
+        
+        # 获取cookies配置
+        self.cookies_file = self.settings.get('bilibili_cookies_file', '/app/data/bilibili_cookies.txt')
+        self.skip_browser_cookies = self.settings.get('skip_browser_cookies_in_container', True)
+        
+        # 记录环境信息
+        if self.is_container:
+            logger.info(f"检测到容器环境，cookies文件路径: {self.cookies_file}")
+            if self.skip_browser_cookies:
+                logger.info("容器环境中将跳过--cookies-from-browser参数")
+        else:
+            logger.info("检测到本地环境，将使用浏览器cookies")
+    
+    def _detect_container_environment(self) -> bool:
+        """
+        检测是否在容器环境中运行
+        
+        Returns:
+            是否在容器环境中
+        """
+        # 检查常见的容器环境标识
+        container_indicators = [
+            Path('/.dockerenv'),  # Docker环境标识文件
+            Path('/run/.containerenv'),  # Podman环境标识文件
+        ]
+        
+        for indicator in container_indicators:
+            if indicator.exists():
+                return True
+        
+        # 检查环境变量
+        if os.getenv('CONTAINER_MODE') == 'true':
+            return True
+        
+        # 检查cgroup信息（Docker容器特征）
+        try:
+            with open('/proc/1/cgroup', 'r') as f:
+                content = f.read()
+                if 'docker' in content or 'containerd' in content:
+                    return True
+        except (FileNotFoundError, PermissionError):
+            pass
+        
+        return False
         
     def validate_bilibili_url(self, url: str) -> bool:
         """
@@ -104,7 +155,16 @@ class BilibiliDownloader:
             'no_warnings': True,
         }
         
-        if self.browser:
+        # 容器环境适配
+        if self.is_container and self.skip_browser_cookies:
+            logger.info("容器环境：跳过cookies-from-browser参数")
+            # 尝试使用cookies文件（如果存在）
+            if Path(self.cookies_file).exists():
+                ydl_opts['cookiefile'] = self.cookies_file
+                logger.info(f"使用cookies文件: {self.cookies_file}")
+            else:
+                logger.info("未找到cookies文件，将以匿名模式访问")
+        elif self.browser:
             ydl_opts['cookies_from_browser'] = self.browser.lower()
             logger.info(f'yt-dlp cookies_from_browser: {ydl_opts.get("cookies_from_browser")}')
         
@@ -162,7 +222,16 @@ class BilibiliDownloader:
             'progress': True,
         }
         
-        if self.browser:
+        # 容器环境适配
+        if self.is_container and self.skip_browser_cookies:
+            logger.info("容器环境：跳过cookies-from-browser参数")
+            # 尝试使用cookies文件（如果存在）
+            if Path(self.cookies_file).exists():
+                ydl_opts['cookiefile'] = self.cookies_file
+                logger.info(f"使用cookies文件: {self.cookies_file}")
+            else:
+                logger.info("未找到cookies文件，将以匿名模式访问")
+        elif self.browser:
             ydl_opts['cookies_from_browser'] = self.browser.lower()
             logger.info(f'yt-dlp cookies_from_browser: {ydl_opts.get("cookies_from_browser")}')
         
@@ -205,9 +274,8 @@ class BilibiliDownloader:
             raise ProcessingError(error_msg)
     
     def _download_sync(self, url: str, ydl_opts: Dict[str, Any]):
-        """同步方式下载 - 使用subprocess确保cookie正确传递，并支持进度回调"""
+        """同步方式下载 - 使用subprocess确保容器环境适配，并支持进度回调"""
         # 构造yt-dlp命令
-        browser = self.browser.lower() if self.browser else "chrome"
         safe_title = ydl_opts.get('outtmpl', '').split('/')[-1].replace('%(ext)s', '')
         if not safe_title:
             safe_title = "video"
@@ -220,16 +288,32 @@ class BilibiliDownloader:
             if hasattr(original_hook, '__closure__') and original_hook.__closure__:
                 progress_callback = original_hook.__closure__[0].cell_contents
         
+        # 构造基本命令
         cmd = [
             "yt-dlp",
             "--write-sub",
             "--sub-lang", "ai-zh",
             "--sub-format", "srt",
             "--output", f"{safe_title}.%(ext)s",  # 只用文件名
-            "--cookies-from-browser", browser,
             "--progress",  # 启用进度输出
-            url
         ]
+        
+        # 容器环境适配
+        if self.is_container and self.skip_browser_cookies:
+            logger.info("容器环境：跳过--cookies-from-browser参数")
+            # 尝试使用cookies文件（如果存在）
+            if Path(self.cookies_file).exists():
+                cmd.extend(["--cookies", self.cookies_file])
+                logger.info(f"使用cookies文件: {self.cookies_file}")
+            else:
+                logger.info("未找到cookies文件，将以匿名模式访问")
+        elif self.browser:
+            browser = self.browser.lower()
+            cmd.extend(["--cookies-from-browser", browser])
+            logger.info(f"使用浏览器cookies: {browser}")
+        
+        cmd.append(url)
+        
         logger.info(f"[subprocess] yt-dlp命令: {' '.join(cmd)}")
         
         # 执行命令并实时解析进度
@@ -466,6 +550,7 @@ async def download_bilibili_video(
     url: str, 
     download_dir: Optional[Path] = None,
     browser: Optional[str] = None,
+    settings: Optional[Dict[str, Any]] = None,
     progress_callback: Optional[Callable[[str, float], None]] = None
 ) -> Dict[str, str]:
     """
@@ -475,24 +560,26 @@ async def download_bilibili_video(
         url: B站视频链接
         download_dir: 下载目录
         browser: 浏览器类型
+        settings: 配置信息
         progress_callback: 进度回调函数
         
     Returns:
         包含video_path和subtitle_path的字典
     """
-    downloader = BilibiliDownloader(download_dir, browser)
+    downloader = BilibiliDownloader(download_dir, browser, settings)
     return await downloader.download_video_and_subtitle(url, progress_callback)
 
-async def get_bilibili_video_info(url: str, browser: Optional[str] = None) -> BilibiliVideoInfo:
+async def get_bilibili_video_info(url: str, browser: Optional[str] = None, settings: Optional[Dict[str, Any]] = None) -> BilibiliVideoInfo:
     """
     便捷的B站视频信息获取函数
     
     Args:
         url: B站视频链接
         browser: 浏览器类型
+        settings: 配置信息
         
     Returns:
         视频信息对象
     """
-    downloader = BilibiliDownloader(browser=browser)
+    downloader = BilibiliDownloader(browser=browser, settings=settings)
     return await downloader.get_video_info(url)

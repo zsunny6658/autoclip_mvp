@@ -492,13 +492,17 @@ async def detect_available_browsers():
 async def parse_bilibili_video(url: str = Form(...), browser: Optional[str] = Form(None)):
     """解析B站视频信息"""
     try:
+        # 获取bilibili配置
+        from src.config import config_manager
+        bilibili_config = config_manager.get_bilibili_config()
+        
         # 验证URL格式
-        downloader = BilibiliDownloader(browser=browser)
+        downloader = BilibiliDownloader(browser=browser, settings=bilibili_config)
         if not downloader.validate_bilibili_url(url):
             raise HTTPException(status_code=400, detail="无效的B站视频链接")
         
         # 获取视频信息，传递browser参数
-        video_info = await get_bilibili_video_info(url, browser)
+        video_info = await get_bilibili_video_info(url, browser, bilibili_config)
         
         return {
             "success": True,
@@ -515,8 +519,12 @@ async def create_bilibili_download_task(
 ):
     """创建B站视频下载任务"""
     try:
+        # 获取bilibili配置
+        from src.config import config_manager
+        bilibili_config = config_manager.get_bilibili_config()
+        
         # 验证URL格式
-        downloader = BilibiliDownloader()
+        downloader = BilibiliDownloader(settings=bilibili_config)
         if not downloader.validate_bilibili_url(request.url):
             raise HTTPException(status_code=400, detail="无效的B站视频链接")
         
@@ -787,6 +795,10 @@ async def process_bilibili_download_task(
 ):
     """处理B站视频下载任务"""
     try:
+        # 获取bilibili配置
+        from src.config import config_manager
+        bilibili_config = config_manager.get_bilibili_config()
+        
         # 更新任务状态
         project_manager.update_bilibili_task(
             task_id,
@@ -795,7 +807,7 @@ async def process_bilibili_download_task(
         )
         
         # 获取视频信息
-        video_info = await get_bilibili_video_info(url, browser)
+        video_info = await get_bilibili_video_info(url, browser, bilibili_config)
         
         # 更新任务信息
         project_manager.update_bilibili_task(
@@ -817,7 +829,7 @@ async def process_bilibili_download_task(
             )
         
         # 下载视频和字幕
-        downloader = BilibiliDownloader(temp_download_dir, browser)
+        downloader = BilibiliDownloader(temp_download_dir, browser, bilibili_config)
         download_result = await downloader.download_video_and_subtitle(url, progress_callback)
         
         if not download_result['video_path']:
