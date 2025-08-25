@@ -12,6 +12,10 @@ services:
         - ${DOCKER_IMAGE_TAG:-autoclip:latest}
     image: ${DOCKER_IMAGE_TAG:-autoclip:latest}
     container_name: ${CONTAINER_PREFIX:-autoclip}-prod
+    # 设置用户ID以解决权限问题（使用高位UID避免冲突）
+    user: "10001:10001"
+    # 使用init进程处理信号
+    init: true
     ports:
       - "${PROD_PORT:-80}:${PORT:-8000}"  # 生产环境端口
     environment:

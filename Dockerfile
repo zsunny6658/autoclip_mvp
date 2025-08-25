@@ -74,7 +74,8 @@ ENV PYTHONPATH=/app \
     DEBIAN_FRONTEND=noninteractive
 
 # 创建应用用户（安全最佳实践）
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# 使用高位UID/GID避免与宿主机用户冲突
+RUN groupadd -r -g 10001 appuser && useradd -r -g appuser -u 10001 appuser
 
 # 安装运行时系统依赖
 RUN apt-get update && apt-get install -y \
@@ -100,8 +101,9 @@ COPY --chown=appuser:appuser prompt/ ./prompt/
 # 复制构建好的前端文件
 COPY --from=frontend-builder --chown=appuser:appuser /app/frontend/dist ./frontend/dist
 
-# 创建必要的目录并设置权限
-RUN mkdir -p input output/clips output/collections output/metadata uploads data logs
+# 创建必要的目录并设置正确的权限
+RUN mkdir -p input output/clips output/collections output/metadata uploads data logs && \
+    chown -R appuser:appuser input output uploads data logs
 
 # 复制配置文件（如果存在）
 COPY --chown=appuser:appuser data/settings.example.json ./data/settings.example.json
@@ -109,10 +111,12 @@ COPY --chown=appuser:appuser data/settings.example.json ./data/settings.example.
 # 创建默认配置文件（如果不存在）
 RUN if [ ! -f "./data/settings.json" ]; then \
         cp ./data/settings.example.json ./data/settings.json; \
-    fi
+    fi && \
+    chown appuser:appuser ./data/settings.json
 
 # 创建空的bilibili cookies文件（容器环境占位符）
-RUN touch ./data/bilibili_cookies.txt
+RUN touch ./data/bilibili_cookies.txt && \
+    chown appuser:appuser ./data/bilibili_cookies.txt
 
 # 创建健康检查脚本
 RUN echo '#!/bin/bash\n\
@@ -124,10 +128,23 @@ curl -f http://localhost:${PORT:-8000}/health > /dev/null 2>&1 || exit 1\n\
 [ -d "/app/output" ] || exit 1\n\
 echo "Health check passed"\n\
 exit 0' > /app/health-check.sh && \
-    chmod +x /app/health-check.sh
+    chmod +x /app/health-check.sh && \
+    chown appuser:appuser /app/health-check.sh
 
 # 设置所有目录和文件的所有权（必须在切换用户前执行）
 RUN chown -R appuser:appuser /app
+
+# 创建启动脚本来处理运行时权限问题
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Starting AutoClip application..."\n\
+echo "Checking directory permissions..."\n\
+# 显示当前目录权限状态\n\
+ls -la /app/ | head -10\n\
+# 启动主应用\n\
+exec "$@"' > /app/docker-entrypoint.sh && \
+    chmod +x /app/docker-entrypoint.sh && \
+    chown appuser:appuser /app/docker-entrypoint.sh
 
 # 切换到非root用户
 USER appuser
@@ -148,5 +165,6 @@ HEALTHCHECK --interval=30s \
             --retries=3 \
     CMD ["/app/health-check.sh"]
 
-# 启动命令
+# 使用入口脚本启动
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["python", "backend_server.py"]
