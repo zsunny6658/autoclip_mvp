@@ -3,6 +3,15 @@
 
 set -e
 
+# 导入Docker Compose兼容性支持
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/docker-compose-compat.sh" ]; then
+    source "$SCRIPT_DIR/docker-compose-compat.sh"
+else
+    echo "❌ 未找到docker-compose-compat.sh，请确保文件存在"
+    exit 1
+fi
+
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -112,10 +121,16 @@ check_docker_compose() {
 rebuild_container() {
     log_info "重建Docker容器以应用权限修复..."
     
+    # 设置Docker Compose命令
+    if ! setup_docker_compose true; then
+        log_error "Docker Compose不可用，无法重建容器"
+        return 1
+    fi
+    
     # 停止现有容器
-    if docker-compose ps -q autoclip >/dev/null 2>&1; then
+    if $DOCKER_COMPOSE_CMD ps -q autoclip >/dev/null 2>&1; then
         log_info "停止现有容器..."
-        docker-compose down
+        $DOCKER_COMPOSE_CMD down
     fi
     
     # 清理Docker缓存
@@ -124,7 +139,7 @@ rebuild_container() {
     
     # 重建并启动
     log_info "重建并启动容器..."
-    docker-compose up --build -d
+    $DOCKER_COMPOSE_CMD up --build -d
     
     log_success "Docker容器已重建并启动"
     
@@ -133,16 +148,21 @@ rebuild_container() {
     
     # 检查容器状态
     log_info "检查容器状态..."
-    docker-compose ps
+    $DOCKER_COMPOSE_CMD ps
 }
 
 # 验证修复结果
 verify_fix() {
     log_info "验证修复结果..."
     
+    # 确保已设置Docker Compose命令
+    if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+        setup_docker_compose true
+    fi
+    
     # 检查容器是否运行
-    if docker-compose ps -q autoclip >/dev/null 2>&1; then
-        local container_id=$(docker-compose ps -q autoclip)
+    if $DOCKER_COMPOSE_CMD ps -q autoclip >/dev/null 2>&1; then
+        local container_id=$($DOCKER_COMPOSE_CMD ps -q autoclip)
         
         if [[ -n "$container_id" ]]; then
             log_info "容器内部权限状态:"
@@ -194,9 +214,16 @@ main() {
         rebuild_container
         verify_fix
     else
-        log_info "目录和配置文件已准备就绪，请手动重建容器:"
-        echo "  docker-compose down"
-        echo "  docker-compose up --build -d"
+        # 设置Docker Compose命令以显示正确的提示
+        if ! setup_docker_compose true; then
+            log_info "目录和配置文件已准备就绪，请手动重建容器:"
+            echo "  docker-compose down  # 或 docker compose down"
+            echo "  docker-compose up --build -d  # 或 docker compose up --build -d"
+        else
+            log_info "目录和配置文件已准备就绪，请手动重建容器:"
+            echo "  $DOCKER_COMPOSE_CMD down"
+            echo "  $DOCKER_COMPOSE_CMD up --build -d"
+        fi
     fi
     
     echo "========================================"
@@ -206,7 +233,11 @@ main() {
     log_info "如果仍有问题，请尝试:"
     echo "1. 确保Docker Compose配置了正确的user参数"
     echo "2. 检查本地目录权限是否正确"
-    echo "3. 重建Docker镜像：docker-compose build --no-cache"
+    if [ -n "$DOCKER_COMPOSE_CMD" ]; then
+        echo "3. 重建Docker镜像：$DOCKER_COMPOSE_CMD build --no-cache"
+    else
+        echo "3. 重建Docker镜像：docker-compose build --no-cache 或 docker compose build --no-cache"
+    fi
 }
 
 # 运行主函数

@@ -3,6 +3,15 @@
 
 set -e
 
+# 导入Docker Compose兼容性支持
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/docker-compose-compat.sh" ]; then
+    source "$SCRIPT_DIR/docker-compose-compat.sh"
+else
+    echo "❌ 未找到docker-compose-compat.sh，请确保文件存在"
+    exit 1
+fi
+
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -127,15 +136,21 @@ show_permissions() {
 rebuild_container() {
     log_info "重建Docker容器以应用权限修复..."
     
+    # 设置Docker Compose命令
+    if ! setup_docker_compose true; then
+        log_error "Docker Compose不可用，无法重建容器"
+        return 1
+    fi
+    
     # 停止现有容器
-    if docker-compose ps -q autoclip >/dev/null 2>&1; then
+    if $DOCKER_COMPOSE_CMD ps -q autoclip >/dev/null 2>&1; then
         log_info "停止现有容器..."
-        docker-compose down
+        $DOCKER_COMPOSE_CMD down
     fi
     
     # 重建并启动
     log_info "重建并启动容器..."
-    docker-compose up --build -d
+    $DOCKER_COMPOSE_CMD up --build -d
     
     log_success "Docker容器已重建并启动"
 }
@@ -172,9 +187,16 @@ main() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         rebuild_container
     else
-        log_info "权限已修复，请手动重建容器以应用更改:"
-        echo "  docker-compose down"
-        echo "  docker-compose up --build -d"
+        # 设置Docker Compose命令以显示正确的提示
+        if ! setup_docker_compose true; then
+            log_info "权限已修复，请手动重建容器以应用更改:"
+            echo "  docker-compose down  # 或 docker compose down"
+            echo "  docker-compose up --build -d  # 或 docker compose up --build -d"
+        else
+            log_info "权限已修复，请手动重建容器以应用更改:"
+            echo "  $DOCKER_COMPOSE_CMD down"
+            echo "  $DOCKER_COMPOSE_CMD up --build -d"
+        fi
     fi
     
     echo "========================================"

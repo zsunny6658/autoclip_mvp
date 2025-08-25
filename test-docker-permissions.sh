@@ -3,6 +3,15 @@
 
 set -e
 
+# 导入Docker Compose兼容性支持
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/docker-compose-compat.sh" ]; then
+    source "$SCRIPT_DIR/docker-compose-compat.sh"
+else
+    echo "❌ 未找到docker-compose-compat.sh，请确保文件存在"
+    exit 1
+fi
+
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -31,11 +40,17 @@ log_error() {
 check_container() {
     log_info "检查容器状态..."
     
-    local container_id=$(docker-compose ps -q autoclip 2>/dev/null || echo "")
+    # 设置Docker Compose命令
+    if ! setup_docker_compose true; then
+        log_error "Docker Compose不可用，无法检查容器状态"
+        return 1
+    fi
+    
+    local container_id=$($DOCKER_COMPOSE_CMD ps -q autoclip 2>/dev/null || echo "")
     
     if [[ -z "$container_id" ]]; then
         log_error "容器未运行，请先启动容器"
-        echo "运行: docker-compose up -d"
+        echo "运行: $DOCKER_COMPOSE_CMD up -d"
         return 1
     fi
     
@@ -47,7 +62,7 @@ check_container() {
 check_container_permissions() {
     log_info "检查容器内权限..."
     
-    local container_id=$(docker-compose ps -q autoclip)
+    local container_id=$($DOCKER_COMPOSE_CMD ps -q autoclip)
     
     echo "容器内文件权限状态:"
     echo "----------------------------------------"
@@ -81,7 +96,7 @@ check_container_permissions() {
 test_file_creation() {
     log_info "测试文件创建权限..."
     
-    local container_id=$(docker-compose ps -q autoclip)
+    local container_id=$($DOCKER_COMPOSE_CMD ps -q autoclip)
     local test_file="/app/data/permission_test_$(date +%s).txt"
     
     # 尝试在容器内创建文件
@@ -123,7 +138,7 @@ test_api_health() {
 show_container_logs() {
     log_info "最近的容器日志："
     echo "----------------------------------------"
-    docker-compose logs --tail=20 autoclip 2>/dev/null || echo "无法获取日志"
+    $DOCKER_COMPOSE_CMD logs --tail=20 autoclip 2>/dev/null || echo "无法获取日志"
     echo "----------------------------------------"
 }
 
@@ -191,7 +206,11 @@ main() {
         log_info "建议操作："
         echo "1. 检查Dockerfile中的用户配置"
         echo "2. 确认docker-compose.yml中的user参数"
-        echo "3. 重建容器：docker-compose down && docker-compose up --build -d"
+        if [ -n "$DOCKER_COMPOSE_CMD" ]; then
+            echo "3. 重建容器：$DOCKER_COMPOSE_CMD down && $DOCKER_COMPOSE_CMD up --build -d"
+        else
+            echo "3. 重建容器：docker-compose down && docker-compose up --build -d"
+        fi
         echo "4. 检查本地目录权限：ls -la"
     fi
     

@@ -130,6 +130,12 @@ docker-compose up --build -d
 - `test-docker-permissions.sh` - 权限验证脚本
 - `DOCKER_PERMISSIONS_FIX.md` - 此说明文档
 
+### Docker Compose兼容性
+所有脚本已支持Docker Compose v1+和v2+版本：
+- 自动检测 `docker-compose`（v1）或 `docker compose`（v2）命令
+- 动态使用正确的命令，无需手动切换
+- 兼容不同系统和Docker版本
+
 ## 常见问题
 
 ### Q: 修复后容器无法启动
