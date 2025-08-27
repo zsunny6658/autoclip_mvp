@@ -49,6 +49,9 @@ class ClusteringEngine:
                 'score': clip.get('final_score', 0)
             })
         
+        logger.info(f"📊 [聚类数据准备] 准备聚类数据，共{len(clips_for_clustering)}个片段")
+        logger.debug(f"📄 [片段数据详情] 片段列表: {json.dumps(clips_for_clustering, ensure_ascii=False, indent=2)[:1000]}...")
+        
         # 首先进行基于关键词的预聚类
         pre_clusters = self._pre_cluster_by_keywords(clips_for_clustering)
         
@@ -233,6 +236,19 @@ class ClusteringEngine:
         """
         logger.info(f"🔍 [开始验证] 验证合集数据，原始合集数量: {len(collections_data) if collections_data else 0}")
         
+        # 记录所有实际可用的片段标题供调试
+        all_actual_titles = []
+        for clip in clips_with_titles:
+            generated_title = clip.get('generated_title', clip['outline'])
+            outline = clip['outline']
+            all_actual_titles.append({
+                'generated_title': generated_title,
+                'outline': outline,
+                'id': clip['id']
+            })
+        
+        logger.debug(f"📚 [实际片段标题] 所有可用片段标题: {json.dumps(all_actual_titles, ensure_ascii=False, indent=2)}")
+        
         # 检查collections_data是否为None或不是列表
         if collections_data is None:
             logger.warning("⚠️ [验证数据为空] collections_data为None")
@@ -286,19 +302,121 @@ class ClusteringEngine:
                     logger.debug(f"🔍 [合集 {i} 片段 {j}] 查找片段标题: '{clip_title}'")
                     # 根据标题找到对应的片段ID
                     found_clip = None
+                    
+                    # 清理LLM返回的标题（去除多余空格和特殊字符）
+                    cleaned_clip_title = clip_title.strip()
+                    # 去除可能的引号
+                    if cleaned_clip_title.startswith('"') and cleaned_clip_title.endswith('"'):
+                        cleaned_clip_title = cleaned_clip_title[1:-1]
+                    if cleaned_clip_title.startswith("'") and cleaned_clip_title.endswith("'"):
+                        cleaned_clip_title = cleaned_clip_title[1:-1]
+                    
+                    # 处理可能的Unicode字符问题
+                    import unicodedata
+                    cleaned_clip_title = unicodedata.normalize('NFKC', cleaned_clip_title)
+                    
+                    logger.debug(f"   清理后标题: '{cleaned_clip_title}'")
+                    logger.debug(f"   原始标题ASCII码: {[ord(c) for c in clip_title]}")
+                    logger.debug(f"   清理后标题ASCII码: {[ord(c) for c in cleaned_clip_title]}")
+                    
+                    # 记录所有实际片段标题的详细信息
+                    logger.debug(f"   实际片段标题列表:")
+                    for k, clip in enumerate(clips_with_titles):
+                        generated_title = clip.get('generated_title', clip['outline'])
+                        outline = clip['outline']
+                        # 清理实际的标题
+                        cleaned_generated_title = generated_title.strip()
+                        cleaned_outline = outline.strip()
+                        
+                        # 处理Unicode字符
+                        cleaned_generated_title = unicodedata.normalize('NFKC', cleaned_generated_title)
+                        cleaned_outline = unicodedata.normalize('NFKC', cleaned_outline)
+                        
+                        logger.debug(f"     片段{k} - Generated: '{generated_title}' (清理后: '{cleaned_generated_title}')")
+                        logger.debug(f"     片段{k} - Outline: '{outline}' (清理后: '{cleaned_outline}')")
+                        logger.debug(f"     片段{k} - Generated ASCII: {[ord(c) for c in generated_title]}")
+                        logger.debug(f"     片段{k} - Outline ASCII: {[ord(c) for c in outline]}")
+                    
+                    # 尝试多种匹配策略
                     for clip in clips_with_titles:
                         generated_title = clip.get('generated_title', clip['outline'])
                         outline = clip['outline']
-                        logger.debug(f"   比较: '{clip_title}' vs '{generated_title}' | '{outline}'")
-                        if clip_title == generated_title or clip_title == outline:
+                        
+                        # 清理实际的标题
+                        cleaned_generated_title = generated_title.strip()
+                        cleaned_outline = outline.strip()
+                        
+                        # 处理Unicode字符
+                        cleaned_generated_title = unicodedata.normalize('NFKC', cleaned_generated_title)
+                        cleaned_outline = unicodedata.normalize('NFKC', cleaned_outline)
+                        
+                        logger.debug(f"   比较: '{cleaned_clip_title}' vs '{cleaned_generated_title}' | '{cleaned_outline}'")
+                        
+                        # 策略1: 精确匹配（忽略首尾空格）
+                        if (cleaned_clip_title.strip() == cleaned_generated_title.strip() or 
+                            cleaned_clip_title.strip() == cleaned_outline.strip()):
                             found_clip = clip
+                            logger.info(f"✅ [合集 {i} 片段 {j} 精确匹配成功] 使用精确匹配找到片段")
+                            break
+                        
+                        # 策略2: 去除标点符号后匹配
+                        import re
+                        def remove_punctuation(text):
+                            # 移除常见的中文和英文标点符号
+                            punctuation_pattern = r'[，。！？；：""''（）【】《》、\s\.\,\!\?\;\:\"\''\(\)\[\]\<\>]*'
+                            return re.sub(punctuation_pattern, '', text).strip()
+                        
+                        no_punct_clip_title = remove_punctuation(cleaned_clip_title)
+                        no_punct_generated_title = remove_punctuation(cleaned_generated_title)
+                        no_punct_outline = remove_punctuation(cleaned_outline)
+                        
+                        logger.debug(f"   去标点比较: '{no_punct_clip_title}' vs '{no_punct_generated_title}' | '{no_punct_outline}'")
+                        
+                        if (no_punct_clip_title == no_punct_generated_title or 
+                            no_punct_clip_title == no_punct_outline):
+                            found_clip = clip
+                            logger.info(f"✅ [合集 {i} 片段 {j} 去标点匹配成功] 使用去标点匹配找到片段")
+                            break
+                        
+                        # 策略3: 包含匹配（LLM标题包含在实际标题中，或实际标题包含在LLM标题中）
+                        if (no_punct_clip_title in no_punct_generated_title or 
+                            no_punct_generated_title in no_punct_clip_title or
+                            no_punct_clip_title in no_punct_outline or 
+                            no_punct_outline in no_punct_clip_title):
+                            found_clip = clip
+                            logger.info(f"✅ [合集 {i} 片段 {j} 包含匹配成功] 使用包含匹配找到片段")
+                            logger.debug(f"     包含关系: '{no_punct_clip_title}' in '{no_punct_generated_title}' or '{no_punct_generated_title}' in '{no_punct_clip_title}' or '{no_punct_clip_title}' in '{no_punct_outline}' or '{no_punct_outline}' in '{no_punct_clip_title}'")
+                            break
+                        
+                        # 策略4: 模糊匹配（忽略标点和空格）
+                        def normalize_text(text):
+                            # 移除标点符号和多余空格，转换为小写
+                            return re.sub(r'[^\w\s]', '', text).strip().lower()
+                        
+                        normalized_clip_title = normalize_text(cleaned_clip_title)
+                        normalized_generated_title = normalize_text(cleaned_generated_title)
+                        normalized_outline = normalize_text(cleaned_outline)
+                        
+                        logger.debug(f"   模糊比较: '{normalized_clip_title}' vs '{normalized_generated_title}' | '{normalized_outline}'")
+                        
+                        if (normalized_clip_title == normalized_generated_title or 
+                            normalized_clip_title == normalized_outline):
+                            found_clip = clip
+                            logger.info(f"✅ [合集 {i} 片段 {j} 模糊匹配成功] 使用模糊匹配找到片段")
                             break
                     
                     if found_clip:
                         valid_clip_ids.append(found_clip['id'])
                         logger.debug(f"✅ [合集 {i} 片段 {j} 匹配成功] 找到匹配片段 ID: {found_clip['id']}")
+                        logger.debug(f"   匹配详情 - LLM标题: '{clip_title}', 实际标题: '{found_clip.get('generated_title', found_clip['outline'])}'")
                     else:
                         logger.warning(f"⚠️ [合集 {i} 片段 {j} 匹配失败] 未找到匹配的片段: '{clip_title}'")
+                        # 记录所有实际标题供调试
+                        all_titles = [clip.get('generated_title', clip['outline']) for clip in clips_with_titles]
+                        logger.debug(f"   可用标题列表: {all_titles}")
+                        # 也记录清理后的标题
+                        cleaned_titles = [title.strip() for title in all_titles]
+                        logger.debug(f"   清理后标题列表: {cleaned_titles}")
                 
                 if len(valid_clip_ids) < 2:
                     logger.warning(f"⚠️ [合集 {i} 片段不足] 有效片段少于2个 ({len(valid_clip_ids)}个)，跳过")
