@@ -381,6 +381,39 @@ npm run build  # Production build
 npm run lint   # Code linting
 ```
 
+### Permission Management
+
+AutoClip uses a unified permission management system to handle file and directory permissions in different environments:
+
+#### 🛠️ Permission Utilities
+- **permission-utils.sh**: Centralized permission management library
+- **Automatic Permission Fixing**: Integrated into deployment scripts
+- **Cross-Environment Support**: Works in both development and production environments
+
+#### 🔧 Usage
+Permissions are automatically handled during deployment:
+```bash
+# Development deployment (auto-fixes permissions)
+./docker-deploy.sh
+
+# Production deployment (auto-fixes permissions)
+./docker-deploy-prod.sh
+```
+
+#### 📋 Manual Permission Fixing
+```bash
+# Fix development environment permissions
+./fix-permissions.sh
+
+# Fix Docker-related permissions
+sudo ./fix-docker-permissions.sh
+```
+
+#### 🔐 Permission Model
+- **Directory Permissions**: 755 (rwxr-xr-x)
+- **File Permissions**: 644 (rw-r--r--)
+- **Container User**: UID/GID 10001 (matches Docker container user)
+
 ### Adding New Video Categories
 1. Create new category folder in `prompt/` directory
 2. Add corresponding prompt template files

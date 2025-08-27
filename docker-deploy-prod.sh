@@ -14,6 +14,16 @@ else
     exit 1
 fi
 
+# 导入权限工具库
+PERMISSION_UTILS_PATH="$(dirname "$0")/permission-utils.sh"
+if [ -f "$PERMISSION_UTILS_PATH" ]; then
+    source "$PERMISSION_UTILS_PATH"
+else
+    echo "❌ 无法找到 permission-utils.sh 文件"
+    echo "请确保 permission-utils.sh 在同一目录下"
+    exit 1
+fi
+
 # 设置错误处理
 set_error_trap
 
@@ -30,6 +40,16 @@ QUIET_MODE="false"
 DEBUG="false"
 
 # ==================== 生产环境专用函数 ====================
+
+# 自动修复生产环境权限函数
+auto_fix_prod_permissions() {
+    log_step "自动修复生产环境权限..."
+    
+    # 使用权限工具库函数
+    fix_prod_permissions
+    
+    log_success "生产环境权限修复完成"
+}
 
 # 检查用户权限
 check_user_permissions() {
@@ -240,6 +260,20 @@ setup_prod_bilibili_cookies() {
         log_info "支持格式：Netscape格式、原始浏览器cookies字符串等"
         log_info "cookies管理脚本将自动检测并转换格式"
     fi
+}
+
+# 设置生产环境
+setup_prod_environment() {
+    log_step "设置生产环境..."
+    
+    # 自动修复权限
+    auto_fix_prod_permissions
+    
+    # 创建目录
+    create_prod_directories
+    
+    # 设置配置
+    setup_prod_config
 }
 
 # 清理旧镜像

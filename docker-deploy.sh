@@ -14,6 +14,16 @@ else
     exit 1
 fi
 
+# 导入权限工具库
+PERMISSION_UTILS_PATH="$(dirname "$0")/permission-utils.sh"
+if [ -f "$PERMISSION_UTILS_PATH" ]; then
+    source "$PERMISSION_UTILS_PATH"
+else
+    echo "❌ 无法找到 permission-utils.sh 文件"
+    echo "请确保 permission-utils.sh 在同一目录下"
+    exit 1
+fi
+
 # 设置错误处理
 set_error_trap
 
@@ -56,9 +66,22 @@ check_dev_prerequisites() {
     log_success "前置条件检查通过"
 }
 
+# 自动修复权限函数
+auto_fix_permissions() {
+    log_step "自动修复权限..."
+    
+    # 使用权限工具库函数
+    fix_dev_permissions
+    
+    log_success "权限修复完成"
+}
+
 # 设置开发环境
 setup_dev_environment() {
     log_step "设置开发环境..."
+    
+    # 自动修复权限
+    auto_fix_permissions
     
     # 检查环境变量文件
     if ! check_environment_file true; then
