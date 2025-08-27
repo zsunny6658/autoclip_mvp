@@ -125,16 +125,23 @@ class TimelineExtractor:
                     
                     for retry_count in range(max_parse_retries + 1):
                         try:
+                            logger.info(f"  > 🚀 [块 {chunk_index} 第{retry_count + 1}次尝试] 调用LLM提取时间轴...")
+                            logger.info(f"  > 📊 [输入统计] 大纲数量: {len(llm_input_outlines)}, SRT条目: {len(srt_chunk_data)}")
+                            logger.debug(f"  > 📄 [输入详情] SRT文本前300字符: {srt_text_for_prompt[:300]}...")
+                            
                             raw_response = self.llm_client.call_with_retry(self.timeline_prompt, input_data)
                             
                             if not raw_response:
-                                logger.warning(f"  > 块 {chunk_index} LLM响应为空，跳过")
+                                logger.warning(f"  > ⚠️ [块 {chunk_index} 空响应] LLM响应为空，跳过")
                                 break
+                            
+                            logger.info(f"  > ✅ [块 {chunk_index} 响应成功] 获得LLM响应，长度: {len(raw_response)} 字符")
                             
                             # 保存原始响应到缓存
                             cache_file = self.llm_raw_output_dir / f"chunk_{chunk_index}_attempt_{retry_count}.txt"
                             with open(cache_file, 'w', encoding='utf-8') as f:
                                 f.write(raw_response)
+                            logger.info(f"  > 💾 [缓存保存] 原始响应已保存到: {cache_file.name}")
                             
                             # 解析LLM的原始响应
                             parsed_items = self._parse_and_validate_response(

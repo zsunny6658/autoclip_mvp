@@ -55,7 +55,24 @@ class SiliconFlowClient:
             else:
                 full_input = prompt
             
+            # 记录调用开始的详细信息
+            logger.info(f"🚀 [SiliconFlow调用开始] 模型: {self.model}")
+            logger.info(f"📝 [提示词长度]: {len(prompt)} 字符")
+            if input_data:
+                input_type = type(input_data).__name__
+                if isinstance(input_data, (dict, list)):
+                    input_size = len(json.dumps(input_data, ensure_ascii=False))
+                    logger.info(f"📊 [输入数据]: 类型={input_type}, 大小={input_size} 字符")
+                else:
+                    logger.info(f"📊 [输入数据]: 类型={input_type}, 长度={len(str(input_data))} 字符")
+            logger.info(f"🔢 [完整输入长度]: {len(full_input)} 字符")
+            logger.debug(f"📄 [完整输入内容前500字符]: {full_input[:500]}...")
+            
             # 调用API
+            import time
+            start_time = time.time()
+            logger.info(f"⏱️ [API调用] 开始时间: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -64,21 +81,42 @@ class SiliconFlowClient:
                 stream=False
             )
             
+            end_time = time.time()
+            call_duration = end_time - start_time
+            logger.info(f"⏱️ [API调用] 耗时: {call_duration:.2f} 秒")
+            
             # 检查响应
             if response and response.choices:
                 content = response.choices[0].message.content
                 if content:
+                    response_length = len(content)
+                    finish_reason = response.choices[0].finish_reason if response.choices[0] else 'unknown'
+                    
+                    logger.info(f"✅ [API调用成功] 响应长度: {response_length} 字符")
+                    logger.info(f"🎯 [结束原因]: {finish_reason}")
+                    logger.debug(f"📄 [响应内容前500字符]: {content[:500]}...")
+                    
+                    # 检查响应内容的基本质量
+                    if response_length < 10:
+                        logger.warning(f"⚠️ [响应质量警告] 响应过短: {response_length} 字符")
+                    if '{' in content or '[' in content:
+                        logger.info(f"🔍 [响应格式] 检测到JSON格式内容")
+                    
                     return content
                 else:
-                    logger.warning("API请求成功，但输出为空")
+                    logger.warning(f"⚠️ [API请求成功，但输出为空] 结束原因: {response.choices[0].finish_reason if response.choices[0] else 'unknown'}")
                     return ""
             else:
                 error_msg = "API调用失败，未返回有效响应"
-                logger.error(error_msg)
+                logger.error(f"❌ [API调用失败] {error_msg}")
                 raise Exception(error_msg)
                 
         except Exception as e:
-            logger.error(f"硅基流动API调用发生异常: {str(e)}")
+            error_type = type(e).__name__
+            error_details = str(e)
+            logger.error(f"❌ [硅基流动API调用异常] 类型: {error_type}")
+            logger.error(f"💬 [异常详情]: {error_details}")
+            logger.error(f"📄 [调用上下文] 模型: {self.model}, 输入长度: {len(full_input) if 'full_input' in locals() else 'N/A'}")
             raise
     
     def call_with_retry(self, prompt: str, input_data: Any = None, max_retries: int = 3) -> str:
@@ -93,18 +131,33 @@ class SiliconFlowClient:
         Returns:
             模型响应文本
         """
+        logger.info(f"🔄 [SiliconFlow重试机制] 开始调用，最大重试次数: {max_retries}")
+        
         for attempt in range(max_retries):
             try:
-                return self.call(prompt, input_data)
-            except ValueError: # 如果是API Key或参数错误，不重试
+                logger.info(f"🔢 [第{attempt + 1}次尝试] 开始调用...")
+                result = self.call(prompt, input_data)
+                logger.info(f"✅ [第{attempt + 1}次尝试成功] 调用完成")
+                return result
+            except ValueError as ve: # 如果是API Key或参数错误，不重试
+                logger.error(f"❌ [不可重试错误] {str(ve)}")
                 raise
             except Exception as e:
+                error_type = type(e).__name__
+                error_msg = str(e)
+                
                 if attempt == max_retries - 1:
-                    logger.error(f"硅基流动API调用在{max_retries}次重试后彻底失败。")
+                    logger.error(f"❌ [重试失败] 硅基流动API调用在{max_retries}次重试后彻底失败")
+                    logger.error(f"💬 [最终错误] 类型: {error_type}, 信息: {error_msg}")
                     raise
-                logger.warning(f"第{attempt + 1}次调用失败，准备重试: {str(e)}")
+                
+                wait_time = 2 ** attempt
+                logger.warning(f"⚠️ [第{attempt + 1}次失败] 类型: {error_type}, 信息: {error_msg}")
+                logger.info(f"⏳ [等待重试] {wait_time}秒后进行第{attempt + 2}次尝试...")
+                
                 import time
-                time.sleep(2 ** attempt)  # 指数退避
+                time.sleep(wait_time)  # 指数退避
+                
         return "" # 确保所有路径都有返回值
     
     def parse_json_response(self, response: str) -> Any:

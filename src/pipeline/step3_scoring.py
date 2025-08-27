@@ -90,10 +90,18 @@ class ClipScorer:
             ]
             
             response = self.llm_client.call_with_retry(self.recommendation_prompt, input_for_llm)
+            
+            logger.info(f"✅ [评分响应成功] 获得LLM响应，长度: {len(response) if response else 0} 字符")
+            logger.debug(f"📄 [评分响应内容]: {response[:300] if response else 'N/A'}...")
+            
+            logger.info(f"🔍 [开始解析] 解析LLM评分响应...")
             parsed_list = self.llm_client.parse_json_response(response)
             
             if not isinstance(parsed_list, list) or len(parsed_list) != len(clips):
-                logger.error(f"LLM返回的评分结果数量与输入不匹配。输入: {len(clips)}, 输出: {len(parsed_list)}")
+                logger.error(f"❌ [评分结果错误] LLM返回的评分结果数量与输入不匹配。输入: {len(clips)}, 输出: {len(parsed_list) if isinstance(parsed_list, list) else '非列表'}")
+                logger.debug(f"📄 [评分解析结果类型]: {type(parsed_list)}")
+                if isinstance(parsed_list, list):
+                    logger.debug(f"📄 [评分结果前3个]: {parsed_list[:3]}")
                 return []
                 
             # 将评分结果合并回原始的clips数据

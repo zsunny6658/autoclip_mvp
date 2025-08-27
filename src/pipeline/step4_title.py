@@ -51,7 +51,9 @@ class TitleGenerator:
             logger.info(f"处理块 {chunk_index}，其中包含 {len(chunk_clips)} 个片段...")
             
             try:
-                logger.info(f"  > 开始调用API生成标题...")
+                logger.info(f"  > 🚀 [块 {chunk_index} 标题生成] 开始调用LLM生成标题...")
+                
+                # 构建输入数据
                 input_for_llm = [
                     {
                         "id": clip.get('id'),
@@ -61,16 +63,23 @@ class TitleGenerator:
                     } for clip in chunk_clips
                 ]
                 
+                logger.info(f"  > 📊 [输入统计] 块 {chunk_index} 包含 {len(chunk_clips)} 个片段")
+                logger.debug(f"  > 📄 [输入详情] 前3个片段: {input_for_llm[:3]}")
+                
                 raw_response = self.llm_client.call_with_retry(self.title_prompt, input_for_llm)
                 
                 if raw_response:
+                    logger.info(f"  > ✅ [块 {chunk_index} 响应成功] 获得LLM响应，长度: {len(raw_response)} 字符")
                     # 保存LLM原始响应用于调试（但不用作缓存）
                     llm_cache_path = self.llm_raw_output_dir / f"chunk_{chunk_index}.txt"
                     with open(llm_cache_path, 'w', encoding='utf-8') as f:
                         f.write(raw_response)
-                    logger.info(f"  > LLM原始响应已保存到 {llm_cache_path}")
+                    logger.info(f"  > 💾 [LLM原始响应已保存到] {llm_cache_path}")
+                    
+                    logger.info(f"  > 🔍 [开始解析] 解析标题生成响应...")
                     titles_map = self.llm_client.parse_json_response(raw_response)
                 else:
+                    logger.warning(f"  > ⚠️ [块 {chunk_index} 空响应] LLM响应为空")
                     titles_map = {}
                 
                 if not isinstance(titles_map, dict):

@@ -65,9 +65,17 @@ class ClusteringEngine:
         
         try:
             # 调用大模型进行聚类
+            logger.info(f"🚀 [聚类开始] 调用LLM进行主题聚类，待处理片段数: {len(clips_for_clustering)}")
+            logger.info(f"📄 [提示词长度]: {len(full_prompt)} 字符")
+            logger.debug(f"📄 [提示词预览]: {full_prompt[:500]}...")
+            
             response = self.llm_client.call_with_retry(full_prompt)
             
+            logger.info(f"✅ [聚类响应成功] 获得LLM响应，长度: {len(response) if response else 0} 字符")
+            logger.debug(f"📄 [聚类响应内容]: {response[:300] if response else 'N/A'}...")
+            
             # 解析JSON响应
+            logger.info(f"🔍 [开始解析] 解析LLM聚类响应...")
             collections_data = self.llm_client.parse_json_response(response)
             
             # 验证和清理合集数据
