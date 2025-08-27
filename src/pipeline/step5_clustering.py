@@ -363,7 +363,7 @@ class ClusteringEngine:
                         import re
                         def remove_punctuation(text):
                             # 移除常见的中文和英文标点符号
-                            punctuation_pattern = r'[，。！？；：""''（）【】《》、\s\.\,\!\?\;\:\"\''\(\)\[\]\<\>]*'
+                            punctuation_pattern = r"""[，。！？；：""''（）【】《》、\s\.\,\!\?\;\:\"\''\(\)\[\]\<\>]*"""
                             return re.sub(punctuation_pattern, '', text).strip()
                         
                         no_punct_clip_title = remove_punctuation(cleaned_clip_title)
