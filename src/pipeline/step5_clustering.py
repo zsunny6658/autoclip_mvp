@@ -62,7 +62,7 @@ class ClusteringEngine:
             full_prompt += "\n\n基于关键词的预聚类结果（仅供参考）：\n"
             for theme, clip_ids in pre_clusters.items():
                 full_prompt += f"{theme}: {', '.join(clip_ids)}\n"
-        
+    
         try:
             # 调用大模型进行聚类
             logger.info(f"🚀 [聚类开始] 调用LLM进行主题聚类，待处理片段数: {len(clips_for_clustering)}")
@@ -72,11 +72,36 @@ class ClusteringEngine:
             response = self.llm_client.call_with_retry(full_prompt)
             
             logger.info(f"✅ [聚类响应成功] 获得LLM响应，长度: {len(response) if response else 0} 字符")
-            logger.debug(f"📄 [聚类响应内容]: {response[:300] if response else 'N/A'}...")
+            # 记录完整的LLM响应用于调试
+            if response:
+                logger.debug(f"📄 [聚类完整响应]: {response}")
+            else:
+                logger.warning("⚠️ [聚类响应为空] LLM返回空响应")
+                return self._create_default_collections(clips_with_titles)
             
             # 解析JSON响应
             logger.info(f"🔍 [开始解析] 解析LLM聚类响应...")
             collections_data = self.llm_client.parse_json_response(response)
+            
+            # 记录解析后的数据
+            logger.info(f"✅ [解析完成] 解析后的合集数据数量: {len(collections_data) if isinstance(collections_data, list) else 'N/A'}")
+            if collections_data is not None:
+                if isinstance(collections_data, list):
+                    logger.debug(f"📄 [解析后数据预览]: {json.dumps(collections_data[:3] if len(collections_data) > 3 else collections_data, ensure_ascii=False, indent=2)}")
+                else:
+                    logger.warning(f"⚠️ [解析数据类型异常] 解析结果不是列表类型: {type(collections_data)}")
+                    logger.debug(f"📄 [解析结果内容]: {str(collections_data)[:500]}")
+            else:
+                logger.warning("⚠️ [解析结果为空] 解析后的collections_data为None")
+                # 尝试直接解析response
+                try:
+                    direct_parse = json.loads(response)
+                    logger.info(f"🔄 [直接解析成功] 直接解析response得到的数据类型: {type(direct_parse)}")
+                    logger.debug(f"📄 [直接解析数据]: {json.dumps(direct_parse, ensure_ascii=False, indent=2)[:500]}")
+                    collections_data = direct_parse
+                except json.JSONDecodeError as je:
+                    logger.error(f"❌ [直接解析失败] 无法直接解析response为JSON: {str(je)}")
+                    logger.debug(f"📄 [原始响应内容]: {response}")
             
             # 验证和清理合集数据
             validated_collections = self._validate_collections(collections_data, clips_with_titles)
@@ -91,6 +116,7 @@ class ClusteringEngine:
             
         except Exception as e:
             logger.error(f"主题聚类失败: {str(e)}")
+            logger.exception(e)
             # 使用预聚类结果作为备选
             if pre_clusters:
                 logger.info("使用预聚类结果作为备选方案")
@@ -205,33 +231,82 @@ class ClusteringEngine:
         Returns:
             验证后的合集数据
         """
+        logger.info(f"🔍 [开始验证] 验证合集数据，原始合集数量: {len(collections_data) if collections_data else 0}")
+        
+        # 检查collections_data是否为None或不是列表
+        if collections_data is None:
+            logger.warning("⚠️ [验证数据为空] collections_data为None")
+            return []
+        
+        if not isinstance(collections_data, list):
+            logger.warning(f"⚠️ [验证数据类型错误] collections_data不是列表类型，实际类型: {type(collections_data)}")
+            logger.debug(f"📄 [验证数据内容]: {str(collections_data)[:1000]}")
+            return []
+        
+        logger.debug(f"📄 [原始合集数据]: {json.dumps(collections_data, ensure_ascii=False, indent=2)[:1000]}...")
+        
         validated_collections = []
         
         for i, collection in enumerate(collections_data):
             try:
-                # 验证必需字段
-                if not all(key in collection for key in ['collection_title', 'collection_summary', 'clips']):
-                    logger.warning(f"合集 {i} 缺少必需字段，跳过")
+                logger.info(f"🔍 [验证合集 {i}] 开始验证第 {i} 个合集")
+                logger.debug(f"📄 [合集 {i} 原始数据]: {json.dumps(collection, ensure_ascii=False, indent=2) if isinstance(collection, dict) else str(collection)}")
+                
+                # 检查collection是否为字典类型
+                if not isinstance(collection, dict):
+                    logger.warning(f"⚠️ [合集 {i} 类型错误] 合集数据不是字典类型，实际类型: {type(collection)}")
                     continue
+                
+                # 验证必需字段
+                required_fields = ['collection_title', 'collection_summary', 'clips']
+                missing_fields = [key for key in required_fields if key not in collection]
+                
+                if missing_fields:
+                    logger.warning(f"⚠️ [合集 {i} 缺少字段] 缺少必需字段: {missing_fields}")
+                    logger.debug(f"📄 [合集 {i} 实际字段]: {list(collection.keys())}")
+                    logger.debug(f"📄 [合集 {i} 完整数据]: {json.dumps(collection, ensure_ascii=False, indent=2)}")
+                    continue
+                
+                logger.info(f"✅ [合集 {i} 字段验证通过] 包含所有必需字段")
                 
                 # 验证片段列表
                 clip_titles = collection['clips']
+                logger.info(f"🔍 [合集 {i} 片段验证] 片段标题数量: {len(clip_titles) if isinstance(clip_titles, list) else 'N/A'}")
+                logger.debug(f"📄 [合集 {i} 片段标题]: {clip_titles}")
+                
+                # 检查clips是否为列表类型
+                if not isinstance(clip_titles, list):
+                    logger.warning(f"⚠️ [合集 {i} 片段类型错误] clips字段不是列表类型，实际类型: {type(clip_titles)}")
+                    logger.debug(f"📄 [合集 {i} clips字段内容]: {str(clip_titles)}")
+                    continue
+                
                 valid_clip_ids = []
                 
-                for clip_title in clip_titles:
+                for j, clip_title in enumerate(clip_titles):
+                    logger.debug(f"🔍 [合集 {i} 片段 {j}] 查找片段标题: '{clip_title}'")
                     # 根据标题找到对应的片段ID
+                    found_clip = None
                     for clip in clips_with_titles:
-                        if (clip.get('generated_title', clip['outline']) == clip_title or 
-                            clip['outline'] == clip_title):
-                            valid_clip_ids.append(clip['id'])
+                        generated_title = clip.get('generated_title', clip['outline'])
+                        outline = clip['outline']
+                        logger.debug(f"   比较: '{clip_title}' vs '{generated_title}' | '{outline}'")
+                        if clip_title == generated_title or clip_title == outline:
+                            found_clip = clip
                             break
+                    
+                    if found_clip:
+                        valid_clip_ids.append(found_clip['id'])
+                        logger.debug(f"✅ [合集 {i} 片段 {j} 匹配成功] 找到匹配片段 ID: {found_clip['id']}")
+                    else:
+                        logger.warning(f"⚠️ [合集 {i} 片段 {j} 匹配失败] 未找到匹配的片段: '{clip_title}'")
                 
                 if len(valid_clip_ids) < 2:
-                    logger.warning(f"合集 {i} 有效片段少于2个，跳过")
+                    logger.warning(f"⚠️ [合集 {i} 片段不足] 有效片段少于2个 ({len(valid_clip_ids)}个)，跳过")
                     continue
                 
                 # 限制每个合集的片段数量
                 if len(valid_clip_ids) > MAX_CLIPS_PER_COLLECTION:
+                    logger.info(f"✂️ [合集 {i} 片段超限] 片段数量 {len(valid_clip_ids)} 超过限制 {MAX_CLIPS_PER_COLLECTION}，截取前{MAX_CLIPS_PER_COLLECTION}个")
                     valid_clip_ids = valid_clip_ids[:MAX_CLIPS_PER_COLLECTION]
                 
                 validated_collection = {
@@ -241,12 +316,15 @@ class ClusteringEngine:
                     'clip_ids': valid_clip_ids
                 }
                 
+                logger.info(f"✅ [合集 {i} 验证通过] 标题: '{validated_collection['collection_title']}', 片段数: {len(valid_clip_ids)}")
                 validated_collections.append(validated_collection)
                 
             except Exception as e:
-                logger.error(f"验证合集 {i} 失败: {str(e)}")
+                logger.error(f"❌ [验证合集 {i} 失败] 错误: {str(e)}")
+                logger.exception(e)
                 continue
         
+        logger.info(f"✅ [验证完成] 最终有效合集数量: {len(validated_collections)}")
         return validated_collections
     
     def _create_default_collections(self, clips_with_titles: List[Dict]) -> List[Dict]:

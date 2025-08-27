@@ -23,6 +23,34 @@
    - 避免将不同主题的切片强行归类
    - 如果某个主题的切片较多，可以创建多个细分合集
 
-请以 JSON 格式输出，字段名为 collection_title、collection_summary、clips。
+输出要求：
+请严格按照以下JSON格式输出，且必须是一个数组，每个元素代表一个合集：
+[
+  {
+    "collection_title": "合集标题",
+    "collection_summary": "合集简介",
+    "clips": ["切片标题1", "切片标题2", ...]
+  }
+]
+
+重要说明：
+1. 输出必须是标准的JSON格式
+2. 输出必须是一个数组，即使只有一个合集
+3. 每个合集对象必须包含collection_title、collection_summary、clips这三个字段
+4. clips字段必须是一个包含切片标题的字符串数组
+
+示例格式：
+[
+  {
+    "collection_title": "投资理财启示",
+    "collection_summary": "通过生活化案例分享投资理念，兼具实用与共鸣。",
+    "clips": ["散户如何解套？", "北交所中免种业还能涨吗？"]
+  },
+  {
+    "collection_title": "职场技能提升",
+    "collection_summary": "探讨职场技能与个人成长的实用建议。",
+    "clips": ["董秘的职业发展路径", "大学生如何提升财商"]
+  }
+]
 
 以下是视频切片列表：
