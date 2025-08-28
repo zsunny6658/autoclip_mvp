@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class ClusteringEngine:
     """主题聚类引擎"""
     
-    def __init__(self, metadata_dir: Optional[Path] = None, prompt_files: Dict = None):
+    def __init__(self, metadata_dir: Optional[Path] = None, prompt_files: Optional[Dict] = None):
         self.llm_client = LLMFactory.get_default_client()
         
         # 加载提示词
@@ -363,7 +363,10 @@ class ClusteringEngine:
                         import re
                         def remove_punctuation(text):
                             # 移除常见的中文和英文标点符号
-                            punctuation_pattern = r'[，。！？；：""''（）【】《》、\s\.\,\!\?\;\:\"\''\(\)\[\]\<\>]*'
+                            # 使用字符串拼接来避免转义问题
+                            chinese_punct = '\u3001\u3002\uff01\uff1f\uff1b\uff1a\u201c\u201d\u2018\u2019\uff08\uff09\u3010\u3011\u300a\u300b\u3001'
+                            english_punct = '.,!?;:"\'\\(\\)\\[\\]<>\\s'
+                            punctuation_pattern = '[' + chinese_punct + english_punct + ']*'
                             return re.sub(punctuation_pattern, '', text).strip()
                         
                         no_punct_clip_title = remove_punctuation(cleaned_clip_title)
@@ -527,7 +530,7 @@ class ClusteringEngine:
         with open(input_path, 'r', encoding='utf-8') as f:
             return json.load(f)
 
-def run_step5_clustering(clips_with_titles_path: Path, output_path: Optional[Path] = None, metadata_dir: Optional[str] = None, prompt_files: Dict = None) -> List[Dict]:
+def run_step5_clustering(clips_with_titles_path: Path, output_path: Optional[Path] = None, metadata_dir: Optional[str] = None, prompt_files: Optional[Dict] = None) -> List[Dict]:
     """
     运行Step 5: 主题聚类
     
@@ -545,7 +548,7 @@ def run_step5_clustering(clips_with_titles_path: Path, output_path: Optional[Pat
     
     # 创建聚类器
     if metadata_dir is None:
-        metadata_dir = METADATA_DIR
+        metadata_dir = str(METADATA_DIR)
     clusterer = ClusteringEngine(metadata_dir=Path(metadata_dir), prompt_files=prompt_files)
     
     # 进行聚类
@@ -554,7 +557,7 @@ def run_step5_clustering(clips_with_titles_path: Path, output_path: Optional[Pat
     # 保存结果
     if output_path is None:
         if metadata_dir is None:
-            metadata_dir = METADATA_DIR
+            metadata_dir = str(METADATA_DIR)
         output_path = Path(metadata_dir) / "step5_collections.json"
     
     clusterer.save_collections(collections_data, output_path)
