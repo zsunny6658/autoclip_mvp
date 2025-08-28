@@ -11,8 +11,10 @@ WORKDIR /app/frontend
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# 安装必要的构建工具和网络工具
-RUN apk update && apk add --no-cache \
+# 配置国内镜像源并安装必要的构建工具和网络工具
+RUN echo "https://mirrors.aliyun.com/alpine/v3.19/main/" > /etc/apk/repositories && \
+    echo "https://mirrors.aliyun.com/alpine/v3.19/community/" >> /etc/apk/repositories && \
+    apk update && apk add --no-cache \
     ca-certificates \
     git
 
@@ -48,6 +50,9 @@ RUN rm -rf node_modules && \
 # ==================== 阶段2: Python依赖安装 ====================
 FROM python:3.11-slim AS python-builder
 
+# 配置国内镜像源
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
 # 安装构建工具
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -72,6 +77,9 @@ ENV PYTHONPATH=/app \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/venv/bin:$PATH" \
     DEBIAN_FRONTEND=noninteractive
+
+# 配置国内镜像源
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 创建应用用户（安全最佳实践）
 # 使用高位UID/GID避免与宿主机用户冲突
