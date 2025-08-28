@@ -1,0 +1,21 @@
+[
+  {
+    "id": "1",
+    "collection_title": "投资理财精华",
+    "collection_summary": "精选投资理财相关内容，从基础到进阶，帮助你建立完整的投资知识体系。",
+    "clip_ids": [
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  {
+    "id": "2",
+    "collection_title": "职场成长指南",
+    "collection_summary": "职场技能提升和学习方法分享，助力你的职业发展。",
+    "clip_ids": [
+      "4",
+      "5"
+    ]
+  }
+]
